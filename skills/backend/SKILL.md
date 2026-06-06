@@ -13,6 +13,16 @@ Input: find the most recent `specs/YYYY-MM-DD-[feature]/` directory and read:
 
 If these files are missing: stop. "No phase spec found. Run `/ba`, `/spec`, and `/frontend` for this phase first."
 
+## Invocation contract
+
+| Mode | Model | Mechanism | Inputs (caller passes) | Outputs (skill produces) | Terminal state (this skill writes) |
+|---|---|---|---|---|---|
+| (single mode) | Opus | inline (in `/build` session) | spec directory; reads requirements.md + plan.md + handover.md + design-tokens.css + design file/mockups | implemented backend per plan.md task groups; integration-tested per requirements.md API contracts | `backend-complete` |
+
+Inline-Opus because the work is deep architectural reasoning + code-harness discipline + Stage 3 adversarial review. The architectural review in Stage 3 spawns its own Opus subagent loaded with `/adversarial-review`.
+
+**Naming note: "Stage" vs "Phase".** The numbered Stages below (Stage 0–4) are this skill's *internal* steps for one project phase. The project Phase (Phase 1, Phase 2, … from `roadmap.md` and `requirements.md` frontmatter) is the higher-level slice the whole `/build` pipeline is working on. When you see `Phase <N>` in placeholders (wiki entry titles, adversarial review prompts, completion summary) that refers to the project Phase. When you see `Stage <N>` it refers to the section in this skill.
+
 ---
 
 ## Voice rules
@@ -27,56 +37,26 @@ The user is not a developer. Plain language throughout — no file paths, functi
 
 ## Wiki integration
 
-Non-blocking — failures log and continue.
+Apply `${CLAUDE_PLUGIN_ROOT}/skills/_shared/wiki.md` with `$AGENT=backend` and `$TAGS` from `tech-stack.md`.
 
-### Read wiki
+**Friction trigger:** in Stage 3, for each Critical or Worth-considering finding from `/adversarial-review` that you act on. One entry per acted-on finding. Skip declined findings and nits. Title: `Phase <N> backend friction: <issue name>` (the placeholder `<N>` is the project Phase, not the Stage). Body: what was flagged, severity, how it was fixed, what would have prevented it.
 
-Before Phase 0 confirm:
-1. Tags from `tech-stack.md` (language, framework, DB, key libs — up to 5).
-2. Run:
-   ```
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/wiki.mjs" read --agent backend --tags "[tags]" --limit 5
-   ```
-3. Index under `## Relevant past learnings` in working context. On empty/fail, log and continue.
-
-### Write learning
-
-**Friction trigger** — fires in Phase 3 for each issue flagged by the Opus architectural review. One entry per issue.
-
-```
-node "${CLAUDE_PLUGIN_ROOT}/scripts/wiki.mjs" save --auto \
-  --title "Phase <N> backend friction: <issue name>" \
-  --tags "[tech-stack-tags]" \
-  --source "[project basename]" \
-  --body "[2–5 sentences: what Opus flagged, severity, how it was fixed, what would have prevented it]" \
-  --agent backend --trigger friction --phase <N>
-```
-
-**Phase-wrap trigger** — fires once after Phase 4 integration testing passes, before Completion. Summarizes what this phase's implementation taught.
-
-```
-node "${CLAUDE_PLUGIN_ROOT}/scripts/wiki.mjs" save --auto \
-  --title "Phase <N> backend: <one-line summary>" \
-  --tags "[tech-stack-tags]" \
-  --source "[project basename]" \
-  --body "[2–5 sentences: what schemas/patterns surprised, which approach worked vs. dropped, what to watch next time]" \
-  --agent backend --trigger phase-wrap --phase <N>
-```
+**Phase-wrap trigger:** once after Stage 4 integration testing passes, before Completion. Title: `Phase <N> backend: <one-line summary>`. Body: which schemas/patterns surprised, which approach worked vs. dropped, what to watch next time.
 
 ---
 
-## Phase 0 — Read and confirm scope
+## Stage 0 — Read and confirm scope
 
 **Step 0:** Run Read wiki (see Wiki integration) before reading spec files.
 
-1. Read `requirements.md` — **start with the frontmatter block** (`phase`, `type`, `tdd_guard`). The `type` field governs how this phase is implemented (see "Phase-type rules" below). Then read the contract, data model, and constraints.
+1. Read `requirements.md` — **start with the frontmatter block** (`phase`, `type`). The `type` field governs how this phase is implemented (see "Phase-type rules" below). Then read the contract, data model, and constraints.
 2. Read `plan.md`: understand the task groups and their sequence. Plan.md is design-agnostic by contract — do not expect visual details here.
 3. Read `handover.md`: understand what the frontend built and what API shape it expects. Note any deviations from requirements.md — these must be resolved before implementation starts.
 4. Check `tech-stack.md` for non-negotiables (e.g. strict TypeScript, no ORM, exact version pinning).
 5. **Open the design file** if `handover.md` lists one under "Design file — source of truth". See Design file rules below — this step is non-negotiable for any phase that touches UI.
 6. **Import design tokens** — if `handover.md` references a `design-tokens.css`, import it from the app's global stylesheet (e.g. `@import './design-tokens.css'` at the top of `globals.css`). Tokens are the single source of truth for colors, fonts, sizes. Do not re-extract by hand, do not approximate.
 
-Log internally: "Building: [API endpoints]. Phase type: [initial/feature/rebuild]. TDD-guard: [on/off]. Constraints: [relevant tech-stack constraints]. Out of scope: UI, design." Proceed immediately — the spec was already user-approved.
+Log internally: "Building: [API endpoints]. Phase type: [initial/feature/rebuild]. Constraints: [relevant tech-stack constraints]. Out of scope: UI, design." Proceed immediately — the spec was already user-approved.
 
 ---
 
@@ -103,7 +83,7 @@ If the `type` field is present but unclear (typo, unknown value), stop and ask: 
 
 The design file is the **visual and structural source of truth** — it supersedes `design-brief.md`, any textual description in `handover.md`, and any visual pattern the existing codebase already uses. The brief describes intent; the design file is what the user approved and is happy with.
 
-**Before any UI group in Phase 2:**
+**Before any UI group in Stage 2:**
 
 1. Open the design file at the path in `handover.md` "Design file" section.
    - Pencil: `mcp__pencil__open_document` → `mcp__pencil__get_editor_state` to list frames → `mcp__pencil__batch_get` with the frame IDs from the handover frame index to read structure → `mcp__pencil__get_screenshot` to visually verify the rendered frame.
@@ -123,45 +103,24 @@ The design file is the **visual and structural source of truth** — it supersed
 
 ---
 
-## Phase 1 — TDD setup
+## Stage 1 — Test plan
 
-**Codepath diagram (tdd_guard: on only):** Before writing any implementation code, map every function and code path that this phase will add or change. For each: list the happy path, the edge cases (null input, empty input, boundary values), and the error paths (upstream failure, invalid state). Mark each path `[TESTED]` or `[GAP]`. This diagram is the test plan — code-harness uses it to know what coverage is required.
+**Codepath diagram.** Before writing any implementation code, map every function and code path that this phase will add or change. For each: list the happy path, the edge cases (null input, empty input, boundary values), and the error paths (upstream failure, invalid state). Mark each path `[TESTED]` or `[GAP]`. This diagram is the test plan for Stage 2 — use it during Stage 2 to decide which groups need tests and what edge cases to cover.
 
-Also enforce: any code path that previously had a passing test and is touched by this phase requires a regression test. The regression test must fail without the fix and pass with it. This is non-negotiable regardless of `tdd_guard` setting.
+**Regression coverage is mandatory.** Any code path that previously had a passing test and is touched by this phase requires a regression test. The regression test must fail without the fix and pass with it.
 
-**Check `tdd_guard` field in `requirements.md` frontmatter.**
-
-- If `tdd_guard: off` (typical for `rebuild` phases or pure-UI work with no new logic): run `tdd-config disable` from the project root and skip the rest of Phase 1. Do not write failing tests per group — there's no logic under test.
-- If `tdd_guard: on` (typical for `initial` or `feature` with new backend logic): continue below.
-
-Install and enable `tdd-guard` for this phase:
-
-Write or merge into `.claude/settings.json` in the project root:
-```json
-{
-  "enabledPlugins": { "tdd-guard@tdd-guard": true },
-  "extraKnownMarketplaces": {
-    "tdd-guard": { "source": { "source": "github", "repo": "nizos/tdd-guard" } }
-  }
-}
-```
-
-Run `tdd-config enable` from the project root. On first init this seeds a curated `ignorePatterns` list (md/txt/log/json/yml/yaml/xml/html/css/rst plus SDD-specific: `verify-*.sh`, `**/migrations/**`, `**/db/schema.*`, `**/seed/**`, `**/fixtures/**`, `**/dist/**`, `**/generated/**`, `*.config.ts`, etc.). On subsequent runs it preserves whatever the project has accumulated — never write `config.json` with raw JSON, that wipes the patterns.
-
-When the guard blocks a file that legitimately can't be unit-tested (declarative schema, generated code, build config, smoke verify script): run `tdd-config ignore '<pattern>'` to persist the exemption. Do not disable the guard or write a fake test as a workaround — the pattern needs to survive into the next phase and session. Use `tdd-config ignore --remove '<pattern>'` to undo.
-
-At phase completion or abort: run `tdd-config disable`.
+For pure-UI / pure-refactor / pure-visual-rebuild phases with no new logic: skip the codepath diagram. The regression-test rule still applies if you touch any tested code path.
 
 ---
 
-## Phase 2 — Implementation (group by group)
+## Stage 2 — Implementation (group by group)
 
 Implement `plan.md` task groups in order using the `code-harness` skill for every group. Each group is independently verifiable before moving to the next.
 
 For each group:
 1. Apply **Spec-Light**: post `TASK: [group description] / ESTIMATE: [time] / VERIFY: [command]`
 2. Write `verify-group-N.sh` before touching implementation
-3. Write failing tests — **if `tdd_guard: on`**. Skip for `tdd_guard: off`.
+3. For groups with new logic: write tests before implementation and confirm they fail first. Skip for pure-UI / pure-config groups. Regression tests for any previously-tested code paths this group touches are mandatory — write them first too.
 4. Implement — minimum code to pass the tests / deliver the slice
 5. Self-verify: run `verify-group-N.sh`
 6. If red: apply root cause discipline before touching anything:
@@ -201,19 +160,48 @@ For every new codepath:
 
 ---
 
-## Phase 3 — Architectural Review
+## Stage 3 — Architectural Review (`/adversarial-review`)
 
-After all groups are implemented. Spawn a subagent (Opus model preferred) for an architectural review under 300 words.
+After all groups are implemented, run a single Opus advisor pass loading `${CLAUDE_PLUGIN_ROOT}/skills/adversarial-review/SKILL.md`. The seven lenses (module depth, abstraction necessity, data-flow legibility, seam placement, information hiding vs relabeling, logic consolidation, naming honesty) cover the full structural sweep — there is no separate "general architecture" pass.
 
-Brief: "Review overall backend architecture for Phase [N]. Per-task logic was harness-verified. Flag: wrong abstractions, coupling issues, structural risks the plan didn't anticipate, missing seams for future change, system-boundary security concerns. Cite line ranges — do not paste file contents."
+Subagent prompt (Opus):
 
-Act on findings silently:
-- Clear structural risk → fix before Phase 4
-- Style concern → note in completion summary
+```
+Read and execute ${CLAUDE_PLUGIN_ROOT}/skills/adversarial-review/SKILL.md.
+
+Target: Phase <N> backend implementation in <project root>.
+Specifically the files touched by this phase's plan.md task groups under
+the following directories: <list app/src/** and any other backend dirs touched>.
+
+Spec context: <spec dir>/requirements.md, <spec dir>/plan.md.
+
+Apply ALL seven lenses. Produce the consulting report in the format the skill specifies — named challenge, specific revision, severity tag per finding. Cite specific files and line ranges. Do NOT paste file contents.
+
+Critical = will cause concrete pain in the next 1–2 phases.
+Worth-considering = adds long-term friction.
+Nit = stylistic.
+
+Empty report (no findings, no clean-lens trace) = malformed run. At minimum, list which lenses came back clean.
+```
+
+When the report comes back, surface it inline (so the user sees the consulting findings) under a `### Adversarial review report — Phase <N>` heading.
+
+### Revision round
+
+Act on the report:
+- **Critical findings**: address all of them. For each, post a one-liner: "Acted on `<finding title>` — `<what changed in plain language>`."
+- **Worth-considering findings**: address the ones whose revision is cheap (single-file change, no contract impact). Decline others — for each declined, post: "Declined `<finding title>` — reason: `<one sentence>`."
+- **Nits**: ignore unless the fix is trivial (one-line change). For any acted-on nits, post a one-liner.
+
+The revision round is the only behavior change. The report itself does not block — Stage 4 (integration testing) runs whether or not every finding is addressed. Anything not acted on is a tacit accept; future phases won't re-litigate it unless new evidence surfaces.
+
+If the revision round touches code that had passing tests, write a regression test before the change (per Stage 1 regression-coverage rule).
+
+Once the revision round writes are complete, log a one-line summary in working context: `Adversarial review: <N> critical → <N> acted, <N> worth-considering → <N> acted / <N> declined, <N> nits → <N> acted.` This goes into the Stage 4 / completion log, not chatted to the user.
 
 ---
 
-## Phase 4 — Integration Testing
+## Stage 4 — Integration Testing
 
 Test the feature as a whole against every API contract in `requirements.md`. Not per-task — the full feature end-to-end.
 
@@ -230,9 +218,9 @@ Test the feature as a whole against every API contract in `requirements.md`. Not
 
 ## Completion
 
-Run `tdd-config disable` from the project root.
-
 **Pre-Completion:** Run the phase-wrap Write learning (see Wiki integration) — one entry per phase.
+
+**Checkpoint state file (compaction-safe handoff):** before invoking `/review`, write `.build-state.json` with `step: "backend-complete"`. Preserve every other field (`phase`, `feature`, `reviewIteration`, `requirementsHash`, `dogfoodPid`); null `currentSubStep`. This is the resume anchor — if context is compacted between this skill ending and `/review` starting, the next `/build` reads `backend-complete` and jumps straight to Step 4 (Review).
 
 > **Backend complete.**
 > **Built:** [what the backend provides — one sentence]
@@ -250,6 +238,6 @@ Immediately invoke `/review`. Do not stop or wait for the user.
 - plan.md task groups are the implementation sequence. Do not reorder or skip groups.
 - Code-harness gates every group. No exceptions.
 - tech-stack.md non-negotiables apply from the first line of code.
-- Opus reviews architecture, not logic. Code-harness handled logic.
+- Opus reviews architecture, not logic. Code-harness handled logic. Stage 3 runs a single Opus pass via `/adversarial-review` (seven structural lenses). The report does not block but triggers a revision round (Critical = act, Worth-considering = act-if-cheap, Nit = ignore).
 - Agent owns servers, processes, and test runners. Never ask user.
 - user is the last resort, not the first.

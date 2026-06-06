@@ -2,6 +2,25 @@
 
 All notable changes to `claude-code-sdd` are documented here.
 
+## [0.4.0] — 2026-06-06
+
+### Added
+- **`/bad-idea`** — contrarian reality check skill. Two modes: (1) full lens-by-lens verdict (manual); (2) tight verdict + minimum-viable-shape (invoked by `/build` at the top of every new project). Seven lenses: solution-as-problem framing, existing-solution overlap, internal consistency, demand reality, cost/value sanity, bloat detection, one-size-fits-all. Surfaced via `AskUserQuestion` loop until the user picks Proceed / Refine / Drop.
+- **`/adversarial-review`** — structural critique skill. Opus-powered. Attacks module depth, abstraction necessity, data-flow legibility, seam placement, information hiding, logic consolidation, and naming honesty. Called by `/backend` Stage 3 for architectural review; also user-invocable on any directory, plan, or diff. Produces a consulting report — does not block.
+- **`/dogfood`** — browser-driven verification gate for work done outside `/build`. Feature check mode (default) and full sweep mode. Three-signal gate: functional scenarios, blind naive-reviewer goal-check, friction-free primary path. Fix loop with 3-attempt cap per failing signal. Uses `/browse` only; never `mcp__claude-in-chrome__*`.
+- **`skills/_shared/wiki.md`** — shared wiki integration reference for all SDD skills (read before first step, write on friction + phase-wrap).
+- **`skills/_shared/browser-review-engine.md`** — shared browser review engine used by `/dogfood` and `/review`. Four engines: scenario subagent, naive reviewer, three-signal gate, fix loop.
+- **`skills/_shared/voice.md`** — shared voice rules for all SDD skills (non-developer language, AUQ for decisions, no process talk).
+- **`skills/build/schemas/polish.md`** — schema for the project-root `polish.md` file (small bugs / polish / deferred requests, parallel to roadmap).
+- **`skills/build/schemas/tools.md`** — schema for the project-root `tools.md` file (machines, accounts, services, project-specific env vars).
+- **`skills/build/schemas/handoff.md`** — schema for the project-root `handoff.md` file (per-phase fresh-session gotchas, one section per phase).
+
+### Changed
+- **`/spec` Mode 1** — now scaffolds `polish.md`, `tools.md`, and `handoff.md` alongside the constitution. `tools.md` is seeded from the user's global `~/.claude/tools.md` if it exists (copies Machines / Accounts / Services sections, appends empty Project-specific stub).
+- **`/spec` Mode 3** — now appends a per-phase section to `handoff.md` between the architecture update and changelog steps.
+- **`/build` project state prime** — now reads `polish.md` (item count + 3 most recent) and `handoff.md` last section on every next-feature entry. Both surfaced in the `## Project state` working-context summary.
+- **`skills/build/schemas/living-docs.md`** — updated file tree to include `product.md`, `polish.md`, `tools.md`, `handoff.md`; added description sections for all three new project-root files.
+
 ## [0.3.0] — 2026-04-28
 
 ### Added

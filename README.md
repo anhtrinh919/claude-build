@@ -120,6 +120,9 @@ Every arrow is a stop. Claude shows you what it's doing before it does it. And i
 | `/backend` | Reads the design file directly. Implements in small task groups. Visual compliance before each commit. |
 | `/code-harness` | Called by `/backend` on every task group. Gates each change behind a spec contract and a verify script. |
 | `/review` | Validation checklist, then walks through the app like a user. Reports bugs, UX problems, visual drift. |
+| `/bad-idea` | Pressure-tests your idea before any building starts. Seven lenses, adversarial by default. Also auto-runs at the start of every new project. |
+| `/adversarial-review` | Structural critique of what was just built. Attacks module shape, abstraction necessity, and naming. Called by `/backend`; also user-invocable. |
+| `/dogfood` | Browser-driven testing of anything you just built outside the `/build` pipeline. Three-signal gate — doesn't report "done" until the user can actually accomplish their goal. |
 
 ---
 

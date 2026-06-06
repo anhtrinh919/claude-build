@@ -8,6 +8,16 @@ description: >
 
 Collect every decision needed to drive the build. Your output goes to `/spec` which writes the structured files. You ask — `/spec` writes.
 
+## Invocation contract
+
+| Mode | Model | Mechanism | Inputs (caller passes) | Outputs (skill produces) | Terminal state |
+|---|---|---|---|---|---|
+| 1 (new project) | Opus | inline | none (drills user from scratch) | constitution decisions handed to `/spec` Mode 1 | none — `/spec` writes |
+| 2 (phase scope) | Opus | inline | mission.md + roadmap.md present | phase decisions + primary flow list handed to `/spec` Mode 2 | none — `/spec` writes |
+| 3 (between phases) | Sonnet | subagent | project state summary (from `/build` prime), last completed phase context | replan notes handed to `/spec` Mode 3 | none — `/spec` writes |
+
+This skill never writes `.build-state.json`. Decisions flow forward via in-memory handoff (inline Opus) or subagent return text (Mode 3).
+
 ## Division of labor (internalize before starting)
 
 **user decides:** what to build, who it's for, scope, priorities, what success looks like.
@@ -28,6 +38,8 @@ Only ask if the choice changes user-facing tradeoffs (e.g., "Postgres means we c
 ---
 
 ## Drilling discipline
+
+**Always ask via `AskUserQuestion`.** Every discrete question with options or a yes/no goes through the structured option-picker tool — never enumerate options as a numbered list in chat and ask the user to type back which one. The picker UI exists; using it is mandatory. Plain text between calls is for orientation, summarising what was collected, or a single open-ended push (e.g. "name the actual person this is for"); plain text is NOT a substitute for an `AskUserQuestion` whose answer is a pick from options or a yes/no.
 
 **Decision-tree traversal — go deep on one branch before opening the next.** When a topic surfaces (e.g., "who uses this"), follow up on it with 3-6 follow-ups — name the role, name the consequence, name what they said directly, name an alternative they tried — before moving to the next topic. Do not round-robin across topics. Do not collect a shallow answer on each topic and call it done.
 
@@ -51,44 +63,11 @@ Check for `mission.md` in the project root:
 
 ## Wiki integration
 
-All `/ba` runs read and potentially write to the global wiki. Non-blocking — failures log and continue.
+Apply `${CLAUDE_PLUGIN_ROOT}/skills/_shared/wiki.md` with `$AGENT=ba` and `$TAGS` from `tech-stack.md` (Mode 1 has no stack — pass empty).
 
-### Read wiki
+**Friction trigger:** the user corrects, rejects, or re-answers the same question or decision topic 3+ times in one session. Title: `Phase <N> ba friction: <topic>`. Body: what was asked, what the user pushed back with, the final decision, and what to ask differently next time. Fire at most once per topic per session.
 
-Before the first `AskUserQuestion`:
-1. Determine tags from `tech-stack.md` if present (up to 5). For Mode 1, invoke with `--agent ba` only.
-2. Run:
-   ```
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/wiki.mjs" read --agent ba --tags "[tags]" --limit 5
-   ```
-3. If output has entries, index them under `## Relevant past learnings` in the skill's working context — titles only. Full bodies on demand.
-4. On `# No relevant entries` or CLI failure, log `No prior BA learnings` and continue.
-
-### Write learning
-
-**Friction trigger:** tracked internally across `AskUserQuestion` rounds. If the user corrects, rejects, or re-answers the same question or decision topic 3+ times in one session, write:
-
-```
-node "${CLAUDE_PLUGIN_ROOT}/scripts/wiki.mjs" save --auto \
-  --title "Phase <N> ba friction: <topic>" \
-  --tags "[tech-stack-tags]" \
-  --source "[project basename]" \
-  --body "[2–5 sentences: what was asked, what user pushed back with, final decision, what to ask differently next time]" \
-  --agent ba --trigger friction --phase <N>
-```
-
-Fire at most once per topic per session.
-
-**Phase-wrap trigger:** at the end of Mode 3, before invoking `/spec` Mode 3, write exactly one summary learning:
-
-```
-node "${CLAUDE_PLUGIN_ROOT}/scripts/wiki.mjs" save --auto \
-  --title "Phase <N> ba: <one-line summary>" \
-  --tags "[tech-stack-tags]" \
-  --source "[project basename]" \
-  --body "[2–5 sentences: what questions surprised the BA, which answers reshaped scope, what to drill harder next phase]" \
-  --agent ba --trigger phase-wrap --phase <N>
-```
+**Phase-wrap trigger:** at the end of Mode 3, before invoking `/spec` Mode 3. One entry per phase. Title: `Phase <N> ba: <one-line summary>`. Body: which questions surprised the BA, which answers reshaped scope, what to drill harder next phase.
 
 ---
 
@@ -101,7 +80,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/wiki.mjs" save --auto \
 
 Before planning anything, validate the problem is real. This is the most important grill. Skip nothing.
 
-Use `AskUserQuestion` for multi-option questions (up to 4 per call, 2–4 options each). Use plain text for open-ended pushes between calls.
+All questions with options or yes/no MUST go through `AskUserQuestion` (up to 4 per call, 2–4 options each). Plain text is reserved for the *single* open-ended push that follows an answer (e.g. "name the actual person"). Never enumerate options inline and ask the user to pick — the option-picker UI exists, use it.
 
 **Q1: What's the strongest evidence someone actually wants this?**
 Push until you hear: someone paid, someone was upset when it broke, a workflow built around this problem. Red flags: "500 waitlist signups," "VCs are excited," "people say it sounds useful." None of these are demand.
@@ -169,7 +148,7 @@ Identify the next phase from roadmap.md. Orient user: "Starting Phase [N]: [feat
 
 ### Part A: Scope grill
 
-Use `AskUserQuestion` for structured questions, plain text for pushes.
+All structured questions (multi-option, yes/no, confirmations) go through `AskUserQuestion`. Plain text is reserved for open-ended pushes between calls — never for asking the user to pick from a list.
 
 **Phase type (ask first — shapes everything downstream):**
 Ask one `AskUserQuestion`: "What kind of phase is this?"
@@ -177,9 +156,7 @@ Ask one `AskUserQuestion`: "What kind of phase is this?"
 - **Feature** — adds capability to an existing product (follows existing patterns)
 - **Rebuild** — visual or structural redesign of existing product (overrides existing patterns)
 
-Then ask: "Does this phase add new logic (new API endpoints, new DB tables, new server-side behavior)?" — this determines `tdd_guard` (on for logic work, off for pure UI / pure refactor).
-
-These two fields end up in `requirements.md` frontmatter and govern backend behavior. Getting them wrong silently fails later (e.g., rebuild phase that tries to preserve existing sidebars).
+This field ends up in `requirements.md` frontmatter and governs backend behavior. Getting it wrong silently fails later (e.g., rebuild phase that tries to preserve existing sidebars).
 
 **What this phase delivers:**
 - The roadmap entry says "[exact text from roadmap.md]." Does that still match what you want this phase to deliver?
@@ -225,9 +202,9 @@ Include this list in the handoff to `/spec`. Any story NOT in this list is a sec
 
 ### Handoff
 
-Tell user: "Got the full scope. Phase type: [initial/feature/rebuild]. TDD guard: [on/off]. `/spec` will write the requirements, implementation plan, and validation checklist — and show them to you for approval before touching the disk."
+Tell user: "Got the full scope. Phase type: [initial/feature/rebuild]. `/spec` will write the requirements, implementation plan, and validation checklist — and show them to you for approval before touching the disk."
 
-Invoke `/spec` Mode 2 with the phase type, TDD guard decisions, and primary flow list.
+Invoke `/spec` Mode 2 with the phase type and primary flow list.
 
 ---
 
@@ -253,7 +230,7 @@ Take the answers and invoke `/spec` Mode 3 for docs update, changelog, and branc
 
 - Never skip demand validation for new projects. It is the first gate.
 - Read constitution files before every Mode 2 or 3 session. Never start from zero on an existing project.
-- Use `AskUserQuestion` for all structured decisions. Plain text between calls for open-ended pushes.
+- **Hard rule:** every question with options or a yes/no goes through `AskUserQuestion`. Inline numbered/bulleted lists asking the user "which one?" are forbidden — they bypass the option-picker UI. Plain text is reserved for orientation, summarising what was just collected, and single open-ended pushes after an answer.
 - Cover every angle across however many rounds it takes. Don't rush to hand off.
 - user reacts; he doesn't pre-spec. Show him options, ask him to choose.
 - Hand off cleanly: tell the user what was collected and what `/spec` will write next.
