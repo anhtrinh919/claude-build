@@ -4,6 +4,8 @@ The browser-driven review pattern shared by `/dogfood` (post-implementation gate
 
 The caller supplies the **scope** (which scenarios, which user goal); this reference owns the **engine** (how subagents are briefed, what the gate checks, how the fix loop iterates).
 
+**Callers must run in the main session.** Every engine spawns subagents, and subagents cannot spawn subagents — a caller running as a subagent silently breaks every engine (one-level nesting rule, `${CLAUDE_PLUGIN_ROOT}/skills/_shared/subagent-policy.md`).
+
 ## Why Sonnet for the subagents
 
 Browser-driven scenario execution and naive first-impression review are both *execution* work, not architectural reasoning. Pinning Sonnet keeps cost predictable when the caller (`/dogfood`, `/review`) is invoked from Opus. Fix work — code edits, root-cause analysis — stays inline on the main agent (whatever model the caller runs on).
@@ -50,8 +52,9 @@ A subagent that *literally cannot* see the implementation tries to accomplish th
 **Brief template — caller fills the slots:**
 
 ```
-You are a user with this problem. You have never seen this app. You don't know what was just built or how. Open the app and try to accomplish your goal using only what you see on screen.
+You are a user with this problem. You don't know what was just built or how. Open the app and try to accomplish your goal using only what you see on screen.
 
+Persona (if provided — adopt it fully, including viewport): <persona line from the caller, or omit — default is a first-time user who has never seen this app>
 Your goal: <user-goal sentence — verbatim, nothing else from the spec>
 Memorable thing the experience should leave you with (if provided): <memorable-thing line from design-brief.md ## Design intent, or omit if none>
 
@@ -80,7 +83,9 @@ First-impression report — answer all of the following:
 
 **Hard rule — what the caller MUST NOT brief:** `requirements.md` (full), `plan.md`, `handover.md`, the diff, what was built, the implementation conversation, or any hint about which feature is being tested. The reviewer must be blind to the solution to give a real first-impression read.
 
-Pass ONLY: the user-goal sentence, the optional memorable-thing line, the URL, login credentials. Nothing else.
+Pass ONLY: the optional persona line, the user-goal sentence, the optional memorable-thing line, the URL, login credentials. Nothing else.
+
+**Persona variants (optional).** A caller may run Engine 2 several times with different persona lines (e.g. `/review`'s three-reviewer fleet: first-timer desktop, impatient mobile, returning user). Each variant is a separate fresh subagent with the identical blindness rules; the persona line changes the lens, never the information available. Callers that pass no persona get the default first-time reviewer.
 
 ---
 

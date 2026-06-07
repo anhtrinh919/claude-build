@@ -16,7 +16,9 @@ Step 1 must pass before Step 2 starts. No exceptions.
 
 | Mode | Model | Mechanism | Inputs (caller passes) | Outputs (skill produces) | Terminal state (this skill writes) |
 |---|---|---|---|---|---|
-| (single mode) | Sonnet for test execution + report writing; main agent (Opus default) for code fixes | subagent | spec directory, validation.md, mission.md (for design-tool track), running app | clean review report (success) OR cap-hit binary surface to user (failure) | `phase-complete` (clean convergence OR user picks Accept on cap-hit); `phase-blocked` (user picks Stop on cap-hit) |
+| (single mode) | Sonnet subagents for test execution + report writing; main session (Opus default) for orchestration + code fixes | **inline** (in `/build` session) | spec directory, validation.md, outcome-card.md, mission.md (for design-tool track), running app | clean review report (success) OR cap-hit binary surface to user (failure) | `phase-complete` (clean convergence OR user picks Accept on cap-hit); `phase-blocked` (user picks Stop on cap-hit) |
+
+**Why inline:** this skill orchestrates its own subagents (reviewer fleet, walk chunks, report writer) and its fix-loop agents must inherit the session's model — subagents can't spawn subagents (one-level nesting rule, `${CLAUDE_PLUGIN_ROOT}/skills/_shared/subagent-policy.md`), so running this skill as a subagent silently breaks both.
 
 The auto-fix loop (see "Auto-fix loop policy" below) is owned entirely by this skill — never surfaces technical decisions to the user except at the cap-hit binary. `reviewIteration` counter persists in `.build-state.json` across loop iterations.
 
@@ -30,7 +32,7 @@ Pinning the cheaper model on the right work keeps cost predictable when this ski
 |---|---|---|
 | Step 1 manual verification (browse passes) | **Sonnet subagent** | Execution work — navigate, observe, record. No architectural reasoning. |
 | Step 1.5 visual compliance (design ↔ built diff) | **Sonnet subagent** | Side-by-side comparison is execution work. |
-| Step 2 naive reviewer (Pre-2a.5) | **Sonnet subagent** (already, via Engine 2) | Blind first-impression — needs a fresh perspective, not deep reasoning. |
+| Step 2 reviewer fleet (Pre-2a.5) | **Three Sonnet subagents** (Engine 2, persona variants) | Blind first-impressions — fresh perspectives, not deep reasoning. |
 | Step 2 story walks + screen review (2a–2f) | **Sonnet subagent** | Same as Step 1 manual — execution, not reasoning. |
 | Step 2 report writing (the big structured report) | **Sonnet subagent** | Synthesis into a fixed template is execution work. |
 | Auto-fix loop dispatch (code edits + `/code-harness`) | **Subagent inheriting the main session model** (Opus by default) | Root-cause analysis + spec-correct fixes need full reasoning. |
@@ -60,9 +62,9 @@ This skill runs in a loop until all checks pass or the iteration cap is hit. Any
 4. **Scoped re-validation** (not a full re-entry from Step 0). Run only:
    - Every check that was failing in step 1 above. Validate from scratch — never trust the subagent's "fixed" claim.
    - **Regression band:** any user story whose handler shares a file with the touched-files list. (Cross-ref `requirements.md` user stories against the file list. If unsure, default to walking the story.)
-   - **Skip the naive reviewer (Pre-2a.5) unless naive-reviewer-itself was the failure being fixed.** Spawning a fresh naive reviewer on every loop iteration is wasted cost — when only Step 1 / 1.5 / 2a–2f checks were failing, the naive reviewer's previous verdict still stands until the last fix lands.
+   - **Skip the reviewer fleet (Pre-2a.5) unless the fleet signal itself was the failure being fixed** — and then re-verify with ONE fresh reviewer (the persona that failed), not all three. Spawning fresh reviewers on every loop iteration is wasted cost — when only Step 1 / 1.5 / 2a–2f checks were failing, the fleet's previous verdicts still stand until the last fix lands.
    - Skip Step 0 (scope drift detection) — the diff hasn't fundamentally changed; only fix-touched files have moved.
-5. **Last-fix-lands rule:** when scoped re-validation passes for the last failing check (no failures remain across the loop), run a **final full pass** — Step 1 fully, Step 1.5 fully, Step 2 (2a–2f) fully, AND the naive reviewer fresh. This is the "nothing else regressed" check. If the final full pass surfaces new failures, increment `reviewIteration` and re-enter the loop body. If it passes clean, write the convergence terminal state per "Reset + clean-convergence" below.
+5. **Last-fix-lands rule:** when scoped re-validation passes for the last failing check (no failures remain across the loop), run a **final full pass** — Step 1 fully, Step 1.5 fully, Step 2 (2a–2f) fully, AND the reviewer fleet fresh (all three personas). This is the "nothing else regressed" check. If the final full pass surfaces new failures, increment `reviewIteration` and re-enter the loop body. If it passes clean, write the convergence terminal state per "Reset + clean-convergence" below.
 
 **Cap:** If `reviewIteration >= 3` and there are still failures after the fresh run, stop the loop and surface once to the user as a binary:
 
@@ -250,21 +252,25 @@ Only runs after Step 1 fully passes.
 
 **Execution dispatch.** Step 2 has four execution chunks that all run as **Sonnet subagents** (`Agent` tool, `subagent_type: general-purpose`, `model: "sonnet"`):
 
-1. **Pre-2a.5 naive reviewer** — already Sonnet via Engine 2.
+1. **Pre-2a.5 reviewer fleet** — three blind Engine-2 reviewers, persona variants (see Pre-2a.5).
 2. **2a story walks** — one Sonnet subagent walks every user story end-to-end and returns the coverage table rows.
 3. **2b–2e screens / mobile / edge / nav** — one Sonnet subagent does all the screenshot-and-assess work and returns visual findings.
 4. **2f problem-resolution + design-intent check** — one Sonnet subagent does the cold-start walk and returns the verdict block.
 
-The main agent orchestrates: persona reset → dispatch naive (blocking) → dispatch 2a → dispatch 2b–2e → dispatch 2f → collect all findings → dispatch the report-writer Sonnet subagent (see "Step 2 report" below). Each subagent gets the relevant context (URL, credentials, the specific stories/screens for its chunk) plus the persona-reset sentences — never the implementation, never the diff, never `plan.md`.
+The main agent orchestrates: persona reset → dispatch fleet (blocking) → dispatch 2a → dispatch 2b–2e → dispatch 2f → collect all findings → dispatch the report-writer Sonnet subagent (see "Step 2 report" below). Each subagent gets the relevant context (URL, credentials, the specific stories/screens for its chunk) plus the persona-reset sentences — never the implementation, never the diff, never `plan.md`.
+
+**Chunks 2a → 2b–2e → 2f run sequentially by design — do NOT parallelize them.** They share one app instance with mutable seeded state: 2a mutates state while walking stories, 2b–2e screenshots would capture mid-mutation states, and 2f requires a blank cold-start. The fleet's internal concurrency rule (Pre-2a.5) is the only sanctioned parallelism in Step 2.
 
 You are a meticulous, opinionated power-user doing QA. You care about: things actually working, clear feedback, sensible defaults, no dead ends, no broken states. You are NOT reviewing code quality — you are reviewing the experience for humans.
 
-### Persona reset — anchor on the user's problem AND the design intent
+### Persona reset — anchor on the outcome card AND the design intent
 
 Before any browser work, do two reads:
 
-1. **Re-read `requirements.md`** and extract the **user goal** for this phase (the problem the user couldn't solve before, not the feature being added). Write it as one sentence:
-   > "I am a [user type] trying to [accomplish goal / solve problem]. I am opening this app for the first time."
+1. **Read `specs/<this phase>/outcome-card.md`** — the user-approved contract. Extract the **phase goal** and the **primary outcomes with their "Success looks like" signals**. Write the goal as one sentence:
+   > "I am a [user type] trying to [phase goal]. I am opening this app for the first time."
+   
+   Keep the outcomes + signals list at hand — 2f grades each one explicitly. (Legacy phase with no card: fall back to extracting the user goal from `requirements.md` as before.)
 
 2. **Read `specs/<this phase>/design-brief.md` `## Design intent`** and extract the **memorable thing** the experience is meant to leave the user with (the answer the user gave when /frontend asked "what's the one thing a user should remember or feel after using this?"). Write it as one sentence:
    > "The experience should leave them feeling [memorable thing]."
@@ -296,7 +302,7 @@ If the app redirects to login, check `.env`, `.env.local`, or `CLAUDE.md` in the
 
 ### Pre-2a: State Setup
 
-Before walking user stories, identify which stories require live run state (any story involving: a run in progress, a gate pending, a failure, a past run log). For those stories, seed the required state directly into the database using the API or direct DB insert. This is mandatory — do not skip a story because "it needs a real run."
+Before walking user stories, identify which stories require live run state (any story involving: a run in progress, a gate pending, a failure, a past run log). For those stories, seed the required state directly into the database using the API or direct DB insert. This is mandatory — do not skip a story because "it needs a real run." 
 
 **State seeding approach:**
 1. Start the dev server, create a test project pointing at a temp directory if needed.
@@ -310,19 +316,30 @@ Cleanup: delete test runs/projects created during review if they pollute the use
 
 ---
 
-### Pre-2a.5 — Naive reviewer pass (blind) — BLOCKING
+### Pre-2a.5 — Reviewer fleet pass (blind) — BLOCKING
 
-Apply **Engine 2** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/browser-review-engine.md`. Pass:
-- The user-goal sentence from "Persona reset" above (verbatim)
-- The memorable-thing line from `specs/<this phase>/design-brief.md` `## Design intent` if present (skip the line if no design brief, e.g. backend-only phases)
-- The running app URL + login credentials if needed
+Apply **Engine 2** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/browser-review-engine.md` **three times — one reviewer per persona**:
 
-**This step blocks 2a. Wait for the naive reviewer subagent to return before starting the 2a story walk.** Do NOT run them in parallel "to save time." 2a's whole job is to use naive's findings to focus what it walks more carefully and dedupe issues into a single consolidated report — if 2a starts before naive returns, naive's findings arrive too late to inform anything and every overlapping issue ends up logged twice (once by 2a, once by naive). The 2–4 minute naive reviewer wait is not dead time: while waiting, the only allowed work is *passive* preparation — listing the user stories you'll walk, confirming seeded state from Pre-2a is still intact, opening the dev tools console. No active 2a story navigation, no screenshots, no story-pass/fail recording until naive's report is in hand.
+1. **First-time user, desktop** — viewport 1280px. Persona line: "You are a first-time user on a desktop computer. You have never seen this app."
+2. **Impatient user, mobile** — viewport 390×844. Persona line: "You are on your phone, in a hurry, with little patience. If something isn't obvious within a few seconds, you note it and try at most once more before giving up on that path."
+3. **Returning user, second visit** — viewport 1280px. Persona line: "You used this app once yesterday to accomplish this same goal. Today you're back to do it again — you remember roughly what you did but none of the details. Note anything that's harder than it should be the second time."
+
+Each reviewer gets ONLY: its persona line, the phase-goal sentence from "Persona reset" (verbatim), the memorable-thing line from `specs/<this phase>/design-brief.md` `## Design intent` if present, the running app URL + login credentials. Identical blindness rules per Engine 2.
+
+**Concurrency:** run the three in parallel ONLY if the app supports per-user isolation (each reviewer gets its own login/account so their actions don't contaminate each other's first impressions). Otherwise run them sequentially — three blind reviewers mutating shared state mid-pass corrupt the read. Sequential cost (~3× 2–4 min) is acceptable; contaminated findings are not.
+
+**Aggregation (2-of-3 rule):**
+- Flagged by **2+ reviewers** → confirmed finding, straight into the consolidated severity tables.
+- Flagged by **1 reviewer** → run one targeted Engine-1 scenario re-check on that specific issue before it may enter the fix loop. Confirms → finding. Doesn't reproduce → log as LOW observation only. This protects fix-loop iterations from single-reviewer false positives.
+- **Goal verdict for the report = the worst of the three** (any "No" beats "Partial" beats "Yes").
+- **Cost rule:** the full fleet runs on iteration 1 and the final full pass only. The existing skip-naive-on-iterations-2+ rule applies to the whole fleet; if the fleet signal itself was the failure being fixed, re-verify with ONE fresh reviewer (the persona that failed), not all three.
+
+**This step blocks 2a. Wait for all fleet reviewers to return before starting the 2a story walk.** Do NOT run 2a in parallel "to save time." 2a's whole job is to use the fleet's findings to focus what it walks more carefully and dedupe issues into a single consolidated report — if 2a starts before the fleet returns, the findings arrive too late to inform anything and every overlapping issue ends up logged twice. The wait is not dead time: while waiting, the only allowed work is *passive* preparation — listing the user stories you'll walk, confirming seeded state from Pre-2a is still intact. No active 2a story navigation, no screenshots, no story-pass/fail recording until the fleet's reports are in hand.
 
 **/review-specific aggregation rules** (extend the engine's severity tags):
 
-- **Findings do NOT fire the auto-fix loop independently.** They aggregate with 2a–2f results; the loop is considered once at the end of Step 2 based on the consolidated severity list. Firing on naive findings alone would waste an iteration — story walks would catch the same issues and re-trigger.
-- **Use naive findings to focus story walks and dedupe.** When 2a runs, you already know what naive flagged. If naive said "Story 3 area was confusing" and 2a confirms it, that is **one** issue in the consolidated report (UX Issues table), not two. The Naive Reviewer section of the report records the high-level "did the user accomplish the goal" verdict; specific issues live in the Bugs / UX Issues / Visual Issues tables.
+- **Findings do NOT fire the auto-fix loop independently.** They aggregate with 2a–2f results; the loop is considered once at the end of Step 2 based on the consolidated severity list. Firing on fleet findings alone would waste an iteration — story walks would catch the same issues and re-trigger.
+- **Use fleet findings to focus story walks and dedupe.** When 2a runs, you already know what the fleet flagged. If a reviewer said "Story 3 area was confusing" and 2a confirms it, that is **one** issue in the consolidated report (UX Issues table), not two. The Reviewer Fleet section of the report records the high-level "did the user accomplish the goal" verdicts; specific issues live in the Bugs / UX Issues / Visual Issues tables.
 
 ---
 
@@ -330,7 +347,7 @@ Apply **Engine 2** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/browser-review-eng
 
 **This step is not optional. Every user story in `requirements.md` must be walked.** A story cannot be marked as passing without a screenshot proving it.
 
-**Precondition — naive reviewer must have returned.** Pre-2a.5 is BLOCKING (see above). Do not start the 2a walk until the naive reviewer subagent has returned its report and you have read its findings. Running 2a in parallel with the naive reviewer breaks the dedupe rule and the focus-the-walk rule. If you find yourself about to navigate to a story while naive is still in flight, stop — wait, then walk.
+**Precondition — the reviewer fleet must have returned.** Pre-2a.5 is BLOCKING (see above). Do not start the 2a walk until all fleet reviewers have returned and you have read their findings. Running 2a in parallel with the fleet breaks the dedupe rule and the focus-the-walk rule. If you find yourself about to navigate to a story while a reviewer is still in flight, stop — wait, then walk.
 
 For each user story in `requirements.md`, in order:
 
@@ -402,13 +419,17 @@ Click through the main navigation. Screenshot each destination. Do active states
 
 ---
 
-### 2f — Problem resolution check + design-intent check
+### 2f — Outcome card grading + design-intent check
 
-Final check before the report. Return to BOTH sentences from "Persona reset" at the top of Step 2 — the user-goal sentence and (if collected) the memorable-thing sentence.
+Final check before the report. Return to the outcome card from "Persona reset" — the phase goal, the primary outcomes with their "Success looks like" signals — and (if collected) the memorable-thing sentence.
 
-Starting from a blank state — no test fixtures, no inside knowledge of where things live — try to solve the original user problem using only what is visible on screen. Walk it as a real first-time user would.
+Starting from a blank state — no test fixtures, no inside knowledge of where things live — walk **each primary outcome on the card** using only what is visible on screen, as a real first-time user would. For each outcome record:
 
-Answer four questions explicitly in the report:
+> **Outcome [N]:** "[card outcome verbatim]". **Delivered in a recognizable way?** Yes / Partial / No — [one line]. **Signal seen:** [the on-screen signal observed, vs the card's "Success looks like" line].
+
+`Partial` or `No` on any **primary** outcome → **HIGH** finding (the phase's contract is unmet). These rows are the "Outcome Card Verdict" block at the top of the report.
+
+Then answer four questions explicitly in the report:
 
 1. **Discoverability:** Is the path to solving the problem discoverable from the entry screen, without guidance? If a user landed here cold, would they know where to start?
 2. **Recognition of success:** When the problem is solved, does the user know it was solved? What specifically tells them — a banner, a state change, a new item appearing? "It just navigates to a new page" is not recognition.
@@ -438,14 +459,15 @@ After all four Step 2 execution chunks have returned, **delegate the report writ
 You are synthesising SDD phase review findings into the Step 2 report. No tools — text only.
 
 Persona reset:
-- Original problem: <user-goal sentence verbatim>
+- Phase goal: <goal sentence verbatim>
+- Outcome card primary outcomes + signals: <verbatim>
 - Memorable thing (omit if none): <memorable-thing sentence verbatim>
 
 Raw findings:
-- Naive reviewer (Engine 2 output): <verbatim>
+- Reviewer fleet (3× Engine 2 output, persona-labelled): <verbatim>
 - 2a story walks (per-story PASS/⚠/✗ rows): <verbatim>
 - 2b–2e screen / mobile / edge / nav findings: <verbatim>
-- 2f problem-resolution + design-intent verdict block: <verbatim>
+- 2f outcome-card grading + design-intent verdict block: <verbatim>
 
 Apply the severity rules and health-score deductions from this SKILL.md ("Issue severity + health score" section, pasted below):
 <paste the rules block verbatim>
@@ -467,8 +489,14 @@ Main agent reads the returned report and uses it to (a) trigger the auto-fix loo
 **Validation:** Step 1 PASS — [N] automated + [N] manual checks
 **Date:** [today]
 
+#### Outcome Card Verdict (from 2f — this is the phase's contract)
+| # | Primary outcome | Delivered? | Signal seen vs promised |
+|---|---|---|---|
+| 1 | [card outcome] | Yes / Partial / No | [one line] |
+Any Partial/No row = HIGH finding. (Legacy phase without a card: replace this table with the Problem Resolution block below.)
+
 #### Problem Resolution (from 2f)
-**Original problem:** "[user-goal sentence]"
+**Phase goal:** "[goal sentence]"
 **Solved in a recognizable way?** Yes / Partial / No — [one-line reason]
 **Recognition signal:** [what specifically tells the user it worked, or "none — user has to infer"]
 **Likely first-attempt mistakes:** [top 1–2, or "none observed"]
@@ -477,10 +505,10 @@ Main agent reads the returned report and uses it to (a) trigger the auto-fix loo
 **Memorable thing:** "[memorable-thing sentence]"
 **Did the experience deliver that?** Yes / Partial / No — [one-line reason citing specific moments]
 
-#### Naive Reviewer (blind first-impression)
-**Goal accomplished?** Yes / Partial / No
-**Top friction:** [1–3 bullets from the subagent's report — what confused or stopped them]
-*(Findings already merged into Bugs / UX Issues / Visual Issues tables below.)*
+#### Reviewer Fleet (blind first-impressions — 3 personas)
+**Goal accomplished?** first-timer: Yes/Partial/No · impatient-mobile: Yes/Partial/No · returning: Yes/Partial/No (verdict = worst)
+**Top friction:** [1–3 bullets across the fleet — what confused or stopped them; tag the persona]
+*(Findings already merged into Bugs / UX Issues / Visual Issues tables below; 1-of-3 flags verified or downgraded per the 2-of-3 rule.)*
 
 #### User Story Coverage
 Every story from requirements.md must appear in this table.
@@ -549,9 +577,9 @@ HIGH and MEDIUM issues both trigger the auto-fix loop — the user is non-techni
 - Always use browse — never Puppeteer, curl, or reading code to infer appearance.
 - Screenshot every story. "I checked the code" does not count as UX verification.
 - Use Pre-2a state seeding for any story requiring an active/past run. Never skip a story because it needs live state — seed it.
-- **Naive reviewer subagent (Pre-2a.5) is mandatory AND blocking.** Persona-roleplay alone won't catch what a fresh user notices — you built this and can't unsee it. The subagent must be briefed with ONLY the user goal and the URL. Never pass it `requirements.md` (full), `plan.md`, `handover.md`, the diff, or any implementation context. **Wait for the naive reviewer to return before starting 2a story walks.** Parallel execution defeats the dedupe and focus-the-walk rules — the 2–4 minute wait is the price of a clean consolidated report.
+- **The reviewer fleet (Pre-2a.5) is mandatory AND blocking.** Persona-roleplay alone won't catch what a fresh user notices — you built this and can't unsee it. Each reviewer is briefed with ONLY its persona line, the phase goal, and the URL. Never pass `requirements.md` (full), `plan.md`, `handover.md`, the diff, or any implementation context. **Wait for all three to return before starting 2a story walks.** Apply the 2-of-3 rule before any fleet finding enters the fix loop. Parallel fleet execution only with per-user isolation; otherwise sequential.
 - **Load the project's design skill in 2b** based on `mission.md` `## Design Tool`. Visual review uses the same taste lens as `/frontend`.
-- **2f problem-resolution check is mandatory.** Every report must include the "Original problem … Solved in a recognizable way?" verdict. Functional pass without recognition of success = MEDIUM finding minimum.
+- **2f outcome-card grading is mandatory.** Every report leads with the Outcome Card Verdict table — one row per primary outcome, graded against the card's "Success looks like" signal. Partial/No on a primary outcome = HIGH. Functional pass without recognition of success = MEDIUM finding minimum.
 - Rate severity honestly. Not everything is critical.
 - Fix minor issues silently. **HIGH and MEDIUM go through the auto-fix loop — never escalate technical decisions to the user.**
 - The user is non-technical. The only thing they ever see from this skill is a clean report (success) or the binary cap-hit surface (after 3 failed fix attempts). Never ask them which bug to prioritise, which fix to accept, or whether a deviation matters.

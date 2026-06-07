@@ -1,7 +1,7 @@
 ---
 name: spec
 description: >
-  Translates BA session output into structured SDD documents. Three modes: (1) new project — writes mission.md + tech-stack.md + roadmap.md and scaffolds living docs; (2) start phase — creates specs/YYYY-MM-DD-[feature]/ with requirements.md + plan.md + validation.md; (3) between phases — updates living docs, runs changelog, merges branch. Always invoked by /ba or /build after a drilling session. Never standalone.
+  Translates BA session output into structured SDD documents. Three modes: (1) new project — writes mission.md + tech-stack.md + roadmap.md and scaffolds living docs; (2) start phase — parallel Sonnet+Opus drafters write requirements.md + plan.md + validation.md under specs/YYYY-MM-DD-[feature]/, validated against the user-approved outcome card by a 3-skeptic panel, then auto-proceeds (no user approval of spec files); (3) between phases — updates living docs, runs changelog, merges branch. Always invoked by /ba or /build after a drilling session. Never standalone.
 ---
 
 # /spec — Structured Document Writing
@@ -12,8 +12,8 @@ Input comes from a `/ba` session. Output is structured markdown files. No drilli
 
 | Mode | Model | Mechanism | Inputs (caller passes) | Outputs (skill produces) | Terminal state (this skill writes) |
 |---|---|---|---|---|---|
-| 1 (new project) | Sonnet | subagent | BA Mode 1 decisions verbatim | mission.md, product.md, tech-stack.md, roadmap.md + scaffolded living docs | `constitution-complete` |
-| 2 (phase spec) | Sonnet | subagent | BA Mode 2 decisions verbatim, phase number, feature slug | requirements.md, plan.md, validation.md under `specs/YYYY-MM-DD-<slug>/`; feature branch created | `spec-complete` (also writes `requirementsHash`) |
+| 1 (new project) | Sonnet | subagent | BA Mode 1 decisions verbatim | mission.md, product.md, tech-stack.md, roadmap.md + scaffolded living docs; returns latent-decisions list + product-story summary for `/build`'s gate | `constitution-complete` |
+| 2 (phase spec) | Sonnet + Opus drafters, Sonnet skeptic panel | **inline** (in `/build` session — orchestrates parallel subagents; one-level nesting rule, see `_shared/subagent-policy.md`) | BA Mode 2 decisions verbatim, phase number, feature slug, approved `outcome-card.md` path | requirements.md, plan.md, validation.md under `specs/YYYY-MM-DD-<slug>/`; feature branch created; **auto-proceeds — no user approval** | `spec-complete` (also writes `requirementsHash`) |
 | 3 (between phases) | Sonnet | subagent | BA Mode 3 replan notes verbatim, project state summary | updated WIKI.md, README.md, docs/api.md, docs/decisions.md, docs/architecture.md, CHANGELOG.md; merged feature branch | none — `/build` owns the next-phase write; this skill only nulls `currentSubStep` on clean exit |
 
 ## Mode detection
@@ -36,51 +36,30 @@ Apply `${CLAUDE_PLUGIN_ROOT}/skills/_shared/wiki.md` with `$AGENT=spec` and `$TA
 
 ---
 
-## Latent-decisions surface (shared procedure — both Mode 1 and Mode 2)
+## Latent decisions — collection and routing (shared procedure — both Mode 1 and Mode 2)
 
-Every spec write involves choices the user did not explicitly hand to you. Some come from BA Mode 1/2 verbatim — those are *locked*, not latent. Latent decisions are the ones you (the spec subagent) made silently while filling the templates because the BA pack didn't speak to them. They include things like: a tech-stack micro-choice (which auth library), a scoping inference (single-mart per pivot, when the BA pack didn't say either way), a structural pattern (static registry vs DB-backed), an interaction default (auto-save debounce timing), an exclusion you added to keep the phase tight, an assumption about an unspecified flow.
+Every spec write involves choices the user did not explicitly hand over. Some come from BA Mode 1/2 verbatim — those are *locked*, not latent. Latent decisions are the ones made silently while filling the templates because the BA pack didn't speak to them: a tech-stack micro-choice (which auth library), a scoping inference, a structural pattern, an interaction default (auto-save debounce), an exclusion added to keep the phase tight, an assumption about an unspecified flow. They are the most common source of post-spec rework.
 
-These are the most common source of post-approval rework — the user reads the spec, says "looks good," then discovers two phases later that something they would have argued about was decided silently. Surface them at the gate so the user can confirm or push back **before** the spec hardens.
+The user never reads spec files, so latent decisions are not presented as a reading list. They are **collected by whoever wrote the docs and routed by whoever runs inline**:
 
-**Procedure:** after writing the files but before the AskUserQuestion approval gate, scan your own working context for choices you made that weren't in the BA pack. Output them in this exact format as part of the same approval message:
-
-```markdown
-### Subagent design decisions you should sanity-check
-
-These weren't in the locked BA pack — I decided them while writing the spec. None violate locked scope, but they're load-bearing.
-
-#: 1
-**Decision:** [one-sentence statement of what you decided — concrete, not abstract]
-**Why I'm flagging:** [one-to-two sentences: what the alternative was, what it locks in, why a non-developer reader could miss this]
-────────────────────────────────────────
-#: 2
-**Decision:** [...]
-**Why I'm flagging:** [...]
-────────────────────────────────────────
-(continue numbering for each latent decision)
-```
+**Collection.** Every doc-writing agent (Mode 1 subagent; Mode 2 drafters) returns a `## Latent decisions` list alongside its content — one sentence per choice that wasn't in the BA pack.
 
 **What qualifies (include):**
 - A scope inference not in the BA pack ("single-mart per pivot", "phase locks to read-only").
-- A tech micro-choice not in `tech-stack.md` already ("static TS registry vs DB-introspection", "Zod for validation, not Yup").
-- A behavior default the user never named ("config auto-saves on drag with 800ms debounce", "polling at 5s").
-- An exclusion you added to a "Not in this phase" list because the BA pack was ambiguous.
-- An assumption about an unspecified user flow ("if the user dismisses the modal, treat it as cancel, not save").
-- A name or label you picked when the BA pack used a placeholder.
+- A tech micro-choice not already in `tech-stack.md` ("Zod for validation, not Yup").
+- A behavior default the user never named ("config auto-saves on drag with 800ms debounce").
+- An exclusion added to "Not in this phase" because the BA pack was ambiguous.
+- An assumption about an unspecified user flow ("dismissing the modal = cancel, not save").
+- A name or label picked where the BA pack used a placeholder.
 
-**What does NOT qualify (skip):**
-- Anything that's verbatim from the BA decisions handoff — that's locked, not latent.
-- File names, directory structure, internal variable names — implementation details, not user-facing decisions.
-- Things the user has explicitly seen in mission.md / tech-stack.md / roadmap.md from a previous mode.
-- Trivial defaults that have one obvious answer (CSS reset, charset declaration).
+**What does NOT qualify (skip):** anything verbatim from the BA handoff; file names / directory structure / variable names; things the user already approved in a prior mode; trivial one-obvious-answer defaults. Aim for 2–6 items per writer; zero means you didn't look hard enough.
 
-**Calibration:**
-- Aim for 2–6 items per spec write. Zero items means you didn't look hard enough — every spec has at least one inference. More than 8 items means you're listing implementation noise — re-filter.
-- Order by load-bearing-ness: the inference that locks the most downstream work goes first.
-- Keep "Decision" to one sentence. Keep "Why I'm flagging" to one or two. The user is non-technical — name the trade-off in business terms ("means adding new fields = code change, not data change") not implementation terms ("requires a redeploy").
-- If you flagged a decision in a previous round of this same spec write and the user already responded to it, drop it from the next round — don't re-litigate.
+**Routing (run by the inline orchestrator — Mode 2 main session during reconciliation; `/build` for Mode 1):** merge and dedupe all writers' lists, then split each decision:
 
-**Where it appears in the message:** after the existing self-check (story↔task↔validation coverage) and before the "Ready to proceed?" AskUserQuestion. Same chat message — the user reads coverage gaps and latent decisions side-by-side, then decides whether to approve.
+- **Experience-affecting** — the user would see, feel, or be constrained by it (an interaction default, a visible behavior, a capability boundary, anything touching the outcome card's promises): **ask immediately**, one `AskUserQuestion` per decision in the standard voice-rule shape — "I'd do X — it means Y for you. OK?" Fold the answer into the docs before the skeptic panel runs. Do not batch for a later gate.
+- **Invisible-technical** — no user-perceivable difference between the alternatives: do NOT ask. Include the list in the skeptic panel's brief (lens 3 judges them better than a non-developer could) and record each in `docs/decisions.md` (`**[Decision]** — Why: [reason]. Alternatives: [considered and rejected].`).
+
+When unsure which side a decision falls on, treat it as experience-affecting — a wasted 5-second question is cheaper than a phase of rework.
 
 ---
 
@@ -90,7 +69,7 @@ These weren't in the locked BA pack — I decided them while writing the spec. N
 
 Input: constitution decisions from `/ba` Mode 1 (mission, tech stack, roadmap, exclusions).
 
-**Approval flow:** Write all constitution files to disk first (Steps 1–2). Then run the **Latent-decisions surface** procedure (see shared section below) — the user almost never spots silently-inferred decisions inside finished docs, so list them explicitly before the gate. Then tell the user where the files are and ask them to review directly — they will either comment in the files or in chat. Use `AskUserQuestion` only after they've had a chance to read: "Reviewed the constitution files. Ready to proceed to Phase 1 spec?" with options "Yes, proceed" / "I have changes." Do not proceed to Phase 1 until confirmed.
+**Approval flow (outcome-only — the user never reads the files):** Write all constitution files to disk (Steps 1–2), then return two things to `/build` in your final text: (1) the **Latent decisions** list per the shared collection procedure, and (2) a **product story** — a plain-language summary covering: what the product does and for whom (from mission.md), what each roadmap phase delivers in one line each, and what the product will never do. No file paths, no tech terms — `tech-stack.md` is written but never presented; technology is Claude's job. `/build` owns the gate: it surfaces the story, asks any experience-affecting latent decisions, and gets the user's approve via `AskUserQuestion`. This skill does not ask the user anything.
 
 ### Step 1 — Write constitution (4 files)
 
@@ -120,16 +99,6 @@ The operator visually skips files that lead with this blockquote; agents still r
 - `docs/architecture.md` — prefix line, then tech stack section copied from tech-stack.md; rest TBD
 - `docs/api.md` — prefix line, then header only: "# API Surface — *(Updated per phase)*"
 - `docs/decisions.md` — prefix line, then seed with decisions already recorded in tech-stack.md Key Technical Decisions table
-- `polish.md` — prefix line, then headers from the polish template at `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/polish.md` (Open buckets + Done). Empty body under each header. Runs in parallel with `roadmap.md` for small unscheduled work.
-- `tools.md` — see Step 2a below (seeded from the user's global `~/.claude/tools.md`, not a blank scaffold).
-- `handoff.md` — prefix line, then header: "# Project handoff notes" + the one-line orienting paragraph from the handoff template at `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/handoff.md`. No phase sections yet — `/spec` Mode 3 appends the first one when Phase 1 completes.
-
-### Step 2a — Seed `tools.md` from global master
-
-Read the user's global `~/.claude/tools.md` if it exists.
-
-- **If present:** copy the `## Machines`, `## Accounts`, and `## Services` sections verbatim into the project's `tools.md`, then append the empty `## Project-specific` section from the schema at `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/tools.md`. Add the prefix line and a one-line header note: "Synced from `~/.claude/tools.md` at constitution time — refresh manually if global changes."
-- **If missing:** write only the `## Project-specific` section (no machine/account snapshot) and surface a one-line note to the user: "Global `~/.claude/tools.md` not found — machine/account sections skipped for this project. Create the global file once to seed future projects." Do not block constitution completion on this.
 
 ### Step 3 — Seed WIKI from global WIKI
 
@@ -151,7 +120,7 @@ If no global WIKI yet: skip silently.
 This is the resume anchor for the new-project path. Constitution is a phase boundary — `/build` stops here and waits for the user to re-invoke. Without the state write, a compaction during the user's pause leaves the project looking unconstituted to the next `/build`, which restarts at Mode 1.
 
 > **Constitution written.**
-> **Files created:** mission.md, product.md, tech-stack.md, roadmap.md, polish.md, tools.md, handoff.md, README.md, WIKI.md, CHANGELOG.md, docs/architecture.md, docs/api.md, docs/decisions.md
+> **Files created:** mission.md, product.md, tech-stack.md, roadmap.md, README.md, WIKI.md, CHANGELOG.md, docs/architecture.md, docs/api.md, docs/decisions.md
 > **Phase 1 feature:** [feature name from roadmap]
 > **Ready to scope Phase 1.**
 
@@ -161,28 +130,21 @@ This is the resume anchor for the new-project path. Constitution is a phase boun
 
 **Step 0:** Run the Read wiki procedure from the Wiki integration section — pull tags from `tech-stack.md`, invoke with `--agent spec`. Summary goes into the skill's working context.
 
-**Friction hook:** if during this phase the user returns with spec modifications after having approved this spec, invoke the Write learning procedure with `--trigger friction --phase <N>` before re-entering Mode 2. Do not repeat for the same area within one session.
+**Friction hook:** if during this phase the user changes the outcome card after approving it (scope creep signal), invoke the Write learning procedure with `--trigger friction --phase <N>` before re-entering Mode 2. Do not repeat for the same area within one session.
 
-Input: phase decisions from `/ba` Mode 2 (scope, user stories, screen inventory, competitor patterns, API needs, constraints).
+Input: phase decisions from `/ba` Mode 2 (scope, user stories, screen inventory, competitor patterns, API needs, constraints) + the user-approved `outcome-card.md` (the contract everything must trace to).
 
 **Scope challenge (before writing anything):** Search the existing codebase before speccing new work.
 
 1. For each feature in the BA handoff: does any existing file, route, component, or utility already handle part of it? List what exists and what's genuinely new.
 2. Identify the minimum set of changes needed — flag if more than 8 files or 2+ new abstractions are involved and ask whether to reduce scope before writing the spec.
 3. Note any deferred items in `roadmap.md` that overlap with this phase — can any be bundled without expanding scope?
-4. Read project-root `polish.md` (if present). For any `## Open — *` item that touches the same surface as the current phase, flag it to the user once before writing — "polish item X overlaps with this phase, fold it in or leave it open?" Do not silently sweep polish items into the spec.
 
 Output a brief "What already exists / What we're actually adding" summary at the top of the working context before writing. This is for the spec author only — not a user-facing deliverable.
 
-**Approval flow:** Write all three spec files to disk first (Steps 1–3). Before presenting for approval, run this self-check and surface any gaps in one message:
-- Every user story maps to at least one task group in `plan.md`
-- Every task group has a corresponding check in `validation.md`
-- All API contracts specify request shape, success response, and all error conditions (not just "500: unexpected error")
-- Primary flow stories from `/ba` are explicitly covered in `validation.md` manual checks
+**Pipeline (no user approval — the card is the contract):** Draft all three spec files via parallel agents (Step 2) → main-session reconciliation + latent-decision routing (Step 3) → skeptic panel + fix loop (Step 4) → write files and auto-proceed (Step 5). The user approved the outcome card in `/ba`; the specs are machine-validated against it. The only user contact in this mode is the immediate-ask on experience-affecting latent decisions (see shared routing procedure) and the rare skeptic-cap-hit surface.
 
-Then run the **Latent-decisions surface** procedure (see shared section below) and present its output to the user as part of the same approval message. Then ask the user to review directly. Use `AskUserQuestion` after they've reviewed: "Reviewed the spec files. Ready to proceed to frontend?" with options "Yes, proceed" / "I have changes." Do not proceed to frontend until confirmed. This gate is mandatory — SDD does not allow implementation to start from an unapproved spec.
-
-**Hash on approval (drift detector):** the moment the user replies "Yes, proceed":
+**Hash on auto-proceed (drift detector):** the moment Step 4 converges and the files are written:
 
 1. Compute `sha256sum specs/YYYY-MM-DD-[feature-slug]/requirements.md | cut -d' ' -f1`.
 
@@ -197,7 +159,7 @@ Then run the **Latent-decisions surface** procedure (see shared section below) a
 
 This is the resume anchor + drift detector in one write. If context is compacted between this skill ending and `/frontend` starting, the next `/build` reads `spec-complete` and jumps straight to Step 2 (Frontend) instead of re-running `/ba` Mode 2 + the 3-doc spec write.
 
-The hash is taken **after** the approval reply, never before — an in-progress edit must not generate a stale hash. Only `/spec` Mode 2 writes `requirementsHash`.
+The hash is taken **after** the skeptic panel converges and the final files are on disk, never mid-fix-loop — an in-progress edit must not generate a stale hash. Only `/spec` Mode 2 writes `requirementsHash`.
 
 ### Drift detection (downstream skills should run on entry)
 
@@ -213,58 +175,106 @@ Use today's date: `date +%Y-%m-%d`. Feature slug from the roadmap entry, kebab-c
 
 Also create a feature branch: `git checkout -b phase-N-[feature-slug]` where N is the phase number from roadmap.md.
 
-### Step 2 — Write requirements.md
+### Step 2 — Parallel spec drafting
 
-Use schema at `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/requirements.md`. Fill every section:
+Spawn two agents in parallel (`Agent` tool — briefing rules in `${CLAUDE_PLUGIN_ROOT}/skills/_shared/subagent-policy.md`). Both work from the BA Mode 2 decisions verbatim, the approved outcome card, and the scope-challenge summary from Step 1.
 
-- **Frontmatter block** (required, at top): `phase`, `type` (`initial` | `feature` | `rebuild`). These come from `/ba` Mode 2 Part A. Missing or wrong `type` causes downstream skills to misbehave (e.g. a `rebuild` with `type: feature` will preserve old UI patterns that should be deleted).
-- **Scope:** one paragraph — what this phase delivers, what a user can do on completion that they couldn't before
-- **User stories:** one per major user action, specific ("I can filter the list by date" not "I can manage content"). Each story must reference its Named Flow and step from `product.md` — format: `[Flow name, Step N]`. A story with no flow reference is incomplete.
-- **UI requirements:** every screen + every state (default, empty, loading, error, mobile) — derived from the screen inventory collected in `/ba`. Describe **behavior and key elements**, not visual treatment. Visual treatment lives in the design file (produced by `/frontend`).
-- **Data model:** all tables/schemas, field names, types, relationships
-- **API contracts:** every endpoint needed by the frontend. Method, path, auth, request shape, success response, all error conditions. Frontend and backend both build from these — they are the shared contract.
-- **Constraints & context:** business rules, patterns to follow from tech-stack.md, tone
-- **Excluded from this phase:** named explicitly
+**Sonnet agent (`model: "sonnet"`) — user-facing specs (requirements.md + validation.md):**
 
-Validation rule: every API contract must have error responses specified. "500: unexpected error" alone is not sufficient — name the domain-specific error conditions.
+```
+You are writing the user-facing spec files for a software phase. Do not write any files — return content only.
 
-### Step 3 — Write plan.md
+BA handoff: [paste full BA Mode 2 decisions verbatim]
+Outcome card (the user-approved contract — every requirement must serve it): [paste outcome-card.md verbatim]
+Scope summary: [paste scope challenge output — what already exists / what's new]
+Phase: [N], Feature slug: [slug], Spec directory: specs/YYYY-MM-DD-[slug]/
+Tech stack: [paste tech-stack.md constraints and non-negotiables]
 
-Use schema at `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/plan.md`. Organize as numbered task groups, independently reviewable. Each group = one coherent slice that code-harness can implement and verify before moving on.
+Write requirements.md using schema at ${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/requirements.md. Fill every section:
+- Frontmatter block: phase (integer), type (initial | feature | rebuild)
+- Scope: one paragraph on what this phase delivers
+- User stories: one per major user action, each referencing its Named Flow + step from product.md, format [Flow name, Step N]
+- UI requirements: every screen + every state (default, empty, loading, error, mobile) — behavior and key elements only, no visual treatment
+- Data model: all tables/schemas, field names, types, relationships
+- API contracts: every endpoint — method, path, auth, request shape, success response, ALL domain-specific error conditions (not just 500)
+- Constraints & context: business rules, tone, patterns from tech-stack.md
+- Excluded from this phase: named explicitly
 
-**Design-agnostic contract.** `plan.md` is written *before* `/frontend` produces the design file. Any visual specifics written here (hex values, Tailwind classes, pixel sizes, font names) will go stale once the design is approved and will silently contradict the design file. Do not include them.
+Write validation.md using schema at ${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/validation.md:
+- Automated checks: specific commands that exit 0 on success (TypeScript typecheck, named unit tests, curl for each API contract)
+- Manual verification: specific steps at named viewport sizes, binary pass/fail
+- Every user story must have at least one manual check
+- Outcome checks: one binary, demonstrable check per outcome-card primary outcome — phrased so a non-technical person can verify it on screen
+- Definition of Done: all criteria listed; the outcome checks are part of it
 
-- Describe **what each group delivers** (user-visible capability, data path, API surface, integration point)
-- Name components, files, modules, endpoints specifically — but do not describe their visual treatment
-- Each group includes a one-line **Verify:** field with the command that proves it's done
-- Each group includes a **Depends on:** field listing earlier groups it requires
+Return both files as raw markdown content, each labelled with its filename, followed by a "## Latent decisions" list — one sentence per choice you made that wasn't in the BA handoff or outcome card (scope inferences, behavior defaults, added exclusions, assumed flows). No other commentary.
+```
 
-Typical group structure:
-- Group 1–2: Shared primitives, layout shell (components named; visuals come from design file at build time)
-- Group 3: Page-level composition (e.g. "rebuild the board page — cards, columns, drag-and-drop wiring")
-- Group 4: Database layer (if any)
-- Group 5: API routes (if any)
-- Group 6: Integration, edge cases, error handling
-- Group 7: Story walk — verify every user story end-to-end
+**Opus agent (`model: "opus"` — alias only, never a version-pinned ID) — technical implementation plan (plan.md):**
 
-Sub-tasks within groups should be specific enough to implement without ambiguity: "Create `src/routes/products.ts` with GET /api/products returning paginated list from DB" is good. "Add product route" is not. "Use `bg-[#F9FAFB]`" is **out of scope for plan.md** — that belongs in the design file.
+```
+You are writing the technical implementation plan for a software phase. Do not write any files — return content only.
 
-### Step 4 — Write validation.md
+BA handoff: [paste full BA Mode 2 decisions verbatim]
+Outcome card (the user-approved contract — every task group must serve it): [paste outcome-card.md verbatim]
+Scope summary: [paste scope challenge output — what already exists / what's new]
+Phase: [N], Feature slug: [slug]
+Tech stack: [paste tech-stack.md — include constraints, non-negotiables, pinned versions, excluded patterns]
+Existing codebase relevant context: [paste key file paths, route structure, component names for files this phase touches]
 
-Use schema at `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/validation.md`. This is the test contract — `/review` reads this file and executes every check.
+Write plan.md using schema at ${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/plan.md. Organize as numbered task groups, each independently verifiable:
+- Describe what each group delivers (user-visible capability, data path, API surface, integration point)
+- Name components, files, modules, endpoints specifically
+- Each group: one-line Verify command + Depends on field + Design-dependent field (`yes` if the group renders UI or needs design tokens/handover; `no` if it's pure data layer, API routes, or business logic buildable from requirements.md alone — these groups can be built before the design exists)
+- Design-agnostic: no hex values, Tailwind classes, pixel sizes, font names — those come from the design file at build time
+- Sub-tasks specific enough to implement without ambiguity
+- Typical sequence: primitives/layout shell → page composition → data layer → API routes → integration/edge cases → story walk
+- Each group should be implementable and verifiable independently before the next starts
 
-- **Automated checks:** specific commands that exit 0 on success. TypeScript typecheck, unit tests (named), API endpoint verification with curl
-- **Manual verification:** specific steps at named viewport sizes. Each step is binary (pass/fail)
-- **Definition of Done:** all criteria listed, all true before phase is approved
+Return plan.md as raw markdown content, followed by a "## Latent decisions" list — one sentence per choice you made that wasn't in the BA handoff or outcome card (tech micro-choices, structural patterns, scoping inferences). No other commentary.
+```
 
-Validation rule: every user story in requirements.md must have at least one corresponding manual verification step. If a story isn't in validation.md, it won't be tested.
+### Step 3 — Main-session reconciliation review + latent-decision routing
+
+Receive both agents' outputs. Check all six of the following. Resolve gaps inline.
+
+1. **Story → task coverage:** every user story in requirements.md maps to ≥1 task group in plan.md. Add a task group if missing.
+2. **Task → validation coverage:** every task group in plan.md has ≥1 corresponding check in validation.md. Add the check if missing.
+3. **API contract alignment:** every API endpoint in requirements.md appears in plan.md (as a group or sub-task to implement) and in validation.md (as an automated curl test). Add whichever is missing.
+4. **Data model consistency:** the data model in requirements.md is consistent with schema/table structure implied in plan.md. Reconcile any field-name or type mismatches.
+5. **Outcome coverage:** every outcome-card primary outcome has ≥1 user story serving it and one Outcome check in validation.md. Add what's missing.
+6. **Scope alignment:** plan.md groups implement only what requirements.md scopes, and requirements.md scopes only what serves the card — no extras, no gaps. Trim or add as needed.
+
+Then run the **routing half of the shared latent-decisions procedure** on the drafters' returned `## Latent decisions` lists (the drafters made these choices, not you — do not re-derive from your own context): merge, dedupe, ask experience-affecting ones via `AskUserQuestion` NOW (fold answers into the docs), route invisible-technical ones into the Step 4 panel briefs and `docs/decisions.md`.
+
+Only surface anything else to the user if there is a structural conflict requiring a product decision (e.g. plan.md assumes a Named Flow that product.md doesn't define).
+
+### Step 4 — Skeptic panel + fix loop (replaces user approval)
+
+The specs are validated adversarially, not by the user. Spawn **three Sonnet skeptics in parallel** (`Agent` tool, `model: "sonnet"`, context-isolated briefs — paste the docs in; no file access, no fix attempts). Each brief ends with: `Return findings ONLY in this format, one per line: [Critical|Major|Minor] <doc>: <what is wrong> → <specific fix>. If a lens finds nothing, return "CLEAN: <lens name>". No commentary.`
+
+1. **Completeness/error-paths skeptic.** Gets: requirements.md, outcome card. Attack: missing states (empty/loading/error/mobile), unhandled error conditions, API contracts with vague errors, "what happens when…" holes (double-submit, expired session, concurrent edit, zero data, huge data), undefined transitions.
+2. **Testability skeptic.** Gets: requirements.md, validation.md, outcome card. Attack: stories too vague to verify, validation checks that can't actually fail or don't prove the story, automated checks that aren't runnable commands, outcome checks a non-technical person couldn't verify on screen, Definition-of-Done gaps.
+3. **Outcome-traceability + reality skeptic.** Gets: all three docs, outcome card, Step-1 scope-challenge summary, the invisible-technical latent decisions. Attack: requirements serving no card outcome (scope creep — name it for cutting), card outcomes under-served by the specs, contradictions with constitution docs or the existing codebase, latent decisions that are actually wrong calls.
+
+**Fix loop:** collect findings. Fix every Critical and Major in the docs (you authored them in Step 3 — these are doc edits, no code). Minors: fix if one-line, otherwise drop. Re-run **only the lenses that had findings**, with **fresh** skeptics (subagent-policy Rule 7). Cap: 3 rounds. Converged (no Critical/Major) → Step 5. Cap hit with Critical findings still open → surface once to the user in outcome language only ("The plan for Phase N has a hole I can't close alone: [plain-language issue]. [Option A / Option B]?") via `AskUserQuestion` — never show the findings list raw.
+
+### Step 5 — Write files and auto-proceed
+
+Write the three reconciled, panel-validated spec files:
+- `specs/YYYY-MM-DD-[slug]/requirements.md`
+- `specs/YYYY-MM-DD-[slug]/plan.md`
+- `specs/YYYY-MM-DD-[slug]/validation.md`
+
+(`outcome-card.md` is already in the directory from `/ba`.) Then run the **Hash on auto-proceed** write from the top of this mode and continue straight to frontend. No user gate.
 
 ### Output
 
-> **Phase [N] spec written.**
+> **Phase [N] spec written and adversarially validated.**
 > **Directory:** `specs/YYYY-MM-DD-[feature]/`
 > **Branch:** `phase-N-[feature-slug]`
 > **Spec:** [N] user stories, [N] screens, [N] API contracts, [N] plan groups, [N] validation checks
+> **Skeptic panel:** converged in [N] round(s) — [N] findings fixed
 > **Ready for frontend design.**
 
 ---
@@ -298,40 +308,6 @@ Add any non-obvious technical choices made during implementation. Format: `**[De
 ### Step 5 — Update docs/architecture.md
 
 If new components were added or the data model changed, update the relevant sections.
-
-### Step 5a — Append phase handoff to `handoff.md`
-
-`handoff.md` lives at the project root and is **distinct from `specs/<dir>/handover.md`** (which is the frontend → backend frame index). See `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/handoff.md` for the full schema and write rules.
-
-Append exactly one new section to project root `handoff.md`:
-
-```markdown
-## Phase <N> — Handoff Notes  *(written <YYYY-MM-DD> by /spec Mode 3)*
-
-### What a fresh session might re-derive painfully
-- [...]
-
-### Operator-side context
-- [...]
-
-### Things that almost made it into permanent docs
-- [...]
-```
-
-Source the bullets from:
-- The just-completed phase's git log + `/review` report (for re-derive-painfully items).
-- Anything the user said about how / where / on what device they dogfooded (for operator-side context).
-- Anything you flagged during the phase that didn't quite warrant a `mission.md` / `tech-stack.md` / `WIKI.md` / `docs/decisions.md` / `CLAUDE.md` / `polish.md` update.
-
-If a section has nothing this phase, write `*(No fresh-session gotchas this phase.)*` rather than leaving the section blank — the explicit empty signal matters.
-
-Append only — do not edit prior phases' sections. Exactly one new section per phase.
-
-### Step 5b — Migrate any polish items closed this phase
-
-Read `polish.md`. For any item under `## Open — *` that was incidentally fixed by the phase's work, move the line to `## Done — Phase <N>` with a one-line note (e.g. "Fixed in Phase 2 — button now scales on mobile."). Do not delete items from polish.md — moving to Done preserves the user's trail of what got addressed.
-
-If no polish items were touched, skip this step silently.
 
 ### Step 6 — Run changelog
 
@@ -370,7 +346,8 @@ git branch -d phase-N-[feature-slug]
 
 ## Ground rules
 
-- Write draft files to disk first (Mode 1 and Mode 2). Tell the user where to find them and ask them to review directly. Use `AskUserQuestion` to confirm after they've reviewed — not before writing. This gives the user something real to react to, not a text summary.
+- **The user approves outcomes, never spec files.** Mode 1's gate is `/build`'s product story; Mode 2's gate is the outcome card approved in `/ba`. Spec files are machine-validated (Mode 2 skeptic panel) and auto-proceed. The only mid-mode user contact is the immediate-ask on experience-affecting latent decisions and the rare cap-hit surface — both via `AskUserQuestion`, both in plain outcome language.
+- Subagent rules (nesting, briefing, models, output contracts) live in `${CLAUDE_PLUGIN_ROOT}/skills/_shared/subagent-policy.md` — Mode 2 orchestrates subagents and therefore runs inline in the `/build` session.
 - Every field in every schema must be filled. Empty sections are failures — write them or remove the heading.
 - API contracts must include all error conditions, not just success responses.
 - Every user story must have a corresponding validation check.

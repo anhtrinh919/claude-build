@@ -12,7 +12,8 @@ How the seven skills hand off to each other across a single project's lifetime.
 /build
   → /ba Mode 1     (demand validation, constitution grill, master user flow)
   → /spec Mode 1   (writes mission.md, tech-stack.md, roadmap.md, scaffolds living docs)
-  → you approve
+  → you approve the PRODUCT STORY (what it does, for whom, phase by phase —
+    tech-stack.md is machine-written and never shown to you)
   → state: constitution-complete
   → STOP. Re-invoke /build for Phase 1.
 ```
@@ -33,9 +34,14 @@ How the seven skills hand off to each other across a single project's lifetime.
 
 ```
 Step 1 — Spec
-  /ba Mode 2     (phase scope grill, user stories, screen inventory)
-  /spec Mode 2   (writes requirements.md + plan.md + validation.md, creates feature branch)
-  you approve all three
+  /ba Mode 2     (phase scope grill, user stories, screen inventory;
+                  competitor research runs in a background agent meanwhile)
+  you approve the OUTCOME CARD — ~10 lines: what you'll be able to do,
+    what "it worked" looks like on screen. The only spec-time gate.
+  /spec Mode 2   (runs inline: parallel Sonnet+Opus drafters write
+                  requirements.md + plan.md + validation.md →
+                  3 adversarial skeptics attack them against the card →
+                  fix loop → auto-proceeds. You never read spec files.)
   state: spec-complete
 
 Step 2 — Frontend design
@@ -44,16 +50,24 @@ Step 2 — Frontend design
     asks: external tool or Claude Code designs?
     writes design-brief.md
     if external: hands off to your design tool, waits for you
+      (meanwhile /build spawns a background agent that builds every
+       plan.md group tagged Design-dependent: no — data layer, API
+       routes — committing per group while you design)
     if internal: designs in HTML mockups
     writes handover.md (with design tokens, frame index, fonts)
-  you approve
+  you approve the design
   state: frontend-complete
 
 Step 3 — Backend implementation
   /backend
     reads requirements.md + plan.md + handover.md
     opens design file via MCP (Pencil) or reads exported design
-    implements plan.md task groups in order
+    skips groups the background foundation agent already built
+      (any group whose verify script passes)
+    implements remaining plan.md task groups in dependency-ordered
+      waves — parallel agents within a wave (Opus for data/API,
+      Sonnet for UI/config); agents never commit, never start servers,
+      never talk to you — the main session integrates, gates, commits
       each group:
         /code-harness writes Spec-Light, verify-N.sh, failing test
         implementation
@@ -64,11 +78,13 @@ Step 3 — Backend implementation
   state: backend-complete
 
 Step 4 — Review
-  /review
-    Step 1: validation.md compliance (automated + manual)
+  /review  (runs inline — it orchestrates its own subagents)
+    Step 1: validation.md compliance (automated + manual + outcome checks)
     Step 1.5: visual compliance (screenshots vs design frames)
-    Step 2: UX dogfooding via browse
-    writes report
+    Step 2: UX dogfooding via browse — blind 3-persona reviewer fleet
+      (first-timer / impatient mobile / returning user, 2-of-3 rule),
+      then grades every Outcome Card promise: delivered or not
+    writes report (leads with the per-outcome verdict)
   you approve the phase
   state: phase-complete (or phase-blocked if review hit the cap with open issues)
   on phase-complete: /build auto-starts a long-running dogfood server with a LAN URL you can hit from any device
@@ -89,14 +105,15 @@ Step 4 — Review
   "reviewIteration": 0,
   "requirementsHash": "9f2c1...",
   "currentSubStep": null,
-  "dogfoodPid": null
+  "dogfoodPid": null,
+  "foundationStatus": null
 }
 ```
 
 | `step` value | Meaning | What re-invoking `/build` does |
 |---|---|---|
 | `constitution-complete` | Mission, stack, roadmap done | Starts Phase 1 spec |
-| `spec-complete` | Requirements/plan/validation approved | Continues to /frontend |
+| `spec-complete` | Outcome Card approved; specs passed the skeptic panel | Continues to /frontend |
 | `frontend-complete` | Handover doc written and approved | Continues to /backend |
 | `backend-complete` | All groups built, integration tests pass | Continues to /review |
 | `phase-complete` | User signed off on the phase | Wraps living docs, starts next phase |
@@ -130,7 +147,8 @@ my-app/
 │   └── decisions.md                    ← non-obvious technical choices
 └── specs/
     └── 2026-04-25-user-auth/           ← one folder per phase
-        ├── requirements.md             ← contract (what)
+        ├── outcome-card.md             ← YOUR contract (the only file you approve)
+        ├── requirements.md             ← machine contract (what)
         ├── plan.md                     ← task groups (how, design-agnostic)
         ├── validation.md               ← test contract (when done)
         ├── design-brief.md             ← intent for the design tool

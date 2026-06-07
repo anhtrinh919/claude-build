@@ -11,7 +11,7 @@ Big vibe-code projects feel more like a real structured collaboration instead of
 **Spec-Driven Development (SDD)** means agreeing on what you're building before building it, then verifying it against that agreement before shipping. Four phases, each behind a gate Claude cannot skip.
 
 **1. Specify**
-Claude writes `requirements.md` before touching any code — what it's building, what's out of scope, how the pieces connect. You read it, approve it, or send it back. Nothing starts until you say yes.
+You approve a ten-line **Outcome Card** — what you'll be able to do at the end of the phase, and what "it worked" looks like on screen. Claude then writes the technical specs against it with parallel drafter agents, and a panel of three adversarial skeptics attacks them (completeness, testability, scope creep) until the holes are closed. You never read a spec file — the card is your contract, and it's what gets graded at the end.
 
 **2. Design**
 Your Pencil or Figma file is the source of truth. Claude reads it frame by frame and builds from it directly — from your actual design, not from what looks similar in the existing codebase.
@@ -20,7 +20,7 @@ Your Pencil or Figma file is the source of truth. Claude reads it frame by frame
 For every UI piece, before Claude saves the work, it screenshots what it made, puts it next to your design frame, and fixes what drifted. Tests are hardcoded scripts via [tdd-guard](https://github.com/nizos/tdd-guard) so Claude can't just skip them when building.
 
 **4. Dogfood Review**
-A separate skill uses the `browse` tool to click through every single user story created in the spec — like a real user going through the app. It writes up what works, what's broken, what looks off.
+A separate skill uses the `browse` tool to click through every single user story — plus a fleet of three *blind* reviewers (a first-timer, an impatient phone user, a returning user) who only know your goal, never the implementation. An issue flagged by two of three is real; the report leads with a verdict on each Outcome Card promise.
 
 ### Built-in wiki
 
@@ -42,7 +42,7 @@ Teams with an existing dev process don't need this. Neither do developers who wa
 
 **Don't try this on Claude Pro.** This workflow is about 18-20% more token-heavy than a normal Claude Code build. You'll hit rate limits mid-build and the flow will stall. Max plan minimum.
 
-**This is v0.3.0.** Gates will break. Flows will get stuck. When they do, file an issue and I'll fix it fast.
+**This is v0.5.0.** Gates will break. Flows will get stuck. When they do, file an issue and I'll fix it fast.
 
 ---
 
@@ -96,16 +96,18 @@ Already have a `mission.md`? `/build` reads your state file and picks up from th
 ```
 /build
   → /ba        scope drill, user stories, screen inventory
-  → /spec      writes the contract — requirements + plan + validation
-  → you approve
-  → /frontend  design brief + handover doc
-  → you approve
-  → /backend   builds from design, visual compliance on every UI commit
-  → /review    spec check + UX run-through + written report
-  → you ship
+  → you approve the Outcome Card (your contract for the phase)
+  → /spec      parallel drafters write requirements + plan + validation
+               → 3 adversarial skeptics attack the docs → auto-proceeds
+  → /frontend  design brief → you design
+               (meanwhile: the non-visual backend builds itself in the background)
+  → you approve the design
+  → /backend   builds from design in dependency waves, visual compliance on every UI commit
+  → /review    spec check + blind 3-persona reviewer fleet + Outcome Card grading
+  → you test the exact promises you approved on the card
 ```
 
-Every arrow is a stop. Claude shows you what it's doing before it does it. And if your session crashes mid-phase, run `/build` again — it picks up at the last gate, no starting over.
+You only ever approve outcomes — the idea, the card, the design, the working app. Everything technical is validated by adversarial machine gates instead of asking you to read specs. And if your session crashes mid-phase, run `/build` again — it picks up at the last gate, no starting over.
 
 ---
 
@@ -114,12 +116,12 @@ Every arrow is a stop. Claude shows you what it's doing before it does it. And i
 | Skill | What it does |
 |---|---|
 | `/build` | Entry point. Reads state, routes to the right next skill, writes `.build-state.json` at every gate. |
-| `/ba` | Drills you on scope until user stories and screen inventory are real, not vague. |
-| `/spec` | Writes `requirements.md`, `plan.md`, `validation.md`. Nothing moves until you approve all three. |
+| `/ba` | Drills you on scope until user stories and screen inventory are real, not vague. Ends with the Outcome Card — the only thing you approve at spec time. Competitor research runs in the background while you answer. |
+| `/spec` | Parallel drafters write `requirements.md`, `plan.md`, `validation.md`; a 3-skeptic panel validates them against your card, then the pipeline auto-proceeds. |
 | `/frontend` | Design brief, handover to your design tool, extracts tokens and frame references into `handover.md`. |
 | `/backend` | Reads the design file directly. Implements in small task groups. Visual compliance before each commit. |
 | `/code-harness` | Called by `/backend` on every task group. Gates each change behind a spec contract and a verify script. |
-| `/review` | Validation checklist, then walks through the app like a user. Reports bugs, UX problems, visual drift. |
+| `/review` | Validation checklist, then a blind 3-persona reviewer fleet walks the app (2-of-3 rule). Report leads with a per-outcome verdict on your card. |
 | `/bad-idea` | Pressure-tests your idea before any building starts. Seven lenses, adversarial by default. Also auto-runs at the start of every new project. |
 | `/adversarial-review` | Structural critique of what was just built. Attacks module shape, abstraction necessity, and naming. Called by `/backend`; also user-invocable. |
 | `/dogfood` | Browser-driven testing of anything you just built outside the `/build` pipeline. Three-signal gate — doesn't report "done" until the user can actually accomplish their goal. |

@@ -1,7 +1,7 @@
 ---
 name: build
 description: >
-  Master SDD workflow — re-entrant, feature-loop aware orchestrator. State-file-first: reads .build-state.json to resume mid-phase if context was lost. Falls back to mission.md detection: missing = new project, present = next feature. New project always starts with a /bad-idea pre-flight on the user's idea brief — back-and-forth refinement until the user says "proceed with this idea" — then /ba Mode 1 → /spec Mode 1 (constitution). Feature cycle: /ba (scope) → /spec (3 spec docs, user approval before write) → /frontend (design → handover) → frontend compliance check → /backend (group-by-group with harness) → backend compliance check → /review (validation.md + UX) → user approves. Phase boundaries stop and require a new /build invocation; within-phase gates (spec→frontend, frontend→backend, backend→review) auto-continue without stopping. Trigger on: /build, /build [idea brief], "build me X", "next feature", "start phase N", or any full-stack app request.
+  Master SDD workflow — re-entrant, feature-loop aware orchestrator. State-file-first: reads .build-state.json to resume mid-phase if context was lost. Falls back to mission.md detection: missing = new project, present = next feature. New project always starts with a /bad-idea pre-flight on the user's idea brief — back-and-forth refinement until the user says "proceed with this idea" — then /ba Mode 1 → /spec Mode 1 (constitution; user approves the product story, not the files). Feature cycle: /ba (scope + user-approved outcome card) → /spec (3 spec docs validated by skeptic panel, auto-proceeds) → /frontend (design → handover; backend foundation builds in the background while the user designs) → frontend compliance check → /backend (wave-dispatched task groups with harness) → backend compliance check → /review (validation.md + reviewer fleet + outcome-card grading) → user approves. User gates are outcome-only; all technical artifacts are machine-validated. Phase boundaries stop and require a new /build invocation; within-phase gates (spec→frontend, frontend→backend, backend→review) auto-continue without stopping. Trigger on: /build, /build [idea brief], "build me X", "next feature", "start phase N", or any full-stack app request.
 argument-hint: "[optional: short idea brief — only used on a new project to seed the /bad-idea pre-flight]"
 ---
 
@@ -97,6 +97,12 @@ type BuildState = {
    *  null when no dogfood server is up. /build kills the prior PID before
    *  starting a new dogfood server, and on the user's "stop dogfood" message. */
   dogfoodPid: number | null;
+
+  /** Backend foundation build (design-independent plan.md groups built in the
+   *  background while the user designs). Owner: /build. null = not started this
+   *  phase. The branch is the truth source on resume — /backend skips any group
+   *  whose verify script passes, regardless of this field. */
+  foundationStatus: null | "running" | "done" | "failed";
 };
 ```
 
@@ -119,8 +125,9 @@ Minimal example, freshly approved spec:
 - **Sub-skills own the terminal `step` write on clean exit.** The terminal value is declared in each sub-skill's `## Invocation contract` section (canonical source — if `/build` and a sub-skill ever disagree, the contract wins). Sub-skills also write `currentSubStep` on entry and null it on clean exit.
 - **`/build` only writes `step` on rollback.** When its post-sub-skill compliance check fails, `/build` rolls `step` back to the previous gate value and re-invokes the sub-skill. Compliance checks are belt-and-suspenders verification of what the sub-skill claimed to ship.
 - **`/review` owns `reviewIteration`** — increment per loop, reset on convergence. See that skill's auto-fix loop policy.
-- **`/spec` Mode 2 owns `requirementsHash`** — write it once on user approval; never overwrite outside Mode 2.
+- **`/spec` Mode 2 owns `requirementsHash`** — write it once on skeptic-panel convergence (auto-proceed); never overwrite outside Mode 2.
 - **`/build` owns `dogfoodPid`** — set when starting the dogfood server, null on "stop dogfood" or before starting a fresh one.
+- **`/build` owns `foundationStatus`** — set to `running` when spawning the background foundation agent, `done`/`failed` when it returns, null at each new phase's spec gate.
 
 The cap-hit terminal writes from `/review` (`phase-complete` on user-Accept, `phase-blocked` on user-Stop) are sub-skill writes per the rule above — `/review` writes them after the user replies to the cap-hit binary.
 
@@ -130,20 +137,24 @@ Delete the file when `step` is set to `roadmap-complete` (roadmap finished).
 
 ## Model assignments
 
-The main `/build` session runs at the user's default model (Opus 4.7). Each sub-skill declares its model + mechanism in its own `## Invocation contract` section — those contracts are the canonical source. The summary below is for quick orientation only.
+The main `/build` session runs at the user's default model (Opus, session default). Each sub-skill declares its model + mechanism in its own `## Invocation contract` section — those contracts are the canonical source. The summary below is for quick orientation only.
 
 | Step | Model | Mechanism |
 |---|---|---|
-| `/bad-idea` Mode 2 (new-project idea pre-flight) | Opus 4.7 | inline |
-| `/ba` Mode 1 + 2 (new project, phase scope) | Opus 4.7 | inline |
+| `/bad-idea` Mode 2 (new-project idea pre-flight) | Opus (session default) | inline |
+| `/ba` Mode 1 + 2 (new project, phase scope) | Opus (session default) | inline — spawns background research agent (Mode 2) |
 | `/ba` Mode 3 (between-phase replan) | Sonnet | subagent |
-| `/spec` all modes | Sonnet | subagent |
-| `/frontend` | Sonnet | subagent |
-| `/backend` | Opus 4.7 | inline |
-| Architectural review (inside `/backend`) | Opus 4.7 | subagent — see `/backend` skill |
-| `/review` | Sonnet | subagent |
+| `/spec` Modes 1 + 3 | Sonnet | subagent |
+| `/spec` Mode 2 (phase spec) | Sonnet + Opus drafters, Sonnet skeptics | **inline** — orchestrates parallel subagents |
+| `/frontend` | Sonnet | subagent (internally subagent-free) |
+| Backend foundation build (during user design wait) | session default | background agent — see Step 2 |
+| `/backend` | Opus (session default) | inline — wave-dispatches Sonnet/Opus agents |
+| Architectural review (inside `/backend`) | Opus | subagent — see `/backend` skill |
+| `/review` | Opus (session default) orchestrating Sonnet subagents | **inline** — fleet, chunks, fix agents |
 
 If this table ever drifts from a sub-skill's contract, the contract wins. Update the contract first, this table second.
+
+**One level of subagents only.** Subagents cannot spawn subagents — any skill that orchestrates its own subagents runs inline in this session; any `subagent`-mechanism skill must be internally subagent-free. Full briefing/dispatch rules: `${CLAUDE_PLUGIN_ROOT}/skills/_shared/subagent-policy.md`.
 
 **Sonnet subagent pattern** (every Sonnet callsite):
 1. Write `currentSubStep: "<step>"` to `.build-state.json` — crash-recovery anchor.
@@ -191,12 +202,15 @@ Everywhere else, /build's prompt is the generic line above.
    - Do NOT write `.build-state.json` during the pre-flight loop. The file is seeded for the first time only at the constitution-approved gate (step 3 below). The pre-flight is conversation-state only — if context is lost mid-pre-flight, the user re-invokes `/build [idea]` and starts the loop fresh.
 
 1. **`/ba` Mode 1** — demand validation + constitution grill + master user flow *(inline — Opus)*
-2. **`/spec` Mode 1** — write `mission.md` + `tech-stack.md` + `roadmap.md` + scaffold living docs. User approves before write.
+2. **`/spec` Mode 1** — write `mission.md` + `tech-stack.md` + `roadmap.md` + scaffold living docs.
    - Write `currentSubStep: "spec"` to `.build-state.json`.
    - Subagent prompt: `Read and execute ${CLAUDE_PLUGIN_ROOT}/skills/spec/SKILL.md. Mode: 1 (new project constitution). Project root: <absolute path>. BA decisions: <inline /ba decisions verbatim>.`
-   - Verify `mission.md`, `tech-stack.md`, `roadmap.md` exist before proceeding.
-3. **Gate: constitution approved.**
-   - Write `.build-state.json`: `{ "phase": 1, "feature": "[phase-1-slug]", "step": "constitution-complete", "reviewIteration": 0, "requirementsHash": "", "currentSubStep": null, "dogfoodPid": null }`
+   - Verify `mission.md`, `tech-stack.md`, `roadmap.md` exist before proceeding. Capture the subagent's returned **product story** and **latent decisions** list.
+3. **Gate: constitution approved (outcome-only — the user never reads the files).**
+   - Surface the product story from the subagent's return: what the product does and for whom, what each phase delivers (one line each), what it will never do. Plain language — no file names, no tech stack. Technology is Claude's job; `tech-stack.md` exists but is never presented.
+   - Ask any **experience-affecting** latent decisions from the subagent's list, one `AskUserQuestion` each ("I'd do X — it means Y for you. OK?"). Invisible-technical ones: record in `docs/decisions.md`, don't ask.
+   - Then one `AskUserQuestion`: "This is the product we're building — approve and lock it in?" Options: **Approve** / **Adjust** (fold the change into the relevant constitution file via the same `/spec` Mode 1 subagent, re-surface, re-ask).
+   - On Approve: write `.build-state.json`: `{ "phase": 1, "feature": "[phase-1-slug]", "step": "constitution-complete", "reviewIteration": 0, "requirementsHash": "", "currentSubStep": null, "dogfoodPid": null, "foundationStatus": null }`
    - Tell user: "Constitution set. Roadmap confirmed. **Run `/build` to start Phase 1.**"
    - Stop.
 
@@ -227,9 +241,6 @@ Before the BA replan starts (cold or post-cache-miss), re-ground on what exists.
 - `roadmap.md` — phase sequence; mark which phases are done vs. pending
 - Last completed phase's `handover.md` (from the most recent `specs/YYYY-MM-DD-[feature]/` directory) — what actually shipped: screens, APIs, deviations
 - `CHANGELOG.md` if it exists — one-line deltas per phase
-- `polish.md` if it exists — open backlog items that may be folded into the next phase scope. List item count + the most recent 3 open items in the prime summary.
-- `handoff.md` last section only (if the file exists) — the most recent phase's fresh-session-gotchas, operator context, and almost-permanent notes. Older sections are historical; only the last is load-bearing for the next phase.
-- `tools.md` if it exists — skim the `## Project-specific` section for deploy target, GitHub repo, and external integrations relevant to scoping. Do not re-read the `## Machines` / `## Accounts` / `## Services` sections (those are stable cross-project snapshots).
 
 Produce a 5–8 line working summary in context under `## Project state`:
 ```
@@ -238,8 +249,6 @@ Flows: [Named Flows from mission.md Master User Journey — one line per flow, e
 Done: Phase 1 [slug] — [one-line what shipped], Phase 2 [slug] — [...]
 Pending: Phase [N] [slug] — [one-line intent from roadmap], Phase [N+1] ...
 Last phase deviations: [any flagged in last handover.md, else "none"]
-Open polish: [N items — most recent: <item>, <item>, <item>; else "none"]
-Last handoff notes: [one-line gist of handoff.md last section, else "none"]
 ```
 
 This summary is read by `/ba` Mode 3 and carried through `/spec` Mode 3. Do not skip this step — cold-start invocations (context compacted, new session) depend on it to avoid heavy re-reads.
@@ -252,15 +261,15 @@ Same for every phase, whether Phase 1 of a new project or Phase N of an ongoing 
 
 ### Step 1 — Spec
 
-1. **`/ba` Mode 2** — phase scope grill, user stories, screen inventory, competitor research *(inline — Opus)*
-2. **`/spec` Mode 2** — writes `requirements.md` + `plan.md` + `validation.md` in `specs/YYYY-MM-DD-[feature]/`. User must approve all three. Creates feature branch `phase-N-[feature-slug]`.
-   - Write `currentSubStep: "spec"` to `.build-state.json`.
-   - Subagent prompt: `Read and execute ${CLAUDE_PLUGIN_ROOT}/skills/spec/SKILL.md. Mode: 2 (phase spec). Project root: <absolute path>. Phase: <N>. Feature: <slug from roadmap.md>. BA decisions: <inline /ba decisions verbatim>. Spec directory: specs/YYYY-MM-DD-<slug>/ containing requirements.md, plan.md, validation.md.`
+1. **`/ba` Mode 2** — phase scope grill, user stories, screen inventory, competitor research (background agent), **Outcome Card draft + user approval** *(inline — Opus)*. The card is the user's contract for the phase — the spec files are never user-approved.
+2. **`/spec` Mode 2** — *(inline — orchestrates parallel subagents; one-level nesting rule)* writes `requirements.md` + `plan.md` + `validation.md` in `specs/YYYY-MM-DD-[feature]/`, validated by its skeptic panel against the approved card, auto-proceeds. Creates feature branch `phase-N-[feature-slug]`.
+   - Write `currentSubStep: "spec"` and `foundationStatus: null` to `.build-state.json`.
+   - Read `${CLAUDE_PLUGIN_ROOT}/skills/spec/SKILL.md` and execute Mode 2 inline in this session (it spawns drafter + skeptic subagents, which a subagent could not). Inputs per its contract: BA decisions verbatim, phase number, feature slug, approved `outcome-card.md` path.
    - Verify all three files exist and are non-empty before proceeding.
-3. **Gate: spec approved.**
-   - Write `.build-state.json` with `step: "spec-complete"`. Preserve `phase`, `feature`, `dogfoodPid`, `requirementsHash`, `currentSubStep`. Reset `reviewIteration` to 0 — a new phase starts a fresh review counter.
-   - Tell user: "Spec locked — [N] user stories, [N] screens, [N] API endpoints. Starting frontend design now."
-   - The spec is frozen — scope changes restart Step 1.
+3. **Gate: spec complete (machine-approved).**
+   - `/spec` Mode 2 already wrote `step: "spec-complete"` + `requirementsHash` on convergence. Re-verify; reset `reviewIteration` to 0 — a new phase starts a fresh review counter.
+   - Tell user: "Specs written and adversarially validated against the card — [N] user stories, [N] screens, [N] API endpoints. Starting frontend design now."
+   - The card is frozen — card changes restart Step 1.
    - **Auto-continue immediately to Step 2.** Do not stop.
 
 ### Step 2 — Frontend design
@@ -286,6 +295,24 @@ Same for every phase, whether Phase 1 of a new project or Phase N of an ongoing 
      The Stage 1 question (which design track for this phase?) is asked by /frontend at the start of every project phase — it overwrites mission.md `## Design Tool` with the picked value. Do not skip this question even if mission.md already has a value from a prior phase.
      ```
    - Verify `design-brief.md` exists before the user-design hand-off; verify `handover.md` exists before proceeding to the compliance check.
+
+4b. **Backend foundation build — runs while the user designs (external tracks only).** The user's design pass is the longest wait in the pipeline; the design-independent half of the backend doesn't need it.
+   - **Trigger:** the moment `/frontend` hits its external-track Stage 3 stop (brief delivered, user has gone off to design). Skip entirely on the `claude-code-impeccable` track (no user wait exists) or if plan.md has no `Design-dependent: no` groups.
+   - **Spawn one background agent** (`Agent` tool, `run_in_background: true`, model omitted — inherits session default). Write `foundationStatus: "running"`. Brief:
+     ```
+     You are building the design-independent foundation of Phase <N>.
+     Read <spec dir>/requirements.md, <spec dir>/plan.md, and tech-stack.md.
+     Implement ONLY the plan.md groups marked `Design-dependent: no`, in dependency order.
+     Discipline per ${CLAUDE_PLUGIN_ROOT}/skills/backend/SKILL.md Stage 2: Spec-Light header, verify-group-N.sh before
+     implementation, tests-first for logic groups, root-cause iron law. NO design-token work, NO UI rendering,
+     NO dev server. Commit per group on the current feature branch with a plain-English message.
+     If blocked on a group after 3 hypotheses: skip it, leave it uncommitted-clean (stash nothing — revert
+     partial work), continue with the next buildable group.
+     Return: per-group status (done+committed / skipped+why), files changed, verify results. No commentary.
+     ```
+     Committing from the background agent is safe here — the main session is idle at the design stop and makes no commits until the user returns (exception to the no-agent-commits dispatch rule, by design; see `_shared/subagent-policy.md` Rule 6).
+   - **When the user returns** with the design: collect the agent's result (await it if still running — tell the user "finishing the data layer I built while you designed"). Write `foundationStatus: "done"` (or `"failed"` if it errored — never block on it; `/backend` will build whatever is missing normally). Then continue `/frontend` Stages 4–5.
+   - **Resume safety:** if context is lost during the design wait, the branch is the truth — foundation commits survive, and `/backend` Stage 2 skips any group whose verify script passes. A dead background agent with `foundationStatus: "running"` is treated as `"failed"` silently.
 
 5. **Frontend compliance check** (run by `/build`, not `/frontend`) — **track-aware**:
    - Read `mission.md` `## Design Tool` to determine the track. Apply legacy-value mapping per `/frontend` backward-compat (`external` → `external-pencil`; `claude-code` / `claude-code-taste` → `claude-code-impeccable`).
@@ -326,9 +353,9 @@ Same for every phase, whether Phase 1 of a new project or Phase N of an ongoing 
 
 ### Step 4 — Review and approval
 
-10. **`/review`** — reads `validation.md` → runs all automated checks → manual verification → UX dogfooding. Only reached after both compliance checks pass.
+10. **`/review`** — reads `validation.md` → runs all automated checks → manual verification → UX dogfooding with the reviewer fleet → grades the outcome card. Only reached after both compliance checks pass.
     - Write `currentSubStep: "review"` to `.build-state.json`.
-    - Subagent prompt: `Read and execute ${CLAUDE_PLUGIN_ROOT}/skills/review/SKILL.md. Project root: <absolute path>. Phase: <N>. Spec directory: <specs/YYYY-MM-DD-slug/>. Validation file: <spec dir>/validation.md.`
+    - Read `${CLAUDE_PLUGIN_ROOT}/skills/review/SKILL.md` and execute it **inline in this session** (it orchestrates its own Sonnet subagents — fleet, walk chunks, report writer — and its fix agents must inherit this session's model; a subagent could do neither). Inputs per its contract: project root, phase, spec directory, validation file, outcome-card path.
 
 11. **Gate: user approves phase. Phase-complete checklist — execute every sub-step in order. The handoff is the body of this gate, not an optional follow-up.**
 
@@ -367,7 +394,7 @@ This step always runs at the top of the handoff — even on resume, even if the 
    ```
    phase N complete: <one-line summary of what shipped, from the /review report>
    ```
-   Use a HEREDOC with the standard `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>` trailer (see CLAUDE.md committing protocol). If the staged set looks suspicious (contains `.env`, credential files, large binaries, or files outside `app/` and `specs/<this phase>/`), pause and ask the user before committing.
+   Use a HEREDOC with the standard `Co-Authored-By:` trailer naming the current session model (see CLAUDE.md committing protocol — never hardcode a version). If the staged set looks suspicious (contains `.env`, credential files, large binaries, or files outside `app/` and `specs/<this phase>/`), pause and ask the user before committing.
 3. **Push the feature branch.** `git push -u origin <branch>`. If push is rejected (remote has commits the local doesn't), do NOT force-push — fetch, surface the divergence to the user, and wait for direction. If push is blocked by a hook or permission rule, surface the exact command to the user. If the project has no `origin` remote configured, skip the push silently and tell the user once: "No git remote configured — work is committed locally but not pushed. Consider `git remote add origin <url>` before next dogfood." (Don't fail the handoff over this — local commit is already enough recovery for most cases.)
 4. **Confirm.** One short line back to the user: "Pushed phase N to origin/<branch> — N commits ahead of main." Then continue to step 2.
 
@@ -410,17 +437,17 @@ Capture the PID. Write it to `.build-state.json` as `dogfoodPid`. Poll the URL (
 
 ### 6 — Generate the "What you can test" bullets
 
-Read `requirements.md` user stories. Map each story to one bullet in the operator's voice:
+Read `outcome-card.md` for this phase — the bullets ARE the card: one bullet per primary outcome, using its "Success looks like" signal as the "what should happen" half. The user approved these exact promises at the start of the phase; now they verify them by hand. (Legacy phases without a card: fall back to `requirements.md` user stories.) Per bullet, in the operator's voice:
 
 - Lead with the screen or feature name (so the operator knows where to look).
 - One short sentence on what to do.
-- One short sentence on what should happen.
+- One short sentence on what should happen — taken from the card's "Success looks like" line.
 
 Example mapping (story → bullet):
 
 > "As a user, I can add a workspace by picking a folder from `~/dev`, so the workspace appears in my list."
 >
-> → `Picker — click "+ Add workspace" — every folder in your dev directory shows up. Pick something to chat about it.`
+> → `Picker — click "+ Add workspace" — every folder in /home/tuana/dev shows up. Pick something to chat about it.`
 
 Keep the list to one bullet per primary story. Skip secondary / negative-path stories — those are review territory, not dogfood territory.
 
@@ -465,8 +492,9 @@ When `/build` resumes and reads a non-null `dogfoodPid`, verify it's still alive
 
 - New project always runs `/bad-idea` Mode 2 pre-flight before `/ba` Mode 1. The pre-flight is in-conversation only — no state file write until the constitution is approved. Pre-flight does NOT run on the next-feature path or any resume.
 - Constitution must exist before any feature work starts. `/build` on a new project runs Mode 1 first (after the idea pre-flight clears).
-- Spec (all 3 docs) must be user-approved before implementation starts. This gate is not skippable.
-- Spec is frozen after approval. Changes to scope restart Step 1 — do not patch around the spec.
+- The Outcome Card must be user-approved before any spec is written, and the spec files must pass `/spec`'s skeptic panel before implementation starts. Neither gate is skippable. The user never approves spec files — outcome gates only.
+- The card is frozen after approval. Scope changes restart Step 1 — do not patch around the card or the specs.
+- One level of subagents only — orchestrating skills run inline; see `_shared/subagent-policy.md`.
 - Frontend compliance check must pass before backend starts.
 - Backend compliance check must pass before `/review` starts.
 - Living docs are updated at the start of the next `/build` invocation (Mode 3), not deferred past that.

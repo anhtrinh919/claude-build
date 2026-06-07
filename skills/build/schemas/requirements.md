@@ -3,7 +3,6 @@
 ---
 phase: [N]
 type: initial | feature | rebuild
-tdd_guard: on | off
 ui: true | false
 ---
 
@@ -11,12 +10,7 @@ ui: true | false
 
 - **`initial`** — first build of a new product area. No existing UI patterns to honor. Greenfield behavior.
 - **`feature`** — adds new capability to an existing product. Follow existing codebase patterns and chrome; only invent what the new capability requires.
-- **`rebuild`** — visual or structural redesign of existing product. **Existing UI patterns are explicitly overridden** by the design file. Backend must mirror the design tree, not the existing codebase. TDD-guard typically `off` (pure UI, no new logic).
-
-## TDD guard
-
-- **`on`** — every group writes a failing test before implementation. Use for logic-heavy phases (`initial`, `feature` with new backend).
-- **`off`** — pure UI / pure refactor / pure visual rebuild. No logic to test.
+- **`rebuild`** — visual or structural redesign of existing product. **Existing UI patterns are explicitly overridden** by the design file. Backend must mirror the design tree, not the existing codebase.
 
 ## UI flag
 

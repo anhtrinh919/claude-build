@@ -1,7 +1,7 @@
 ---
 name: frontend
 description: >
-  Frontend design and implementation skill for SDD projects. Reads requirements.md as its contract (not produces it). Asks the user first which of three design tracks to use: (1) External tool — Pencil.dev, (2) External tool — Figma / other, or (3) Claude Code with /impeccable pack. External tracks get a lean mood/tone brief; the Claude Code track gets a full-detail brief written by a Sonnet subagent loaded with /impeccable. External tracks: stops while user designs, then writes a frame-index handover pointing backend at the design file. Claude Code track: designs using HTML/CSS/React static mockups under specs/.../mockups/, with /impeccable enforcing craft throughout. Every track ends with handover.md for backend. Trigger on: /frontend, or when /build reaches the frontend step.
+  Frontend design and implementation skill for SDD projects. Reads requirements.md as its contract (not produces it). Asks the user first which of three design tracks to use: (1) External tool — Pencil.dev, (2) External tool — Figma / other, or (3) Claude Code with /impeccable pack. External tracks get a lean mood/tone brief; the Claude Code track gets a full-detail brief written inline with /impeccable loaded. External tracks: stops while user designs (backend foundation builds in the background meanwhile), then writes a frame-index handover pointing backend at the design file. Claude Code track: designs using HTML/CSS/React static mockups under specs/.../mockups/, with /impeccable enforcing craft throughout. Every track ends with handover.md for backend. Trigger on: /frontend, or when /build reaches the frontend step.
 ---
 
 # /frontend — Design Brief & Handover
@@ -15,9 +15,9 @@ If no `requirements.md` is found in a `specs/` directory: stop. "No phase spec f
 
 | Mode | Model | Mechanism | Inputs (caller passes) | Outputs (skill produces) | Terminal state (this skill writes) |
 |---|---|---|---|---|---|
-| (single mode) | Sonnet | subagent | spec directory path, phase number; reads requirements.md + product.md + mission.md | design-brief.md (always); track-dependent: design file path OR `mockups/` directory; handover.md; design-tokens.css | `frontend-complete` |
+| (single mode) | Sonnet | subagent (internally subagent-free — one-level nesting rule, `_shared/subagent-policy.md`) | spec directory path, phase number; reads requirements.md + product.md + mission.md | design-brief.md (always); track-dependent: design file path OR `mockups/` directory; handover.md; design-tokens.css | `frontend-complete` |
 
-Stage 2 (design brief) is unconditional — never skipped, even if a design file already exists. Pencil MCP is forbidden during Stage 3 External-path; allowed only in Stage 5 (handover).
+Stage 2 (design brief) is unconditional — never skipped, even if a design file already exists. Pencil MCP is forbidden during Stage 3 External-path; allowed only in Stage 5 (handover). This skill runs AS a subagent, so it never spawns its own — all brief writing is inline.
 
 **Naming note: "Stage" vs "Phase".** The numbered Stages below (Stage 1–5) are this skill's *internal* steps for one project phase. The project Phase (Phase 1, Phase 2, … from `roadmap.md` and `requirements.md` frontmatter) is the higher-level slice the whole `/build` pipeline is working on. When you see `Phase <N>` in placeholders (wiki entry titles, "Project Phase 1" recommendation rules, "Coming in Phase N" stub label, the `Phase 1 skeleton rule` below) that refers to the project Phase. When you see `Stage <N>` it refers to the section in this skill.
 
@@ -95,9 +95,9 @@ The answer picks which brief template + which design discipline governs Stages 2
 |---|---|---|---|
 | `external-pencil` | external (lean) | inline in /frontend | n/a — user designs in Pencil |
 | `external-other` | external (lean) | inline in /frontend | n/a — user designs in their tool |
-| `claude-code-impeccable` | internal (full) | **Sonnet subagent loaded with `/impeccable`** | Claude Code designs with `/impeccable` discipline |
+| `claude-code-impeccable` | internal (full) | **inline in /frontend with `/impeccable` loaded** | Claude Code designs with `/impeccable` discipline |
 
-The two external tracks share a brief template — the difference is only which tool the user opens. The Claude Code track's Sonnet brief writer fills the schema through the /impeccable lens, and the implementor in Stage 3 keeps /impeccable loaded throughout.
+The two external tracks share a brief template — the difference is only which tool the user opens. On the Claude Code track, /frontend loads /impeccable once and keeps it loaded from brief writing (Stage 2) through design (Stage 3) — same lens end to end.
 
 **`/taste-skill` is no longer a design track.** It's better used as a polish pass on already-built UI (engineering discipline applied to existing code), not as the design generator. Do not load it in this skill.
 
@@ -125,23 +125,8 @@ Written **inline** in /frontend (no subagent). High-level only: product context,
 
 Template: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/design-brief-internal.md`
 
-Brief is written by a **Sonnet subagent loaded with `/impeccable`**. The subagent fills the schema using the impeccable vocabulary: register identification (brand vs product), explicit color strategy on the commitment axis (Restrained / Committed / Full palette / Drenched), theme via scene sentence, typography hierarchy with weight contrast, layout vary-spacing-for-rhythm, motion ease-out exponential curves, and the absolute bans (side-stripe borders, gradient text, glassmorphism-as-default, hero-metric template, identical card grids, modal-as-first-thought).
+Brief is written **inline** — this skill runs as a subagent and cannot spawn its own (one-level nesting rule). **Load `~/.claude/skills/impeccable/SKILL.md` now**, before writing a word of the brief; it stays loaded through Stage 3 so the brief and the design share one lens. Fill the schema using the impeccable vocabulary, with this discipline:
 
-Subagent prompt:
-
-```
-Read and execute ~/.claude/skills/impeccable/SKILL.md, then write the design brief.
-
-Project root: <absolute path>
-Spec directory: <specs/YYYY-MM-DD-slug/>
-Phase: <N>
-Memorable thing (north star — write at top of brief): <user's answer to the memorable-thing question>
-
-Output file: <spec dir>/design-brief.md
-
-Brief schema: ${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/design-brief-internal.md — every section must be filled.
-
-Discipline: every brief decision MUST be justified through the impeccable lens. Use its vocabulary explicitly:
 - State the register (brand vs product) up front and why — load the matching reference.
 - For color: name the chosen strategy on the commitment axis (Restrained / Committed / Full palette / Drenched). Use OKLCH. Tint neutrals.
 - For theme: write the scene sentence forcing dark vs light (who, where, ambient light, mood).
@@ -149,11 +134,11 @@ Discipline: every brief decision MUST be justified through the impeccable lens. 
 - For layout: name the variation pattern; flag that "cards are the lazy answer."
 - For every section: explicitly call out which absolute-bans you are NOT triggering.
 - For motion: ease-out exponential curves only.
+- Write the memorable-thing answer at the top under `## Design intent` — it is the north star for every decision below it.
 
 Note: /impeccable's PRODUCT.md / DESIGN.md gates can be SKIPPED for brief writing — those gates are for /impeccable craft / shape commands. You are filling the design brief schema, not invoking impeccable's own pipeline. Apply the design laws and register-specific reference; skip the setup gates.
-```
 
-After the subagent returns, verify `design-brief.md` exists and contains the register + color strategy + scene sentence + screen checklist before continuing.
+Before continuing, self-verify `design-brief.md` contains the register + color strategy + scene sentence + screen checklist — every section of the schema filled.
 
 ---
 
@@ -170,9 +155,9 @@ Tell the user:
 > **Screen checklist ([N] states to cover):**
 > [paste the numbered checklist from the brief]
 >
-> Come back here when the design is done and you're happy with it.
+> Come back here when the design is done and you're happy with it. Meanwhile I'll build the data layer and behind-the-scenes plumbing that doesn't depend on the design — it'll be done by the time you're back.
 
-Stop. Do not proceed until the user returns.
+Stop. Do not proceed until the user returns. (The foundation build itself is orchestrated by `/build` Step 4b, not this skill — this skill just sets the expectation in the stop message.)
 
 When the user returns: go to Stage 4.
 

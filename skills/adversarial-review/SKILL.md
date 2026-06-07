@@ -121,7 +121,7 @@ One report per run. No prose preamble, no encouragement, no closing summary.
 ```markdown
 # Adversarial review — [target identifier]
 
-**Reviewer:** Opus 4.7 via /adversarial-review
+**Reviewer:** Opus via /adversarial-review
 **Target:** [path or description]
 **Findings:** [N total — N critical, N worth-considering, N nit]
 

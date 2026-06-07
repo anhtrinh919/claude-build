@@ -29,12 +29,21 @@ Walk through these checks in a browser. Each is pass/fail.
 - [ ] Error state: [trigger condition] → user sees [specific message], not blank screen
 - [ ] [Edge case]: [what to do] → [expected behavior]
 
+## Outcome Checks
+
+One per PRIMARY outcome on the phase's `outcome-card.md` — same numbering. Each is binary and demonstrable on screen by a non-technical person ("the API returns 200" is a violation). `/review` grades these explicitly in its report.
+
+- [ ] Outcome 1: [card outcome restated] → [the on-screen signal from the card's "Success looks like" — what a person sees that proves it]
+- [ ] Outcome 2: [...]
+- [ ] Outcome 3: [...]
+
 ## Definition of Done
 
 This phase is complete when ALL of the following are true:
 
 - [ ] All automated checks pass (exit 0)
 - [ ] All manual verifications pass
+- [ ] All outcome checks pass — every primary outcome on the card is demonstrably delivered
 - [ ] Frontend compliance check passes (handover covers all UI requirements)
 - [ ] UX review passes — no blocking issues
 - [ ] user explicitly approves

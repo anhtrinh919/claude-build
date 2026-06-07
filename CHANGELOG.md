@@ -2,6 +2,28 @@
 
 All notable changes to `claude-code-sdd` are documented here.
 
+## [0.5.0] — 2026-06-07
+
+### Changed — outcome-driven gates (the headline)
+- **You approve outcomes, never spec files.** `/ba` Mode 2 now ends with a user-approved **Outcome Card** (`outcome-card.md`, ~10 lines: phase goal, what you'll be able to do, what "it worked" looks like on screen). It is the only spec-time gate.
+- **`/spec` Mode 2 auto-proceeds.** Parallel drafters (Sonnet: requirements + validation; Opus: plan) → main-session reconciliation → a **3-skeptic adversarial panel** (completeness/error-paths, testability, outcome-traceability + scope creep) → fix loop (cap 3) → auto-proceed. Experience-affecting latent decisions are asked immediately as one-off questions; invisible-technical ones go to the panel + `docs/decisions.md`.
+- **Constitution gate is outcome-only.** `/build` presents a plain-language product story; `tech-stack.md` is machine-written and never shown.
+- **The card flows end-to-end.** `validation.md` gains an Outcome Checks section; `/review` 2f grades every card outcome (Partial/No on a primary = HIGH) and the report leads with the per-outcome verdict; the phase-end dogfood handoff's "What you can test" bullets are generated from the card.
+
+### Added — parallel-agent upgrades
+- **Backend foundation overlap.** `plan.md` groups carry a `Design-dependent: yes/no` tag; on external design tracks, `/build` spawns a background agent that builds the `no` groups (data layer, API routes) while you design. `/backend` skips any group whose verify script already passes. New `foundationStatus` state field.
+- **Blind reviewer fleet.** `/review` Pre-2a.5 runs three Engine-2 reviewers (first-timer desktop / impatient mobile / returning user) with a 2-of-3 confirmation rule; 1-of-3 flags are re-verified before entering the fix loop. Engine 2 gains a persona slot.
+- **Background competitor research** in `/ba` Mode 2 — runs while you answer the scope drill.
+- **`skills/_shared/subagent-policy.md`** — the stack-wide rulebook: one-level nesting, briefing styles, model aliases (no version pins), output contracts, verify-on-return, parallel-dispatch rules.
+
+### Fixed — subagent architecture
+- **One-level nesting rule enforced.** Subagents cannot spawn subagents; `/spec` Mode 2 and `/review` now run inline in the `/build` session, and `/frontend`'s Track-3 brief is written inline with `/impeccable` loaded (was a nested spawn that silently degraded).
+- **`/backend` wave dispatch.** Task groups dispatch in dependency-ordered waves; agents never commit, never start dev servers, never address the user — the main session integrates, runs visual gates, and commits per group.
+- Model version pins removed everywhere ("Opus 4.7" → session default; invalid pinned-ID references → aliases).
+
+### Removed
+- `polish.md` / `tools.md` / `handoff.md` scaffolds and their `/spec`/`/build` wiring (reverted upstream — the public repo now mirrors the maintained stack exactly).
+
 ## [0.4.0] — 2026-06-06
 
 ### Added

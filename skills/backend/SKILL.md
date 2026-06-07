@@ -17,9 +17,9 @@ If these files are missing: stop. "No phase spec found. Run `/ba`, `/spec`, and 
 
 | Mode | Model | Mechanism | Inputs (caller passes) | Outputs (skill produces) | Terminal state (this skill writes) |
 |---|---|---|---|---|---|
-| (single mode) | Opus | inline (in `/build` session) | spec directory; reads requirements.md + plan.md + handover.md + design-tokens.css + design file/mockups | implemented backend per plan.md task groups; integration-tested per requirements.md API contracts | `backend-complete` |
+| (single mode) | Opus (main session) + wave-dispatched Sonnet/Opus agents | inline (in `/build` session) | spec directory; reads requirements.md + plan.md + handover.md + design-tokens.css + design file/mockups | implemented backend per plan.md task groups; integration-tested per requirements.md API contracts | `backend-complete` |
 
-Inline-Opus because the work is deep architectural reasoning + code-harness discipline + Stage 3 adversarial review. The architectural review in Stage 3 spawns its own Opus subagent loaded with `/adversarial-review`.
+Inline-Opus for the main session (architectural reasoning, wave orchestration, commits, visual gates, Stage 3 adversarial review, integration). Stage 2 dispatches parallel subagents in dependency-ordered waves — Opus for architectural/data/API groups, Sonnet for leaf/UI/config groups; agents never commit, never start servers, never address the user (see `${CLAUDE_PLUGIN_ROOT}/skills/_shared/subagent-policy.md`). Stage 3 adversarial review spawns its own Opus subagent loaded with `/adversarial-review`.
 
 **Naming note: "Stage" vs "Phase".** The numbered Stages below (Stage 0–4) are this skill's *internal* steps for one project phase. The project Phase (Phase 1, Phase 2, … from `roadmap.md` and `requirements.md` frontmatter) is the higher-level slice the whole `/build` pipeline is working on. When you see `Phase <N>` in placeholders (wiki entry titles, adversarial review prompts, completion summary) that refers to the project Phase. When you see `Stage <N>` it refers to the section in this skill.
 
@@ -115,7 +115,48 @@ For pure-UI / pure-refactor / pure-visual-rebuild phases with no new logic: skip
 
 ## Stage 2 — Implementation (group by group)
 
-Implement `plan.md` task groups in order using the `code-harness` skill for every group. Each group is independently verifiable before moving to the next.
+Implement `plan.md` task groups using the `code-harness` skill for every group. Each group is independently verifiable before moving to the next.
+
+### Stage 2 entry — foundation skip check (runs first, every phase)
+
+Before any dispatch or implementation: if `.build-state.json` has `foundationStatus` of `done` or `failed`, a background foundation agent may have already built the `Design-dependent: no` groups during the user's design wait (see `/build` Step 4b). The branch is the truth, not the field: run each group's `verify-group-N.sh` — **any group whose verify script passes is already built and committed; skip it.** Groups that fail or were skipped by the foundation agent are built normally below. Log internally: "Foundation: [N] groups pre-built, [N] remaining."
+
+### Complexity assessment and wave dispatch
+
+Subagent rules (briefing, output contracts, dispatch) are in `${CLAUDE_PLUGIN_ROOT}/skills/_shared/subagent-policy.md` — Rule 6 governs everything below.
+
+Before starting any implementation, map the dependency graph from the remaining (non-skipped) groups:
+- Read every group's "Depends on:" field from plan.md
+- **Topologically sort into waves**: wave 1 = groups with no unmet dependencies; wave N+1 = groups whose dependencies are all in waves ≤ N. Within a wave, split into agent assignments with **non-overlapping file sets** (two groups touching the same file go to the same agent, or to a later wave).
+
+| Tier | Criteria | Strategy |
+|---|---|---|
+| **Simple** | ≤3 remaining groups, or every wave has 1 agent | Sequential inline — the main session implements all groups itself using the per-group procedure below. No dispatch. |
+| **Standard / Complex** | 4+ remaining groups with ≥1 multi-agent wave | Wave dispatch: within each wave, parallel agents; barrier between waves. |
+
+**Assigning groups to agents within a wave:**
+- **Opus (`model: "opus"`):** data model setup, schema migrations, API route implementations, auth/session logic, complex integrations, any group where an architectural decision must be made
+- **Sonnet (`model: "sonnet"`):** UI component implementation, static config, simple CRUD wiring to existing API contracts, utility functions, test helpers
+- A group may stay with Opus if it's simple but shares files with an Opus-owned group in the same wave
+
+**Per-wave dispatch:**
+
+Give each agent:
+- Full `requirements.md`, `plan.md`, `handover.md`, `tech-stack.md`
+- Its assigned task group numbers and sub-tasks only
+- The completed earlier waves' outputs: implemented API surface + changed-file lists (paste, don't reference)
+- These discipline rules verbatim: Spec-Light (TASK/ESTIMATE/VERIFY header), write verify-group-N.sh before implementation, tests before code for logic groups, root-cause iron law before any fix, WTF-score tracking
+- These hard constraints: **do NOT commit** (the main session owns commits); **do NOT start a dev server** (the visual compliance gate runs in the main session); any "stop and surface to user" condition in the discipline (3 failed hypotheses, WTF > 20%, 2× estimate) means **return immediately with `status: blocked` + the diagnosis** — agents never address the user
+- Return format: per-group `status: done | blocked`, changed-file list, verify-script results, diagnosis for any blocked group. No commentary.
+
+**Main session at each wave barrier:**
+1. Collect returns. For any `blocked` group: decide — retry with a **fresh** agent (policy Rule 7) carrying the diagnosis, reassign to yourself inline, or surface to the user (last resort, plain language).
+2. Cross-check interfaces between groups owned by different agents (function signatures, API shapes, shared types). Fix mismatches inline.
+3. **Run the visual compliance gate** (below) for every UI group in the wave — main session only: start the dev server, capture built vs design, post the side-by-side to the user.
+4. **Commit per group** — main session only, plain-English summary per group, only the files that group's agent listed.
+5. Re-run each group's verify script from scratch (never trust the agent's claim — policy Rule 5). Green → next wave.
+
+For the Simple tier: implement groups sequentially in the main session using the procedure below (commits and visual gates inline as written).
 
 For each group:
 1. Apply **Spec-Light**: post `TASK: [group description] / ESTIMATE: [time] / VERIFY: [command]`

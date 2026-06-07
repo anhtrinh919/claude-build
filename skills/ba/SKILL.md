@@ -13,7 +13,7 @@ Collect every decision needed to drive the build. Your output goes to `/spec` wh
 | Mode | Model | Mechanism | Inputs (caller passes) | Outputs (skill produces) | Terminal state |
 |---|---|---|---|---|---|
 | 1 (new project) | Opus | inline | none (drills user from scratch) | constitution decisions handed to `/spec` Mode 1 | none — `/spec` writes |
-| 2 (phase scope) | Opus | inline | mission.md + roadmap.md present | phase decisions + primary flow list handed to `/spec` Mode 2 | none — `/spec` writes |
+| 2 (phase scope) | Opus | inline | mission.md + roadmap.md present | user-approved `outcome-card.md` (written to the spec directory) + phase decisions + primary flow list handed to `/spec` Mode 2 | none — `/spec` writes state |
 | 3 (between phases) | Sonnet | subagent | project state summary (from `/build` prime), last completed phase context | replan notes handed to `/spec` Mode 3 | none — `/spec` writes |
 
 This skill never writes `.build-state.json`. Decisions flow forward via in-memory handoff (inline Opus) or subagent return text (Mode 3).
@@ -146,6 +146,8 @@ Read `mission.md`, `tech-stack.md`, and `roadmap.md` before asking anything. Kno
 
 Identify the next phase from roadmap.md. Orient user: "Starting Phase [N]: [feature name from roadmap]. Let me ask a few questions."
 
+**Launch competitor research in the background (before the first question).** Spawn a Sonnet agent (`Agent` tool, `run_in_background: true`) with a context-isolated brief: the feature name, the product one-liner from `mission.md`, and the Part C extraction goals (what screens exist, what patterns are standard, what's distinctive — for 2–3 apps that solve this specific feature; use WebSearch). It researches while the user answers Part A/B drilling. Collect the result at Part C. Fallback: if it hasn't returned by Part C, run the search inline as before. See `${CLAUDE_PLUGIN_ROOT}/skills/_shared/subagent-policy.md` for briefing rules.
+
 ### Part A: Scope grill
 
 All structured questions (multi-option, yes/no, confirmations) go through `AskUserQuestion`. Plain text is reserved for open-ended pushes between calls — never for asking the user to pick from a list.
@@ -182,9 +184,9 @@ Walk the user journey for this feature:
 
 ### Part C: Competitor research
 
-Find 2–3 apps that solve this specific feature (not the whole product — just this feature). Use `WebSearch`. Look for: `"[app name] [feature] UX"`, `"[app name] [feature] flow"`.
+Collect the background research agent's result (launched at the top of Mode 2). If it returned: use its comparison directly. If still running or failed: do the work inline — find 2–3 apps that solve this specific feature (not the whole product — just this feature) via `WebSearch` (`"[app name] [feature] UX"`, `"[app name] [feature] flow"`), extract what screens exist, what patterns are standard, what's distinctive.
 
-Extract: what screens exist, what patterns are standard, what's distinctive. Build a quick comparison. Ask user: "Seen these? Anything worth stealing? Anything to avoid?" One `AskUserQuestion` with the options: "Use some of these patterns," "Avoid all of these," "Take note but design differently."
+Either way, present the quick comparison and ask user: "Seen these? Anything worth stealing? Anything to avoid?" One `AskUserQuestion` with the options: "Use some of these patterns," "Avoid all of these," "Take note but design differently."
 
 ### Primary flow
 
@@ -200,11 +202,20 @@ Primary flow:
 
 Include this list in the handoff to `/spec`. Any story NOT in this list is a secondary story — bugs block but do not stop the review.
 
+### Part D: Outcome Card — the user's contract for this phase
+
+This is the ONLY approval the user gives at spec time. The spec files themselves are machine-validated downstream (`/spec` skeptic panel) and auto-proceed — the user never reads them.
+
+1. **Draft the card** from the drilling session using the schema at `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/outcome-card.md`. Primary outcomes map 1:1 to the Primary flow stories (same count, same order). Everything in user language — no endpoints, schemas, or component names. Leave `approved` unset.
+2. **Write it** to `specs/YYYY-MM-DD-[feature-slug]/outcome-card.md` (create the directory if `/spec` hasn't yet — it reuses the same one).
+3. **Surface the card verbatim in chat**, then one `AskUserQuestion`: "This card is the contract for Phase [N] — everything built and reviewed this phase traces back to it. Approve?" Options: **Approve** / **Adjust** (user says what to change; fold it in, re-surface, re-ask — loop until Approve).
+4. On Approve: set `approved: <today>` in the card frontmatter. The card is now the freeze point — later card changes restart `/spec` Mode 2.
+
 ### Handoff
 
-Tell user: "Got the full scope. Phase type: [initial/feature/rebuild]. `/spec` will write the requirements, implementation plan, and validation checklist — and show them to you for approval before touching the disk."
+Tell user: "Card locked. I'll now write the technical specs against it, have them adversarially reviewed, and start the design step — no more paperwork for you until the design."
 
-Invoke `/spec` Mode 2 with the phase type and primary flow list.
+Invoke `/spec` Mode 2 with the phase type, primary flow list, and the approved outcome-card.md path.
 
 ---
 
