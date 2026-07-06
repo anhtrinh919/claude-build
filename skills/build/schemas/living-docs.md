@@ -7,15 +7,18 @@ Living docs are always-current project documentation. Agents read them before to
 Every SDD project contains:
 
     project/
-    ├── mission.md                 # Product identity, mission, named user flows (created once)
+    ├── CLAUDE.md                  # Auto-loaded agent operating brief — index + project directives (created once, refreshed per phase)
+    ├── mission.md                 # Product identity, mission, target users (created once)
+    ├── product.md                 # Screen inventory + flows + App Map, AS BUILT (maintained per phase — drift anchor)
     ├── tech-stack.md              # Languages, frameworks, infra (created once)
     ├── roadmap.md                 # Ordered phase list (created once, refined between phases)
+    ├── backlog.md                 # Short-term task lake — dogfood Reports (threaded) + flat tasks (transient)
     ├── README.md                  # Overview, setup instructions, current status
     ├── WIKI.md                    # Project learnings and gotchas (updated per phase)
-    ├── CHANGELOG.md               # One-line delta per completed phase
+    ├── CHANGELOG.md               # Per-phase deltas incl. pivots/removals — the divergence ledger
     ├── specs/
     │   └── YYYY-MM-DD-[feature]/  # One dated dir per phase
-    │       ├── requirements.md    # What the phase delivers (frozen after /spec Mode 2 approval)
+    │       ├── requirements.md    # What the phase delivers (frozen after /build-spec (phase mode) approval)
     │       ├── plan.md            # Task groups (how)
     │       ├── validation.md      # When done (test contract)
     │       ├── design-brief.md    # Frontend brief (lean external or full internal)
@@ -27,6 +30,15 @@ Every SDD project contains:
         └── decisions.md           # Key technical forks and why
 
 ## File Descriptions
+
+### CLAUDE.md
+The auto-loaded agent operating brief (Claude Code reads it at the start of every session in the project dir). It is an **index + operating context**, not a content doc: a one-line product description, how to resume a build, pointers to every living doc, and a `## Project directives` section. It never duplicates the docs it points to — on conflict, the pointed-to doc wins. The `## Project directives` section is the home for durable, project-specific user instructions/preferences/constraints stated in conversation that fit no other doc; agents append a dated one-liner the moment one surfaces. Created once by `/build-spec` (constitution mode), refreshed each phase by `/build-spec` (replan mode). Schema: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/claude-md.md`.
+
+### product.md
+Screen inventory, navigation, named flows, and the App Map — **as actually built, not the original plan.** Maintained per phase by `/build-spec` (replan mode): new screens added, cut screens marked `removed`, reshaped screens marked `changed`, App Map regenerated. This is the phase-start re-board's drift anchor, so it must reflect reality. Schema: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/product.md`.
+
+### backlog.md
+The short-term task lake — transient work that doesn't belong in any phase's spec. Two zones: **Reports** (threaded dogfood bugs/feedback, `DF-N`, with rounds and status — the chat-driven replacement for an external bug tracker) and the flat task buckets (`T-N`: roll-in candidates, dogfood polish, side tasks). The agent maintains it from conversation and always tells the user the item ID. NOT the roadmap, NOT directives, NOT WIKI. Schema: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/backlog.md`.
 
 ### README.md
 Project name, mission (one sentence from constitution), setup instructions (how to run locally), current status line: "Phase N — [feature name] — in progress / complete." Update when a phase completes or setup steps change.
@@ -49,7 +61,13 @@ Component map (what exists and what it does), data models (schema with fields an
 Current full API surface. Every endpoint: method, path, auth required, brief description of what it does. Update any time an endpoint is added, changed, or removed. This is the live truth — not the spec file, which is frozen after approval.
 
 ### docs/decisions.md
-Non-obvious technical choices made during the project. Format: Decision → Why → Alternatives considered. Update whenever a non-default approach is taken. Example:
+The project's **decision ledger** — the within-project analog of the brain (which is cross-project canon). **Re-read it before reopening any settled question, at phase start, and on every post-compaction reload**, so a new session or compacted agent can't silently overturn what's already decided. Two sections:
+
+**## User decisions (settled — do not reopen without asking).** Every fork the user resolved. This is the anti-overturn record: a new or post-compaction agent reads it and honors it instead of re-litigating. One entry per decision — the question, the options offered, **what the user chose**, the one-line *why* (if stated), and the phase/date. An agent that believes a settled decision should now change must surface the prior choice to the user ("you chose X for this because Y — reopen?") — never quietly pick differently. Append-only; never delete a settled decision (mark it superseded if the user reopens it). Format:
+
+    **[Decision, as a question]** — Chose: **[option]**. Why: [reason, or "user preference"]. Options were: [A / B]. _(Phase N · YYYY-MM-DD)_
+
+**## Technical decisions (Claude's calls).** Non-obvious invisible-plumbing choices Claude made with no felt user difference (the silent half of the fork law). Format: Decision → Why → Alternatives considered. Example:
 
     **Used server-side pagination instead of cursor-based:** Simpler implementation for expected dataset size (<100k rows). Alternatives: cursor-based (better for real-time, overkill here), client-side (not viable at scale).
 

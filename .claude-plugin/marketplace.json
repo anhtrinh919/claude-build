@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-build",
+  "description": "Spec-Driven Development for non-devs — a gated build pipeline that ships one dogfooded vertical slice at a time.",
+  "owner": {
+    "name": "Anh Trinh",
+    "url": "https://github.com/anhtrinh919"
+  },
+  "plugins": [
+    {
+      "name": "build",
+      "description": "SDD build stack: shaping gate → constitution → per-phase spec → design → backend → review, one dogfooded slice per phase. Eight skills, state-file-driven, re-entrant.",
+      "source": "./",
+      "category": "workflow"
+    }
+  ]
+}

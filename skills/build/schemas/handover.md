@@ -1,29 +1,17 @@
 # Phase [N] Frontend Handover — [Feature Name]
 
-## Design file — source of truth
+**External track only.** This file is the **bare screen→image index** for a design the user made in their own tool and exported as images. (The `claude-code` track writes no handover — its mockups are real code in `specs/<phase>/mockups/` and backend builds from them directly.)
 
-> **This handover is an index. The design file is the specification.**
-> Backend must open the design file and build UI from it — frame by frame, node by node. The handover describes structure and mappings; the design file describes visuals, layout, spacing, typography, and interaction affordances. Where the two differ, the design file wins.
+## Design source — the exported images
 
-- **Path:** `[absolute or project-relative path to the design file]`
-- **Tool:** `Pencil` | `Figma` | `Penpot` | `other`
-- **How to read it:**
-  - Pencil → `mcp__pencil__open_document`, then `mcp__pencil__batch_get` for structure and `mcp__pencil__get_screenshot` for visual verification
-  - Figma → the Figma MCP or exported asset bundle at `[path]`
-  - Other → `[explicit instructions for how backend should access]`
+> **This handover is an index, not a specification.** The exported images ARE the design; backend builds each screen to match its image. This file only says *which image is which screen* — it never restates colors, spacing, or layout (those are in the images + tokens).
 
-## Design tokens
-
-Generated from the design file's variables — not authored by hand. Backend imports these; it does not re-extract or approximate visual values.
-
-- **Tokens file:** `specs/YYYY-MM-DD-[feature]/design-tokens.css`
-- **Generated from:** `mcp__pencil__get_variables` (or tool-equivalent)
-- **Includes:** colors (surfaces, borders, text, accent, status), font families, font sizes, spacing scale, radius scale
-- **How backend uses it:** import `design-tokens.css` from the app's global stylesheet; reference via CSS variables (`var(--surface-primary)`) or Tailwind-arbitrary values (`bg-[var(--surface-primary)]`). Do not duplicate hex values into Tailwind classes or component styles.
+- **Images path:** `[folder or list of exported image files]` — **backend builds each screen to match its image.**
+- **Tokens file:** `specs/YYYY-MM-DD-[feature]/design-tokens.css` — import from the app's global stylesheet; reference via CSS variables (`var(--surface-primary)`), never duplicate hex/px into component styles.
 
 ## Fonts
 
-List every font family the design file uses. Backend configures font loading once (e.g. `next/font/google` or local `@font-face`) and wires the CSS variables into `design-tokens.css`.
+Every font family the design uses. Backend configures loading once (e.g. `next/font/google` or local `@font-face`) and wires the variables into `design-tokens.css`.
 
 | Role | Family | Weights used |
 |------|--------|--------------|
@@ -31,61 +19,44 @@ List every font family the design file uses. Backend configures font loading onc
 | Body | [e.g. Inter] | 400, 500 |
 | Monospace | [e.g. Geist Mono] | 400 |
 
-## What was designed
+## Screen → image index
 
-One paragraph — what the design covers at a high level. No per-state narration (that's in the frame index below, and the details live in the design file).
+The mapping from each requirement-spec state to the exact exported image. Backend opens the named image to build that state.
 
-## Frame index
-
-The mapping from each requirement-spec state to the exact design file node/frame. Backend reads the named node to build that state.
-
-| Requirement state | Design frame / node ID | Notes |
-|-------------------|------------------------|-------|
-| Home — empty | `frame-name` / `nodeId` | |
-| Home — populated | `frame-name` / `nodeId` | |
-| Board — running card | `frame-name` / `nodeId` | |
+| Requirement state | Image file | Notes |
+|-------------------|------------|-------|
+| Home — empty | `home-empty.png` | |
+| Home — populated | `home.png` | |
+| Board — running card | `board-running.png` | |
 | ... | ... | |
 
-Every state listed in `requirements.md` UI Requirements must appear here. If a state is intentionally not designed, mark it `— not designed —` with a reason.
+Every state listed in `requirements.md` UI Requirements must appear here. A state intentionally not designed → `— not designed —` + reason.
 
 ## Reusable components
 
-If the design file defines reusable symbols/components (e.g. "Phase Card / Running"), list them. Backend should implement these as reusable components in the frontend stack (React component, Vue component, etc.) — not inline-duplicate them per screen.
+Visual elements that repeat across screens (e.g. "Phase Card / Running"). Backend implements each as one reusable component with state variants — never inline-duplicated per screen.
 
-| Component name | Design node ID | Used in frames |
-|----------------|----------------|----------------|
-| [e.g. Phase Card / Idle] | `nodeId` | Board, Card Detail |
-| ... | ... | ... |
+| Component name | Appears in screens |
+|----------------|--------------------|
+| [e.g. Phase Card] | Board, Card Detail |
+| ... | ... |
 
 ## Deviations from requirements spec
 
-Any design decision that diverges from `requirements.md`. State what and why.
+Any design that diverges from `requirements.md`. What and why.
 
-- **[What deviated]:** [Why]
-- **Impact on backend:** [None / describe]
+- **[What deviated]:** [Why] — **Impact on backend:** [None / describe]
 
-*No deviations — design matches spec exactly.* [Delete this line if there are deviations]
+*No deviations — design matches spec exactly.* [Delete if there are deviations]
 
 ## Layout / IA notes
 
-One short section only if the design introduces structural patterns that differ from prior phases or from the existing codebase. Examples: "No left sidebar — top header pattern throughout." "Card detail is a right-side sheet, not a modal." Do not restate what the design file shows — only flag the things the implementer might miss by pattern-matching against existing code.
+Only structural patterns an implementer might miss by pattern-matching existing code (e.g. "No left sidebar — top-header throughout." "Card detail is a right-side sheet, not a modal."). Never restate what the images show.
 
-If none: *No IA deviations — design follows existing app structure.*
+*No IA deviations — design follows existing app structure.* [Delete if there are notes]
 
-## API contracts expected from backend
+## Spec gaps (if any)
 
-Pulled directly from the phase spec's API Contracts section. Backend implements these exactly.
+> ⚠ **Spec gap:** the design needs `[screen/state/endpoint]` that `requirements.md` does not cover. Do not start backend until the spec is updated.
 
-### [Endpoint name]
-- **Request:** `[METHOD] /api/[path]`
-- **Auth required:** Yes / No
-- **Input:** `{ field: type }` (POST/PUT) or `?field=type` (GET)
-- **Expected success response:** `{ field: type }` — status `[200/201]`
-- **Expected error responses:**
-  - `400`: [condition]
-  - `404`: [condition]
-
-[Flag any gaps here:]
-> ⚠ **Spec gap:** Design requires `[METHOD] /api/[path]` which is not in the phase spec. Do not start backend until spec is updated.
-
-*No new API contracts — this phase reuses existing endpoints.* [Delete this line if there are new contracts]
+*No gaps — the design covers exactly the spec's screens.* [Delete if there are gaps]

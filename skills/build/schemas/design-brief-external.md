@@ -1,20 +1,22 @@
 # Design Brief — External Tool Path
 
-Brief for handoff to Pencil.dev, Claude Design, Figma, or similar external design tool. The tool owns component-level, layout-hierarchy, and interaction-pattern decisions. This brief's job is to give the tool **deep grounded context** for the full product so it doesn't design Phase N into a corner that later phases must retrofit around — and so it knows the *why* behind every screen group, not just the *what*.
+Brief for handoff to whatever external design tool the user chooses. The external tool owns the **entire visual look** — style, color, typography, layout, components, spacing, and motion. This brief provides **context, spec, and copy only**: deep grounded product context, the full spec (screens, states, behaviors, IA), and the real on-screen copy — so the tool doesn't design Phase N into a corner that later phases must retrofit around, and so it knows the *why* behind every screen group, not just the *what*.
 
-**Length target:** 15–40K tokens. Lower bound for small phases, upper bound for foundation phases with rich product context. Stay under 50K to leave the design tool's context budget room for its own design system, screen iteration, and MCP overhead.
+**Length target:** 15–40K tokens. Lower bound for small phases, upper bound for foundation phases with rich product context. Stay under 50K to leave the design tool's context budget room for its own design system, screen iteration, and tool overhead.
 
-**Read before writing:** `mission.md`, `tech-stack.md`, `roadmap.md`, `specs/YYYY-MM-DD-[feature]/requirements.md`, and any project-level `CLAUDE.md` or `past-lives.md`. Pull from them — do not paraphrase from memory.
+**Read before writing:** `mission.md`, `product.md`, `tech-stack.md`, `roadmap.md`, `specs/YYYY-MM-DD-[feature]/requirements.md`, and any project-level `CLAUDE.md` or `past-lives.md`. Pull from them — do not paraphrase from memory.
 
-**Do NOT include:** specific component names, layout hierarchy, interaction patterns, mobile breakpoints, padding/spacing values, empty/error state copy. Those belong to the design tool. (You CAN describe behavioral *intent* — "the empty state should feel confident, not hand-holding" — without writing the actual copy.)
+**Do NOT include:** visual style direction, color/palette intent, typography intent, tone/mood-as-aesthetic, aesthetic references, theme posture (light/dark), specific component names, layout hierarchy, interaction patterns, mobile breakpoints, padding/spacing values. The external design tool decides the entire look and layout; prescribing it defeats the point of an external track and biases the tool. (You CAN describe behavioral *intent* — "the empty state should feel confident, not hand-holding.")
 
 **DO include** (the lessons from past phases — every section below is required unless marked optional):
 - Full product vision — what the product becomes at the end of the roadmap, not just this phase.
 - A roadmap-at-a-glance.
+- Product type & mental model — concrete product type and which design approach/toolset to apply (and which to avoid).
 - Forward-compatibility callouts — "leave room for X, which lands in Phase Y." This is the single most important section for preventing retrofit pain.
 - Per-screen-group rationale — what each group of screens does and why it exists.
 - User stories — verbatim from `requirements.md`, organized by screen group.
-- Patterns to avoid — what the design must NOT become (especially relevant if past attempts exist).
+- Patterns to avoid — product-category and mental-model anti-patterns (not visual bans).
+- Copy & content — real on-screen text, labels, and microcopy (or pointers to the canonical content source).
 - Information architecture table.
 - Screen checklist with coverage notes.
 
@@ -22,29 +24,41 @@ Brief for handoff to Pencil.dev, Claude Design, Figma, or similar external desig
 
 ## Design intent
 
-One short paragraph — the answer to the "what's the one thing a user should remember or feel after using this?" memorable-thing question. Quote the user verbatim where possible. End with a one-liner: *"Every visual decision should be weighed against this."*
+One short paragraph — the answer to the "what's the one thing a user should remember or feel after using this?" memorable-thing question. This captures the **experience and feeling goal**, not a visual instruction. Quote the user verbatim where possible. End with a one-liner: *"Every design decision should be weighed against this."*
+
+## Product type & mental model
+
+State two things explicitly:
+
+1. **Concrete product type (one line).** Name what this is: "a production native tablet/iPad app," "a CLI tool," "a data dashboard web app," "a marketing site," "a B2B SaaS web app," etc. The more specific, the better — this tells the design tool which platform conventions and native patterns to draw from.
+
+2. **Which mental model and toolset to apply — and which to avoid.** AI design tools default to building an interactive HTML artifact (scrollytelling page, slide deck, visual playground) unless told otherwise. Be explicit. Example for a native app: *"Design this as a real native application using standard platform app UI patterns (navigation, screens, touch targets, system chrome). Do NOT design it as an interactive HTML document, a scrollytelling or explorable web page, a slide deck, or a code artifact."* Adapt to the actual product type — for a marketing site, the HTML-document mental model is correct; for a mobile or tablet app, it is wrong.
+
+**Why this matters:** without this section, AI design tools apply the wrong mental model by default — usually an interactive webpage — regardless of the product type described elsewhere in the brief. Name it explicitly so the tool reaches for the right conventions from the start.
 
 ## Product context — full vision
 
 The full picture of what the product becomes at the end of the roadmap. Aim for **3–6 paragraphs**, not just a summary. Cover:
 - **What it is.** Product type, deployment surface, who runs it, who uses it.
 - **What it replaces.** The current tools or workflows the user is moving away from. Naming these sharpens the contrast for the design tool.
-- **What it explicitly isn't.** Adjacent products that are NOT the target — this prevents Pencil from pattern-matching toward the wrong reference.
-- **The end-state form factor.** Describe the eventual layout, navigation model, and key surfaces in prose. Pencil designs Phase 1 better when it can picture the Phase N destination.
-- **The operator's day with this product.** Optional but high-value — a short narrative of the user's typical day using the product. Helps Pencil see screens as connected nodes in a flow, not isolated mockups.
+- **What it explicitly isn't.** Adjacent products that are NOT the target — this prevents the design tool from pattern-matching toward the wrong reference.
+- **The end-state form factor.** Describe the eventual layout, navigation model, and key surfaces in prose. the design tool designs Phase 1 better when it can picture the Phase N destination.
+- **The operator's day with this product.** Optional but high-value — a short narrative of the user's typical day using the product. Helps the design tool see screens as connected nodes in a flow, not isolated mockups.
 
 Pull from `mission.md` and `roadmap.md`. Don't paraphrase — quote where useful.
 
 ## Patterns to avoid
 
-If the project has predecessors (failed attempts, cousin projects, prior prototypes), this section names the design failure modes to specifically avoid. Read `past-lives.md`, `CLAUDE.md`, or any "lessons learned" docs.
+This section is about **product-category and mental-model anti-patterns** — wrong-category thinking the design must not fall into. It is NOT a list of visual bans (the design tool picks the visuals).
 
-For each prior attempt or known anti-pattern:
-- **Name it.** What was the prior attempt or pattern called?
-- **What went wrong visually.** What did the design become that it shouldn't have?
-- **What this design must NOT do.** Concrete "do not" statements.
+If the project has predecessors (failed attempts, cousin projects, prior prototypes), name the product-level failure modes. Read `past-lives.md`, `CLAUDE.md`, or any "lessons learned" docs.
 
-If no past attempts, name **generic anti-patterns for this product type**: marketing-site aesthetic, IDE pane density, generic AI-app chrome, etc. The point is to give Pencil a clear list of references to pattern-AWAY-from.
+For each anti-pattern:
+- **Name it.** What product category or mental model is it being confused with?
+- **What went wrong.** What did the design become that it shouldn't have — in product/UX terms?
+- **What this design must NOT do.** Concrete "do not" statements about product behavior, navigation, or category.
+
+If no past attempts, name **generic anti-patterns for this product type**: a learning app becoming a passive video player; a tool dashboard becoming a marketing site; a native tablet app becoming an HTML scrollytelling page; an ops tool becoming a toddler tap-toy. The point is to protect the product-category identity, not to constrain color choices.
 
 ## Roadmap at a glance
 
@@ -87,11 +101,11 @@ For each natural group of screens (Login, Home, Settings, Editor, etc.), write a
 - **Job.** One paragraph — what the user comes to this group of screens to do. Frame in user motivation, not feature names.
 - **Why it exists in this phase.** What about the phase scope makes this group necessary now.
 - **User stories served.** List the user stories from `requirements.md` that this group fulfills. Reference by number.
-- **Key behaviors the design must encode.** Behavior, not visual treatment. Examples: "the Send button morphs into a Stop button while a response is generating", "the folder picker breadcrumb cannot navigate above WORKSPACE_ROOT", "queued messages persist across browser tab close." Pencil needs to know these to design correct affordances.
+- **Key behaviors the design must encode.** Behavior, not visual treatment. Examples: "the Send button morphs into a Stop button while a response is generating", "the folder picker breadcrumb cannot navigate above WORKSPACE_ROOT", "queued messages persist across browser tab close." the design tool needs to know these to design correct affordances.
 - **States that surprise.** States that aren't obvious from the screen name and might be missed: queue chip below input, jump-to-latest pill while scrolled up, restart banner when the underlying process dies, etc.
 - **Forward-compat for this group.** Which forward-compat callouts from above apply most directly to this group.
 
-This section grounds Pencil in the *why* of each screen, not just the *what*. Without it, designs end up correct in form but wrong in priority.
+This section grounds the design tool in the *why* of each screen, not just the *what*. Without it, designs end up correct in form but wrong in priority.
 
 ## User stories
 
@@ -103,35 +117,19 @@ Format:
 **N. [Story title]:** As [actor], I [specific action] so that [outcome]. [Mission flow + step reference, if any.]
 ```
 
-Pencil references these while designing — when a screen feels off, the question "which user story does this serve?" cuts through ambiguity.
+the design tool references these while designing — when a screen feels off, the question "which user story does this serve?" cuts through ambiguity.
 
-## Visual style
+## Copy & content
 
-Pick a specific direction (e.g., "operator's executive dashboard", "editorial minimal", "playful consumer", "dense data IDE"). State **why** — tie to who uses it and what the product should feel like. One paragraph.
+Provide the **real on-screen text** — not lorem ipsum. The design tool returns a design with real words, so the brief must supply them.
 
-If the design has **dual register** (e.g., dense dashboard surfaces + calm reading surfaces), name both modes explicitly and explain which surfaces use which register. Conflating two registers loses both.
+Include (or point directly to the canonical source):
+- **Representative screen copy.** Key headings, labels, and body text for the main screens. Pull from the curriculum docs, requirements.md, or mission.md — do not invent.
+- **Button and action labels.** The actual text on primary and secondary actions for each screen group.
+- **Microcopy.** Confirmation messages, empty states, error states, helper text. These shape affordances — the design tool needs them to size and place UI elements correctly.
+- **Content source pointer.** If copy lives in a canonical doc (e.g., `curriculum/unit-1-deep-sea.md`, `requirements.md`), name it and quote the most important sections inline. Do not just reference the doc without giving the tool a usable sample.
 
-## Tone and mood
-
-Three to five adjectives describing the feel. Each adjective backed by a one-line reason that ties to user motivation, not aesthetic preference.
-
-## Palette direction
-
-Rough color intent — not hex codes. Cover:
-- **Primary mode:** light / dark / both
-- **Foundation:** neutrals or saturated?
-- **Accent reserved for:** primary action / branding / active state / etc.
-- **Saturated/semantic color reserved for:** what specifically (status, errors, gates) — and the discipline ("scarce, semantic, never decorative")
-
-The design tool picks specific hex/HSL values. The brief constrains the discipline.
-
-## Typography direction
-
-Serif vs. sans for body and UI. Mono usage (paths, code, literals). Display vs. utilitarian. Weight personality. Not font names — the design tool picks specifics.
-
-## References (optional)
-
-If relevant, name 1–3 products whose **feel** is close to the target. State which aspect each reference captures (layout density, color discipline, conversational tone, etc.). Don't reference for the sake of referencing — only when it sharpens the brief.
+The guiding principle: the design returned should look like the real product, not a wireframe with placeholder text.
 
 ## Information architecture
 
@@ -163,7 +161,7 @@ GROUP B
 
 ## Coverage notes
 
-- **Constitution constraints** that apply to all screens (responsive viewports, theme posture, accessibility minimums) — restate from `tech-stack.md`.
+- **Constitution constraints** that apply to all screens (responsive viewports, touch-target size minimums, text-size minimums, accessibility minimums, platform-specific attribution requirements, product rules like no-streak/no-leaderboard) — restate from `tech-stack.md`. Do NOT include theme posture (light/dark) — that is a visual decision the tool owns.
 - **Design system anchors** — patterns that should survive across surfaces (e.g., a card shape that works at full-card size on a home page AND at compact-row size in a future sidebar).
 - **Most-forgotten surfaces** — list-item renderers in particular tend to get designed as detail panels but missed as compact components. Call this out for any list-item that has state variants.
 - **Forward-compat reminders mapped to specific screens** — call out which screens from the checklist most directly inherit the forward-compat callouts above.

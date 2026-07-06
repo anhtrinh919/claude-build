@@ -4,6 +4,10 @@ Full-detail brief used when Claude Code designs the UI directly via HTML/CSS/Rea
 
 ---
 
+## Design intent
+
+The one thing a user should remember or feel after using this — copied from `## Design North Star` in `mission.md` (asked once at the first brief). Written at the top of every brief on every track; `/build-review` (pipeline-review mode) Step 6 grades the built product against it.
+
 ## Visual style
 
 Pick a specific direction that fits the product's mission and tone (from `mission.md`). State **why** — specific reasoning tied to who uses this and what it needs to feel like.
