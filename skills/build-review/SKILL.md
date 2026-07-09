@@ -3,7 +3,8 @@ name: build-review
 description: >
   SDD review + dogfood skill (v2), two modes by explicit arg. **pipeline-review** (the /build
   phase gate): Round 1 code review — automated checks (tsc, unit tests, one curl per API contract),
-  an architecture pass (nine lenses incl. honest-mechanism/anti-hack + reinvention/simplification),
+  an architecture pass (design lenses incl. honest-mechanism/anti-hack + reinvention/simplification,
+  plus Fowler's baseline code smells),
   a correctness pass (concrete-failure-scenario bug hunt) — re-verified, no browser; Round 2 dogfood through the shared
   browser-review engine (blind first-impression + guided story/shell/validation walk), then
   outcome-card grading; every HIGH+MEDIUM finding
@@ -119,7 +120,7 @@ Write `currentSubStep: "review.code"`. The single code-quality gate — checks, 
 
 **1a — Automated checks.** Run every check in `validation.md` (tsc, unit tests, one curl per API contract). Record exit code + `✓`/`✗`. Start the dev server if needed, poll ≤30s, never ask the user. Any `✗` = HIGH. Fast-fail before spending Opus on 1b.
 
-**1b — Architecture pass (Opus subagent).** Target = `main..HEAD`. Tests catch logic bugs; the harness catches contract bugs; nothing else catches **shape** bugs. Default stance adversarial — assume the shape is wrong until findings prove otherwise; generic praise is a failure mode. Apply nine lenses (the ninth folds the old ponytail-review simplify pass in — one pass now, since it reads the same whole diff); skip one only when structurally inapplicable; verify every finding against the actual code before returning it.
+**1b — Architecture pass (Opus subagent).** Target = `main..HEAD`. Tests catch logic bugs; the harness catches contract bugs; nothing else catches **shape** bugs. Default stance adversarial — assume the shape is wrong until findings prove otherwise; generic praise is a failure mode. Apply every lens below — one pass now, since it reads the same whole diff (this also folds in the old ponytail-review simplify pass); skip a lens only when structurally inapplicable or already caught under another name; verify every finding against the actual code before returning it.
 
 Each finding names a concrete revision (collapse / inline / merge / delete / consolidate / rename / move-upstream) — no vague "consider refactoring."
 
@@ -133,7 +134,21 @@ Each finding names a concrete revision (collapse / inline / merge / delete / con
 | Logic consolidation | one rule, one place — duplicated rules drift → consolidate; extract the threshold to one constant |
 | Naming honesty | name a noun the domain knows, not a `Manager`/`Handler`/`Util` role → rename; split the kitchen-sink `Util` |
 | Reinvention & dead weight (ponytail) | reimplemented stdlib/native, a new dep for what a few lines do, speculative flexibility with no 2nd caller, dead abstraction → replace with the stdlib/native/platform primitive, delete the speculative code; the whole-diff view also catches duplication *across* parallel build agents — consolidate to one; report net lines removed |
+| Mysterious Name (Fowler) | a function, variable, or type whose name doesn't reveal what it does or holds → rename it; if no honest name comes, the design's murky |
+| Duplicated Code (Fowler) | the same logic shape appears in more than one hunk or file in the change → extract the shared shape, call it from both |
+| Feature Envy (Fowler) | a method that reaches into another object's data more than its own → move the method onto the data it envies |
+| Data Clumps (Fowler) | the same few fields or params keep travelling together (a type wanting to be born) → bundle them into one type, pass that |
+| Primitive Obsession (Fowler) | a primitive or string standing in for a domain concept that deserves its own type → give the concept its own small type |
+| Repeated Switches (Fowler) | the same switch/if-cascade on the same type recurs across the change → replace with polymorphism, or one map both sites share |
+| Shotgun Surgery (Fowler) | one logical change forces scattered edits across many files in the diff → gather what changes together into one module |
+| Divergent Change (Fowler) | one file or module is edited for several unrelated reasons → split so each module changes for one reason |
+| Speculative Generality (Fowler) | abstraction, parameters, or hooks added for needs the spec doesn't have → delete it; inline back until a real need shows |
+| Message Chains (Fowler) | long `a.b().c().d()` navigation the caller shouldn't depend on → hide the walk behind one method on the first object |
+| Middle Man (Fowler) | a class or function that mostly just delegates onward → cut it, call the real target direct |
+| Refused Bequest (Fowler) | a subclass or implementer that ignores or overrides most of what it inherits → drop the inheritance, use composition |
 | **Honest mechanism (anti-hack)** | *kept verbatim below* |
+
+**Overlap with the architecture lenses is expected — report a finding once, under whichever name fits better, never both.** Nearest pairs: Naming honesty / Mysterious Name; Logic consolidation / Duplicated Code & Repeated Switches; Reinvention & dead weight / Speculative Generality; Information hiding vs relabeling / Middle Man.
 
 **Honest-mechanism lens (verbatim).** Fix the cause, not the symptom. The smell is a fix that **infers structure from surface form** — a regex guessing paragraph breaks, a magic-string special-case, a heuristic that passes the one observed input. These pass the demo and rot on the next input, because the defect is still upstream where the data first went wrong. Ask, per fix in the diff: is it applied at the boundary where the bug was *noticed*, or at the layer where the value first becomes wrong? Does any change reconstruct lost information by guessing (regex on formatting, parsing a rendered string, sniffing a magic substring) instead of preserving it at the source? Does a special-case branch exist only to make one observed input pass — what's the next input that breaks it? **Revision:** move the fix upstream to where the value is first wrong; delete the surface-form heuristic and preserve the real signal at the producing layer. A genuinely-warranted symptom-patch is tagged `[symptom-patch]` with the tradeoff surfaced — never shipped as a root-cause fix (`~/.claude/CLAUDE.md` "Fix discipline").
 
@@ -259,9 +274,9 @@ Main writes it after a clean re-verify (or on Accept). Title `### Review Report 
 
 ---
 
-## Wiki integration
+## Brain integration
 
-Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/wiki.md` with `$AGENT=review`, `$TAGS` from `tech-stack.md`. **Friction:** one entry per real bug — `Phase <N> review friction: <bug name>`; body = which sub-pass surfaced it, which story, how resolved, what check would catch it earlier. **Phase-wrap:** once after the final report — `Phase <N> review: <summary>`; body = what caught real bugs, what UX pattern to watch next.
+Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/brain.md` with `$AGENT=review`, `$TAGS` from `tech-stack.md`. **Friction:** one entry per real bug — `Phase <N> review friction: <bug name>`; body = which sub-pass surfaced it, which story, how resolved, what check would catch it earlier. **Phase-wrap:** once after the final report — `Phase <N> review: <summary>`; body = what caught real bugs, what UX pattern to watch next.
 
 ---
 

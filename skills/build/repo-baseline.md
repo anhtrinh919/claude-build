@@ -214,4 +214,3 @@ None. Open source status is a decision the user makes when ready to publish — 
 - Code quality tooling (linting, formatting) → `dx-baseline.md`
 - Security hygiene → `production-safety-baseline.md`
 - CI/CD pipeline configuration → platform-handled or post-PMF
-- Wiki / project knowledge base → already managed by `/build-spec`'s living docs

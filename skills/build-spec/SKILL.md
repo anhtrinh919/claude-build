@@ -65,9 +65,9 @@ Latent decisions are choices made silently while authoring because the drilling 
 
 When unsure, treat as **`felt-impact`** — a 5-second fork is cheaper than a phase of rework. Before surfacing any fork, check `docs/decisions.md ## User decisions` first — if already settled, honor it, never re-litigate.
 
-## Brain + wiki
+## Brain integration
 
-Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/wiki.md` with `$AGENT=spec` and `$TAGS` from `tech-stack.md` (constitution has no stack — pass empty). Read at the first substantive step. **Friction trigger:** the user re-answers/rejects the same decision topic 3+ times, or modifies a spec after approval — one entry per topic per session. **Phase-wrap trigger:** once per phase at the end of replan, before merging the branch.
+Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/brain.md` with `$AGENT=spec` and `$TAGS` from `tech-stack.md` (constitution has no stack — pass empty). Read at the first substantive step. **Friction trigger:** the user re-answers/rejects the same decision topic 3+ times, or modifies a spec after approval — one entry per topic per session. **Phase-wrap trigger:** once per phase at the end of replan, before merging the branch.
 
 ---
 
@@ -151,7 +151,7 @@ Spawn Opus drafter leaf agent(s) with a context-isolated brief — the Product S
   List only the confirmed keys; omit deselected ones. This is the durable carrier the baseline injection reads when `.build-state.json` is absent. `tech-stack.md` is the **widest-read doc** in the stack — every phase skill reads it as the constraints authority.
 - **`roadmap.md`** — Phase 0 (Foundation) first, then one vertical slice per phase; carry the user's slice sequence verbatim; each phase names feature + what it delivers + why it's at that position; global out-of-scope named.
 
-**Scaffold living docs** per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md` (headers only — an empty section is fine, fake content is not): `CLAUDE.md` (index + `## Project directives`, no prefix), `backlog.md` (empty buckets, no prefix), `README.md` (mission + status "constitution complete, Phase 0 not started", no prefix), `WIKI.md`, `CHANGELOG.md`, `docs/architecture.md`, `docs/api.md`, `docs/decisions.md`. Every agent-facing living doc (`WIKI.md`, `docs/architecture.md`, `docs/api.md`, `docs/decisions.md`) opens with the exact first line `> Agent context — not for human reading.`; `README.md` and `CLAUDE.md` do NOT. Seed `docs/decisions.md ## User decisions` with the forks already resolved (the Product Shape's chosen forks + any felt-impact calls answered during the grill), each as `[Decision] — Chose: X. Why: … Options were: … (Phase 0 · date)`; seed `## Technical decisions` from the tech-stack Key Technical Decisions table. If `~/.claude/wiki/` exists, copy stack-tagged entries under `## From Global WIKI — [tech]` in `WIKI.md`; else skip silently.
+**Scaffold living docs** per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md` (headers only — an empty section is fine, fake content is not): `CLAUDE.md` (index + `## Project directives`, no prefix), `backlog.md` (empty buckets, no prefix), `README.md` (mission + status "constitution complete, Phase 0 not started", no prefix), `CHANGELOG.md`, `docs/architecture.md`, `docs/api.md`, `docs/decisions.md`. Every agent-facing living doc (`docs/architecture.md`, `docs/api.md`, `docs/decisions.md`) opens with the exact first line `> Agent context — not for human reading.`; `README.md` and `CLAUDE.md` do NOT. Seed `docs/decisions.md ## User decisions` with the forks already resolved (the Product Shape's chosen forks + any felt-impact calls answered during the grill), each as `[Decision] — Chose: X. Why: … Options were: … (Phase 0 · date)`; seed `## Technical decisions` from the tech-stack Key Technical Decisions table.
 
 **Persist `baselines`** to both `.build-state.json` (the `baselines` array) and `tech-stack.md ## Baselines` (written above). If the drilling produced no baseline confirmation, default to `["repo"]`.
 
@@ -328,13 +328,13 @@ Run in the **same session** the phase completed. Reconcile every living doc to *
 - **`product.md` is the phase-start drift anchor — keep it as-built.** New screens → add rows, Status `built`. Cut screens → keep the row, Status `removed` + one-line why. Reshaped screens → Status `changed`, note how. Regenerate the App Map + Navigation Structure. Never leave a removed/pivoted screen showing as planned.
 - **`tech-stack.md` is the widest-read doc — keep it as-built.** New dependency/library/service → add it with its pinned version. Changed pattern/decision → update the Key Technical Decisions table and cross-link the `docs/decisions.md` entry holding the *why*. Anything ruled out earlier but adopted (or dropped) → correct it. A stale line here misleads every phase skill.
 - **`mission.md` is constitution-frozen — do NOT silently edit.** If the phase outgrew the mission (scope expanded past what the product does/doesn't do), that's a **constitution change** — surface it to the user as one; don't quietly redefine the product. Only `CLAUDE.md`'s one-line product description refreshes, and only if `mission.md` was deliberately changed through that flow.
-- **`docs/api.md`, `docs/decisions.md`, `docs/architecture.md`, `WIKI.md`, `README.md`, `CLAUDE.md`** — update per living-docs.md (api.md always-current; decisions.md gets new non-obvious calls; WIKI gets `## Phase N — [Feature] Learnings`, what was *learned* not done, ≥3 entries if anything non-obvious happened; CLAUDE.md index + directive sweep — append durable project-scoped user directives stated this phase, 0–2 lines typical).
+- **`docs/api.md`, `docs/decisions.md`, `docs/architecture.md`, `README.md`, `CLAUDE.md`** — update per living-docs.md (api.md always-current; decisions.md gets new non-obvious calls; CLAUDE.md index + directive sweep — append durable project-scoped user directives stated this phase, 0–2 lines typical).
 
 **Backlog triage (silent — no user interaction).** In `backlog.md`: completed `open` item → `done YYYY-MM-DD`; `DF-N` verified fixed → `resolved YYYY-MM-DD` (obsolete/non-reproducing → `dropped`); superseded/off-roadmap task → `dropped`; an open item that merits a full phase → note it for the roadmap; leave genuinely-pending items `open`. Write it back before the changelog.
 
 **Changelog — the divergence ledger.** Generate `CHANGELOG.md` from the git log grouped by date (or `scripts/changelog.py` if present); strip merge commits and branch housekeeping; under this phase's date heading add explicit `Pivoted:` / `Removed:` lines for anything that diverged (git's additive log won't show these).
 
-**Merge.** Merge the feature branch to `main` with a no-fast-forward "Phase N complete: [feature]" commit and delete the branch. Fire the phase-wrap wiki trigger before the merge (once per phase).
+**Merge.** Merge the feature branch to `main` with a no-fast-forward "Phase N complete: [feature]" commit and delete the branch. Fire the phase-wrap brain trigger before the merge (once per phase).
 
 One `AskUserQuestion` batch may cover: did Phase N deliver as planned (scope slipped?); roadmap priority/sequence changes; constitution changes; confirm Phase N+1 is the next roadmap feature. Zero questions is acceptable if nothing changed. The orchestrator owns the next-phase write.
 

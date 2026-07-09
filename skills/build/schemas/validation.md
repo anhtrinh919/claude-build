@@ -65,4 +65,4 @@ This phase is complete when ALL of the following are true:
 - [ ] Frontend compliance check passes (handover covers all UI requirements)
 - [ ] UX review passes — no blocking issues
 - [ ] user explicitly approves
-- [ ] Living docs updated: README status, WIKI learnings, docs/api.md, CHANGELOG.md
+- [ ] Living docs updated: README status, docs/api.md, CHANGELOG.md

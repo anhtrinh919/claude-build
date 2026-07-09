@@ -206,7 +206,7 @@ Fork the direction-setting calls (a handful per phase); default the rest and sho
 - `references/gates.md` — the gate catalogue, shared by both tracks: each gate's tier, what it verifies, how to check it with existing tooling, the evidence it must produce. `claude-code` reads it at M4 (skim at M1 to build toward it); `external` runs the whole catalogue over the exported images.
 - `references/toolkit.md` — the vision loop, running axe on static mockups, free asset recipes (hand-SVG, Mermaid, Lucide/Iconify, @vercel/og, matplotlib/QuickChart), optional env-key raster generation, per-platform component defaults.
 - `references/app-shell-spec.md` — the standard app-shell spec **build-spec** reads to fill `requirements.md`'s App-Shell section; also a useful shell reference for M1 when the phase builds foundation chrome. This skill does not invoke it.
-- Schemas: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/{design-brief-internal,design-brief-external,handover}.md` (`handover.md` = the external track's screen→image index only). Voice: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`. Wiki learnings: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/wiki.md`, `$AGENT=design`.
+- Schemas: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/{design-brief-internal,design-brief-external,handover}.md` (`handover.md` = the external track's screen→image index only). Voice: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`. Brain: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/brain.md`, `$AGENT=design`.
 
 ---
 

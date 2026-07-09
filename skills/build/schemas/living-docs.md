@@ -14,7 +14,6 @@ Every SDD project contains:
     ├── roadmap.md                 # Ordered phase list (created once, refined between phases)
     ├── backlog.md                 # Short-term task lake — dogfood Reports (threaded) + flat tasks (transient)
     ├── README.md                  # Overview, setup instructions, current status
-    ├── WIKI.md                    # Project learnings and gotchas (updated per phase)
     ├── CHANGELOG.md               # Per-phase deltas incl. pivots/removals — the divergence ledger
     ├── specs/
     │   └── YYYY-MM-DD-[feature]/  # One dated dir per phase
@@ -38,21 +37,10 @@ The auto-loaded agent operating brief (Claude Code reads it at the start of ever
 Screen inventory, navigation, named flows, and the App Map — **as actually built, not the original plan.** Maintained per phase by `/build-spec` (replan mode): new screens added, cut screens marked `removed`, reshaped screens marked `changed`, App Map regenerated. This is the phase-start re-board's drift anchor, so it must reflect reality. Schema: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/product.md`.
 
 ### backlog.md
-The short-term task lake — transient work that doesn't belong in any phase's spec. Two zones: **Reports** (threaded dogfood bugs/feedback, `DF-N`, with rounds and status — the chat-driven replacement for an external bug tracker) and the flat task buckets (`T-N`: roll-in candidates, dogfood polish, side tasks). The agent maintains it from conversation and always tells the user the item ID. NOT the roadmap, NOT directives, NOT WIKI. Schema: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/backlog.md`.
+The short-term task lake — transient work that doesn't belong in any phase's spec. Two zones: **Reports** (threaded dogfood bugs/feedback, `DF-N`, with rounds and status — the chat-driven replacement for an external bug tracker) and the flat task buckets (`T-N`: roll-in candidates, dogfood polish, side tasks). The agent maintains it from conversation and always tells the user the item ID. NOT the roadmap, NOT directives. Schema: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/backlog.md`.
 
 ### README.md
 Project name, mission (one sentence from constitution), setup instructions (how to run locally), current status line: "Phase N — [feature name] — in progress / complete." Update when a phase completes or setup steps change.
-
-### WIKI.md
-Project-specific learnings: gotchas, tech quirks, patterns that worked, patterns that failed. Seeded from global WIKI at project init (by tech stack). A new section is added at the end of every phase.
-
-Format for entries:
-```
-## Phase N — [Feature Name] Learnings
-- **[Topic]:** [What was learned, useful to a future agent starting fresh]
-- **[Gotcha]:** [What went wrong and how to avoid it next time]
-- **[Pattern]:** [What worked well and should be repeated]
-```
 
 ### docs/architecture.md
 Component map (what exists and what it does), data models (schema with fields and types), tech decisions (link to docs/decisions.md for the why). Update when a new component is added or the data model changes.
@@ -76,6 +64,5 @@ The project's **decision ledger** — the within-project analog of the brain (wh
 1. **Read first.** Before touching code in an existing project, read the relevant living docs. Not the raw source files — the docs.
 2. **Same session.** Update docs in the same session the code changed. Not in a follow-up session.
 3. **Summaries only.** Docs are compressed — useful facts, not full code dumps or activity logs.
-4. **WIKI is not an activity log.** WIKI entries record what was *learned*, not what was *done*. Git log has the what. WIKI has the why and the surprise.
-5. **No blanks.** An empty section means the doc wasn't written. Write it or delete the section heading.
-6. **docs/api.md is always current.** If the API changed and docs/api.md wasn't updated, the doc is wrong — fix it before proceeding.
+4. **No blanks.** An empty section means the doc wasn't written. Write it or delete the section heading.
+5. **docs/api.md is always current.** If the API changed and docs/api.md wasn't updated, the doc is wrong — fix it before proceeding.

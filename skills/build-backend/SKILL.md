@@ -23,7 +23,7 @@ Find the most recent `specs/YYYY-MM-DD-[feature]/` directory and read: `requirem
 
 This session owns wave dispatch, interface cross-checks, commits, and integration testing. Wave agents never commit, never start servers, never address the user (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/subagent-policy.md` — Rule 6 governs the dispatch below).
 
-Voice: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`. Wiki: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/wiki.md`, `$AGENT=backend`, `$TAGS` from `tech-stack.md`. **Friction trigger:** a group needed a meaningfully different second approach after code-harness rejected the first — one entry per group, title `Phase <N> backend friction: <issue>`. **Phase-wrap trigger:** once, after Stage 3 passes — title `Phase <N> backend: <summary>`.
+Voice: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`. Brain: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/brain.md`, `$AGENT=backend`, `$TAGS` from `tech-stack.md`. **Friction trigger:** a group needed a meaningfully different second approach after code-harness rejected the first — one entry per group, title `Phase <N> backend friction: <issue>`. **Phase-wrap trigger:** once, after Stage 3 passes — title `Phase <N> backend: <summary>`.
 
 ---
 
@@ -116,7 +116,7 @@ Test the **full API surface** against every contract in `requirements.md` — al
 
 ## Completion
 
-Write the phase-wrap wiki entry (once, after Stage 3 passes). Report to the orchestrator: what the backend provides (one sentence), endpoint count (all integration-tested), status (`ready` / `has known issues` / `blocked`), one line on anything fragile.
+Write the phase-wrap brain entry (once, after Stage 3 passes). Report to the orchestrator: what the backend provides (one sentence), endpoint count (all integration-tested), status (`ready` / `has known issues` / `blocked`), one line on anything fragile.
 
 **Do not** write `.build-state.json`'s `step` — terminal-state ownership belongs to the orchestrator. Null `currentSubStep` on return (it should have carried a `"backend.group-N"` breadcrumb while a group was in flight, for crash-resume). **Do not** invoke `/build-review` — the orchestrator runs the `backend-compliance` gate first and decides: pass writes `backend-complete`; fail rolls back to `design-complete` and re-runs this skill.
 

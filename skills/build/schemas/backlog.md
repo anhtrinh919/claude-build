@@ -2,7 +2,7 @@
 
 > Agent context — not for human reading.
 
-Short-term task lake. This is NOT the roadmap (committed phases), NOT `CLAUDE.md ## Project directives` (durable preferences), and NOT `WIKI.md` (learnings). It is transient: things to do that don't belong in the current phase's spec.
+Short-term task lake. This is NOT the roadmap (committed phases) and NOT `CLAUDE.md ## Project directives` (durable preferences). It is transient: things to do that don't belong in the current phase's spec.
 
 ## Numbering & communication — read this first
 
