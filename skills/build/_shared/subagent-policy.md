@@ -18,7 +18,7 @@ Consequence for skill design:
 | **Skill-loader** | `Read and execute ~/.claude/skills/<x>/SKILL.md per its Invocation contract. <slot-filled inputs>` | The subagent runs a whole pipeline and full skill context is wanted. |
 | **Context-isolated inline brief** | Self-contained prompt; only the named slots are passed; relevant doc content pasted in | Blindness or scope-limiting is the point: naive reviewers, skeptic panels, drafters, fix agents. Never pass the conversation, the diff, or "what was just built" unless the brief explicitly calls for it. |
 
-The blind-reviewer hard rule (see `browser-review-engine.md` Engine 2) is the strictest instance of the second style — what the caller must NOT brief is part of the contract.
+The blind-reviewer hard rule (see the `dogfood` agent's Phase 1) is the strictest instance of the second style — what the caller must NOT brief is part of the contract.
 
 ## Rule 3 — Model selection
 
@@ -50,7 +50,7 @@ When a skill dispatches multiple agents to build in parallel (e.g. `/backend` St
 
 ## Rule 7 — Fresh instance per retry
 
-Once a subagent has seen a discrepancy or a failed attempt, it is no longer a clean read. Re-verification, repeat skeptic rounds, and fleet re-runs always spawn **fresh** instances with the same brief shape — never continue a contaminated one. (Same rule as `browser-review-engine.md` "Why fresh subagents".)
+Once a subagent has seen a discrepancy or a failed attempt, it is no longer a clean read. Re-verification, repeat skeptic rounds, and fleet re-runs always spawn **fresh** instances with the same brief shape — never continue a contaminated one. (Same rule the `code-reviewer` and `dogfood` agents both depend on for re-verify.)
 
 ## Rule 8 — Image hygiene: main session never holds base64 images
 
