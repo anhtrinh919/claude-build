@@ -68,9 +68,9 @@ Backend reorients from: the mockups in `specs/<phase>/mockups/` (the design), `r
 
 ## Track: `external` — brief, wait, review, gate, index
 
-### Step 1 — external design brief (unconditional)
+### Step 1 — external design brief (once per phase)
 
-Write `specs/<phase>/design-brief.md` from `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/design-brief-external.md`. **Include:** product context, product type & mental model, full spec (screens, states, behaviors, forward-compat callouts, IA, user stories), real on-screen copy, the numbered screen checklist. **Exclude — the design tool owns the entire look AND layout:** any styling (visual direction, palette, typography, mood, theme), component decisions, layout hierarchy, interaction patterns, breakpoints, spacing. Carry the north star into `## Design intent`.
+`specs/<phase>/design-brief.md` already exists → the user is returning from their design tool, not starting over; do NOT rewrite it — skip to Step 3. Otherwise write `specs/<phase>/design-brief.md` from `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/design-brief-external.md`. **Include:** product context, product type & mental model, full spec (screens, states, behaviors, forward-compat callouts, IA, user stories), real on-screen copy, the numbered screen checklist. **Exclude — the design tool owns the entire look AND layout:** any styling (visual direction, palette, typography, mood, theme), component decisions, layout hierarchy, interaction patterns, breakpoints, spacing. Carry the north star into `## Design intent`.
 
 ### Step 2 — hand off and wait
 
@@ -78,7 +78,7 @@ Convey: the brief is written; design it in whatever tool you like, cover every s
 
 ### Step 3 — review the exported design against the gates
 
-The user returns with exported images → review them against `references/gates.md`, adapted to a non-runnable design (the split shifts toward evidence/vision; the catalogue is identical). First map every screen in `requirements.md` (the coverage contract) to its exported image — this mapping *becomes* the screen→image index. Then judge each image via a Sonnet leaf that reads the image files and returns text findings + paths (never image bytes into the main session):
+The user returns with exported images → review them against `references/gates.md` as written (that catalogue is this track's, written natively against static exports — don't re-adapt it). First map every screen in `requirements.md` (the coverage contract) to its exported image — this mapping *becomes* the screen→image index. Then judge each image via a Sonnet leaf that reads the image files and returns text findings + paths (never image bytes into the main session):
 
 - **Structural — from the index + requirements** (deterministic): every required screen present? every data screen's five states (Loading/Empty/Error/Not-found/Offline) designed? every non-home screen has a back affordance? any orphan or dead-end? auth set complete where accounts exist? (`G-REACH` `G-STATES` `G-NAV` `G-AUTH-SET` `G-SCREEN-JOB`.)
 - **Visual — vision pass per image** (`G-DENSITY`, `G-DEFECTS`, `G-A11Y-TARGET`, contrast): give each image a density verdict (too busy / balanced / too sparse) and a concrete-defect list (overlap/collision · clipping/cut-off · broken image · empty control · >1 equal-weight primary CTA); flag *likely* contrast failures and undersized targets. Do **not** score holistic hierarchy or taste — that stays the user's call on their own design. Contrast off an image is an estimate; flag the pair and tell the designer to verify with a checker, don't assert a false-precise ratio.
@@ -108,7 +108,7 @@ Show the user the verdict line + the HIGH items (the design is theirs — they f
 
 **Close-out (external):**
 1. **`design-tokens.css`** — the token file backend imports. Pull the design-system values the images imply (palette, spacing, type) into one CSS custom property set under `:root`, a generated-from header (source + date). Fonts not in the app → a **Fonts required** note so backend wires them.
-2. **`handover.md`** — a **bare screen→image index only**, per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/handover.md`. Backend can't read an image the way it reads a mockup, so it needs the map: every screen in `requirements.md` → its exact exported image file (or "not designed" + reason), plus the design source path (marked loud "backend builds from these images"), the tokens import path, fonts required, and any structural note an implementer might miss. **Not a narration** — no restating colors/sizes/spacing; just the map.
+2. **`handover.md`** — **the screen→image index and nothing decorative** (plus the structural sections the schema names — reusable components, deviations, IA notes, and any **spec gap**, which stops backend until the spec is updated), per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/handover.md`. Backend can't read an image the way it reads a mockup, so it needs the map: every screen in `requirements.md` → its exact exported image file (or "not designed" + reason), plus the design source path (marked loud "backend builds from these images"), the tokens import path, fonts required, and any structural note an implementer might miss. **Not a narration** — no restating colors/sizes/spacing; just the map.
 
 ---
 

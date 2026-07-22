@@ -87,7 +87,7 @@ Rules are tagged `[all]`, `[web]`, `[mobile]`, `[iOS]`, `[Android]`, `[desktop]`
 
 ---
 
-## 3. Interaction & accessibility (mostly deterministic — these become the axe gates)
+## 3. Interaction & accessibility (these become the a11y gates — axe at build time, vision estimates at design time)
 
 **Touch/click target sizing** — default to the largest that fits.
 - **A1 `[all]`** Anything tappable is **≥ 44×44 px/pt (48dp on Android)**. The WCAG 24px floor is a compliance backstop, not a design goal.
@@ -137,7 +137,7 @@ Rule: components reference semantic tokens; semantic tokens reference primitives
 
 ---
 
-## Pre-ship structural checklist (the wireflow reads at Milestone 1)
+## Pre-ship structural checklist
 
 - [ ] Every screen maps to one job and one primary action (F1, F3)
 - [ ] No two actions have equal visual weight (F2)

@@ -26,7 +26,7 @@ One owner per field; separate fields prevent write races.
 
 | Field | Values | Owner |
 |---|---|---|
-| `stack` | `"build"` \| `"build-lite"` — which orchestrator owns this project; set at the first state write, carried forever | orchestrator (first write) |
+| `stack` | `"build"` \| `"build-lite"` — which orchestrator owns this project; set at the first state write, carried forever. Absent (pre-`stack` project, or state rebuilt from `mission.md`) → the orchestrator you're already in backfills it on its next write; never guess it from step names | orchestrator (first write, backfilled if missing) |
 | `phase` | number (0 = Foundation) | orchestrator |
 | `feature` | slug | orchestrator |
 | `step` | see Resume ladder | see *Terminal-step ownership* below |
@@ -54,10 +54,10 @@ Within-phase gates **auto-continue in the same turn** (`_shared/auto-continue.md
 | `shape-complete` | build-spec constitution mode — start at Step 1.4, or resume at `currentSubStep` if one is set (mid 1.4–1.6) | auto (start) / conversation-continues (resume) |
 | *(no state, mission.md present)* | build-spec **replan** → feature cycle | — |
 | `constitution-complete` | Feature cycle → Phase 0 spec | **Boundary** — `/eli` wrap + AUQ go/no-go |
-| `spec-complete` | build-design | Within-phase — auto |
+| `spec-complete` | build-design — or straight to build-backend when `phaseCeremony: "narrow"` (build-design + design-compliance skipped entirely) | Within-phase — auto |
 | `design-complete` | build-backend | Within-phase — auto |
 | `backend-complete` | build-review | Within-phase — auto (silent handoff) |
-| `phase-complete` | check `dogfoodPid` → dogfood handoff if needed → `/eli` wrap + AUQ go/no-go → (Proceed) build-spec replan → next phase spec | **Boundary** — AUQ go/no-go |
+| `phase-complete` | check `dogfoodPid` → dogfood handoff if needed → `/eli` wrap + AUQ go/no-go → (Proceed) build-spec replan **always** → then: a roadmap phase left → its spec; none left → write `roadmap-complete` and continue into Milestone 3 in the same turn, no second AUQ | **Boundary** — AUQ go/no-go |
 | `phase-blocked` | surface open issues — never auto-resume | Always stops |
 | `roadmap-complete` | build-deploy — Milestone 3 (whole-codebase review, whole-app dogfood, merge check, deploy) | **Boundary** — `/eli` wrap + AUQ go/no-go into Milestone 3 |
 | `deploy-complete` | "Nothing left to build or deploy." Stop. | — |
@@ -97,7 +97,7 @@ Each sub-skill declares its own `## Invocation contract` (model · mechanism · 
 | build-spec · constitution | Product Shape, `research.md` | `mission.md` `product.md` `tech-stack.md` `roadmap.md` + living-docs scaffold |
 | build-spec · phase | constitution, `roadmap.md`, `backlog.md` | user-approved `outcome-card.md` + `specs/YYYY-MM-DD-[feature]/{requirements,plan,validation}.md` + `requirementsHash` |
 | build-spec · replan | phase-just-completed | living-docs updated, changelog, branch merged |
-| build-design | `requirements.md` | `design-brief.md` + `design-tokens.css` + (`claude-code`: `mockups/` (impeccable-owned), decisions→`docs/decisions.md`, **no handover**) / (`external`: exported images + `design-comment.md` + `handover.md` screen→image index) |
+| build-design | `requirements.md` | `design-tokens.css` + (`claude-code`: `mockups/` (impeccable-owned), decisions→`docs/decisions.md`, **no handover**) / (`external`: `design-brief.md` + exported images + `design-comment.md` + `handover.md` screen→image index) |
 | build-backend | `requirements.md` `plan.md` `design-tokens.css` + design source (`claude-code`: `mockups/` + `docs/decisions.md`; `external`: `handover.md` + images) | working, integration-tested API |
 | build-review | `validation.md` `outcome-card.md`, running app | review report + silent fixes + **dogfood handoff** + `phase-complete`\|`phase-blocked` |
 | build-deploy | `roadmap.md` (complete), `tech-stack.md ## Choices` (hosting), `mission.md ## Master User Journey`, every `outcome-card.md` | optional cleanup/fix commits, `docs/deployment.md` or a live deploy, `deploy-complete`\|`deploy-blocked` |

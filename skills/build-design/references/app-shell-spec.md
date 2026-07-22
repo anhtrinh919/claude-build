@@ -2,7 +2,7 @@
 
 The concrete specification of the standard app shell every `ui: true` project builds in **Phase 0 (Foundation)**. This is `/build-design`'s **app-shell spec reference**: `/build-spec` (phase mode) fills `requirements.md`'s `## App Shell` section and `validation.md`'s shell block **from this doc**, adapted to the app's context (labels, icons, which settings categories apply, social-login providers).
 
-**Best of both:** the concrete measurements/patterns below are the buildable spec; each element is tagged with the [ux-rules.md](ux-rules.md) rule (`N/F/A#`) and the [gates.md](gates.md) gate it must satisfy, so the shell is traceable to the correctness bar and both the claude-code-track and external-design-track gates check the same things they specify. Where a rule needs its full rationale, ux-rules carries it — this doc stays concrete so an injected requirement is self-contained.
+**Best of both:** the concrete measurements/patterns below are the buildable spec; each element is tagged with the [ux-rules.md](ux-rules.md) rule (`N/F/A#`) and the [gates.md](gates.md) gate it must satisfy, so the shell is traceable to the correctness bar: on `external`, `gates.md` checks it against the exported images; on `claude-code`, impeccable owns checking the shell against these same rules directly in its own live mockups, not this catalogue. Where a rule needs its full rationale, ux-rules carries it — this doc stays concrete so an injected requirement is self-contained.
 
 **When this applies** (by phase number):
 - `ui: true`, Phase 0 → **BUILD** the shell this phase.

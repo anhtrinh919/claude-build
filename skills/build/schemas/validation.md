@@ -62,7 +62,7 @@ This phase is complete when ALL of the following are true:
 - [ ] All automated checks pass (exit 0)
 - [ ] All manual verifications pass
 - [ ] All outcome checks pass — every primary outcome on the card is demonstrably delivered
-- [ ] Frontend compliance check passes (handover covers all UI requirements)
+- [ ] Design compliance check passes (the design source covers all UI requirements)
 - [ ] UX review passes — no blocking issues
 - [ ] user explicitly approves
 - [ ] Living docs updated: README status, docs/api.md, CHANGELOG.md

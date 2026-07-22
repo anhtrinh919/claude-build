@@ -8,14 +8,14 @@ description: >
 
 # /build-backend — Backend Implementation
 
-Find the most recent `specs/YYYY-MM-DD-[feature]/` directory and read: `requirements.md` (contract), `plan.md` (task groups in build order), `design-tokens.css` if `ui: true`, and the **design source** (track-dependent, `mission.md ## Design Tool`): **`claude-code`** → the mockups in `specs/<phase>/mockups/` (they ARE the design) + `docs/decisions.md` (non-visual design decisions) — there is no handover doc on this track; **`external`** → `handover.md` (the screen→image index) + the exported images it points to. `requirements.md`/`plan.md` missing, or (for `ui: true`) the design source missing → stop: "No phase spec/design found — run `/build-spec` and `/build-design` for this phase first."
+Find the most recent `specs/YYYY-MM-DD-[feature]/` directory and read: `requirements.md` (contract), `plan.md` (task groups in build order), `design-tokens.css` if `ui: true`, and the **design source** (track-dependent, `mission.md ## Design Tool`): **`claude-code`** → the mockups in `specs/<phase>/mockups/` (they ARE the design) + `docs/decisions.md` (non-visual design decisions) — there is no handover doc on this track; **`external`** → `handover.md` (the screen→image index) + the exported images it points to. `requirements.md`/`plan.md` missing, or (for `ui: true`) the design source missing → stop: "No phase spec/design found — run `/build-spec` and `/build-design` for this phase first." **`phaseCeremony: "narrow"` exempts the design half of that stop:** design never ran this phase by design, so the source is the *prior* phases' mockups/images plus the existing `design-tokens.css` — a narrow phase touches only screens already built to polished static. Never invoke `/build-design` on a narrow phase; the orchestrator skips it deliberately.
 
 ## What this skill is
 
 - **Goal.** Turn the approved phase spec into a working, integration-tested backend — every API contract in `requirements.md`, built group by group — nothing beyond it.
 - **Read-only cross-check.** Also read `outcome-card.md` — the user's approved outcome, plain language. `requirements.md` is the build contract and wins on conflict, but the card→requirements translation is the one place an approved outcome can silently get lost, and this skill is the last builder before review. A group that would visibly diverge from a card outcome (nothing in requirements.md serves it, or contradicts it) → stop that group, return `status: needs-decision` with the gap. Don't build faithfully-wrong off a mistranslation and leave it for review to catch.
 - **How.** Wave-dispatched implementation agents per `plan.md` group; Stage 3 integration-tests the full API surface.
-- **Done when.** Every group's verify script is green, every API contract is exercised with real requests (shape, status, every error path), `handover.md`'s expectations are met.
+- **Done when.** Every group's verify script is green, every API contract is exercised with real requests (shape, status, every error path), the design source's expectations are met.
 
 ## Invocation contract
 
@@ -31,7 +31,7 @@ Voice: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`. Brain: `${CLAUDE_P
 
 ## Design authority (`ui: true` phases)
 
-The design wins on visuals (color, spacing, typography, structure); `requirements.md` wins on behavior. Before any UI group, read the **design source** (per track, above) and mirror it, not the existing codebase: **`claude-code`** → build each screen from its mockup in `specs/<phase>/mockups/` (real code already — wire it, don't re-derive it); **`external`** → open each screen's exported image via the `handover.md` index. A reusable design element ("Phase Card / Running") is one component with state variants, never duplicated inline per screen. Import `design-tokens.css` into the global stylesheet; tokens are the sole source for color/font/spacing values — never re-extract or approximate. A screen/state `requirements.md` UI Requirements lists but the design source doesn't cover → stop: "Design missing [state] — return to `/build-design`." Building each screen *from* the design source (above) is the conformance mechanism — there is no separate post-build visual gate; design-quality defects are caught upstream in `/build-design`'s gates.
+The design wins on visuals (color, spacing, typography, structure); `requirements.md` wins on behavior. Before any UI group, read the **design source** (per track, above) and mirror it, not the existing codebase: **`claude-code`** → build each screen from its mockup in `specs/<phase>/mockups/` (real code already — wire it, don't re-derive it); **`external`** → open each screen's exported image via the `handover.md` index. A reusable design element ("Phase Card / Running") is one component with state variants, never duplicated inline per screen. Import `design-tokens.css` into the global stylesheet; tokens are the sole source for color/font/spacing values — never re-extract or approximate. A screen/state `requirements.md` UI Requirements lists but the design source doesn't cover → stop: "Design missing [state] — return to `/build-design`." On `phaseCeremony: "narrow"` that return doesn't exist — a narrow phase needing a screen no prior phase designed was mis-scoped: surface it as a scoping error, never guess the screen. Building each screen *from* the design source (above) is the conformance mechanism — there is no separate post-build visual gate; design-quality defects are caught upstream in `/build-design`'s gates.
 
 ---
 
@@ -58,7 +58,7 @@ Map the dependency graph from the remaining groups: read each group's `Depends o
 
 **Model split:** Opus — data model, schema migrations, API routes, auth/session logic, any group needing an architectural call. Sonnet — UI components, static config, CRUD wiring to an existing contract, utilities, test helpers. A simple group stays with Opus if it shares files with an Opus group in the same wave.
 
-**Per-wave brief, every agent gets:** full `requirements.md` + `plan.md` + `handover.md` + `tech-stack.md`; its assigned group numbers only; prior waves' implemented API surface + changed-file list (pasted, not referenced); the per-group procedure below; **containment — no spawning agents, no `/build*`, no `claude -p`, no commit, no server, don't address the user — return content/paths/status only**; any stop condition (3 failed hypotheses, thrashing, 2× estimate) → return immediately, do not surface to the user itself.
+**Per-wave brief, every agent gets:** full `requirements.md` + `plan.md` + the design source + `tech-stack.md`; its assigned group numbers only; prior waves' implemented API surface + changed-file list (pasted, not referenced); the per-group procedure below; **containment — no spawning agents, no `/build*`, no `claude -p`, no commit, no server, don't address the user — return content/paths/status only**; any stop condition (3 failed hypotheses, thrashing, 2× estimate) → return immediately, do not surface to the user itself.
 
 **Felt-impact fork → `status: needs-decision`, never a silent pick.** A UX or performance choice with no strictly-better option, not already settled in `requirements.md`/`plan.md` → stop that group, return the fork: genuine options, each option's one-line plain-language tradeoff, a recommended default. Invisible plumbing the agent decides itself and records in `docs/decisions.md`.
 
@@ -99,7 +99,7 @@ Test the **full API surface** against every contract in `requirements.md` — al
 
 1. Start the dev server; poll until ready (max 30s).
 2. For **every** API contract in `requirements.md`: send the exact request specified, verify the response shape (field names, types, status codes); trigger every error condition and verify status + message; **protected endpoints need both 401 cases — missing Authorization header, and a malformed JWT (`Authorization: Bearer invalid.jwt.here`)** — these hit different branches, both are required; verify edge cases (empty/null input, concurrent requests where relevant).
-3. Cross-check against `handover.md` — does the implementation match the shape frontend expects? Flag mismatches.
+3. Cross-check against the design source — does the implementation match the shape frontend expects? Flag mismatches.
 4. Failure attempt 1 → diagnose and fix. Attempt 2 → a genuinely different diagnosis. Still failing → surface: which endpoint fails, what was tried, what's suspected, the decision needed.
 
 ---

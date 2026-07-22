@@ -55,7 +55,7 @@ The job is to settle the product's big-picture shape — what it is, who it's fo
 
 ### Step 1.1 — Grill-me concept interview
 
-Write `.build-state.json` — `{ step: "shaping-in-progress", currentSubStep: "shape.1.1" }` — before the first question. This is the project's first state write; no file exists yet.
+Write `.build-state.json` — `{ stack: "build", step: "shaping-in-progress", currentSubStep: "shape.1.1" }` — before the first question. This is the project's first state write; no file exists yet. `stack` is written here and never again; without it a later resume loads the wrong orchestrator.
 
 Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/drilling-discipline.md` at full depth: a real trunk/branch/leaf tree-walk, not a fixed script.
 

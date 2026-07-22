@@ -36,9 +36,10 @@ Read `.build-state.json`; rewrite it as:
 
 | Field | Action |
 |---|---|
-| `phase`, `feature`, `reviewIteration`, `requirementsHash`, `currentSubStep`, `dogfoodPid`, `baselines` | carry over unchanged (default any missing: numbers→`0`, strings→`""`, `dogfoodPid`→`null`, `baselines`→`[]`) |
+| `phase`, `feature`, `reviewIteration`, `requirementsHash`, `currentSubStep`, `dogfoodPid` | carry over unchanged (default any missing: numbers→`0`, strings→`""`, `dogfoodPid`→`null`) |
 | `step` | **translate** (table below) |
-| `foundationStatus` | **drop** — not a current field |
+| `stack` | **write** `"build"` — current schema requires it, v1 never wrote it |
+| `foundationStatus`, `baselines` | **drop** — retired fields, not part of the current schema |
 
 **Step translation:**
 | Old v1 `step` | Current `step` |
@@ -88,10 +89,10 @@ Copy the old `.build-state.json` to `.build-state.json.bak` before overwriting (
 
 ## Case B — renamed build-2 → current
 
-The schema is already correct; only the filename and `/build-2*` references are stale.
+The schema is already correct apart from `stack` (build-2 predates it); the filename and `/build-2*` references are stale.
 
 ### 1. Rename the state file
-Write `.build-state.json` from the contents of `.build2-state.json` (no schema change), then rename the original to `.build2-state.json.bak` (the rollback).
+Write `.build-state.json` from the contents of `.build2-state.json` (adding `stack: "build"`, the one field build-2 lacks), then rename the original to `.build2-state.json.bak` (the rollback).
 
 ### 2. Sweep `/build-2*` references in the project's own docs
 Across `CLAUDE.md`, `product.md`, `backlog.md`, and every `specs/**/*.md`, apply the same rename that renamed the stack itself:
@@ -115,11 +116,11 @@ Old `.build-state.json`:
 ```
 → new `.build-state.json`:
 ```
-{ "phase": 2, "feature": "sharing", "step": "design-complete",
+{ "stack": "build", "phase": 2, "feature": "sharing", "step": "design-complete",
   "reviewIteration": 0, "requirementsHash": "a1b2…", "currentSubStep": null,
-  "dogfoodPid": null, "baselines": ["observability"] }
+  "dogfoodPid": null }
 ```
-(`frontend-complete`→`design-complete`; `foundationStatus` dropped; rest carried.) `mission.md ## Design Tool: claude-code-design` → `claude-code`. Old file saved as `.build-state.json.bak`. Report: "Migrated — this project now runs on `/build`. It'll resume at the backend build for Phase 2 (sharing). Design track set to Claude-designs-it. Your old state is backed up."
+(`frontend-complete`→`design-complete`; `foundationStatus`/`baselines` dropped; `stack: "build"` written; rest carried.) `mission.md ## Design Tool: claude-code-design` → `claude-code`. Old file saved as `.build-state.json.bak`. Report: "Migrated — this project now runs on `/build`. It'll resume at the backend build for Phase 2 (sharing). Design track set to Claude-designs-it. Your old state is backed up."
 
 ## Boundaries
 - Touches only the project's own files (`.build-state.json` / `.build2-state.json`, the `.bak`, `mission.md ## Design Tool`, and the reference sweep across `CLAUDE.md` / `product.md` / `backlog.md` / `specs/**/*.md`). Never edits any `/build` skill.

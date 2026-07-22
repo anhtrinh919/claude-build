@@ -117,6 +117,7 @@ One continuous session inside the `dogfood` agent, empty → populated. Write `c
 
 The verification gate for any implementation outside `/build`. Uses the app via `/browse`, never by reading code. **Reads no `.build-state.json`, requires no spec dir, writes nothing to build state** — organic/ad-hoc invocation ("done", "just built X"). **Exception:** when the orchestrator explicitly invokes this mode to close out a narrow-ceremony phase (`phaseCeremony: "narrow"`), steps 1-6 below run exactly the same, but on a passing gate write `.build-state.json` `step: "phase-complete"` (or `"phase-blocked"` on Stop) — the same terminal write pipeline-review owns, just from this mode. Never report-only.
 
+0. **Automated checks + code review first** (a narrow-phase closure must not be weaker than pipeline-review): typecheck, unit tests, one curl per API contract in `requirements.md` — green before the browser opens — then dispatch `subagent_type: code-reviewer` on `main..HEAD` and feed its findings into the same fix loop. On an ad-hoc standalone run with no spec dir, derive the checks from what changed and scope the reviewer to the diff.
 1. **Find the running app.** `lsof -i :3000 -i :3001 -i :5173 -i :8080 -i :4000 -i :8000 2>/dev/null | grep LISTEN` → use that port. If none, read `package.json` `scripts.dev`/`scripts.start` or `CLAUDE.md`, start it in the background, wait ≤15s. Still nothing → ask once for the URL.
 2. **Two distinct sentences.** From (in order) the arg, `specs/*/requirements.md` (most recent dated dir), `git diff HEAD~1 --stat` + `git log -1 --format=%B`, else ask once: write an **Original problem** (what the user couldn't do / kept hitting / worked around) and **What was built**. If the two read the same, you're verifying the implementation, not the problem — re-derive.
 3. **Derive 2–4 scenarios from the problem, not the implementation.** Bug fix: scenario 1 reproduces the situation that triggered the bug and verifies it's gone. New feature: scenario 1 = "user arrives with the problem, tries to solve it naturally"; scenario 2 = one edge case (empty state, validation failure, error) if applicable. Classify each **Simple** (navigate → verify present/absent/correct) or **Flow** (action → verify intermediate → action → verify outcome); document each before executing.
@@ -138,7 +139,7 @@ The verification gate for any implementation outside `/build`. Uses the app via 
 
 1. Collect every failure verbatim into a fix brief — failing checks with output, failing story/check records, outcome-card gaps — plus the verify command for each.
 2. **Dispatch** —
-   - **pipeline-review:** wave-dispatched fix **leaves**, non-overlapping file sets, parallel (subagent-policy Rule 6) — Opus for structural/logic, Sonnet for token/markup/copy. Each brief carries: its failures verbatim (never summarized); spec paths (`requirements.md`, `plan.md`, `handover.md`); the verify commands; **`/code-harness` discipline — verify-script red first, implement, green after, no fix without a passing verify-script**; **root cause only — no refactoring, no scope/spec change; >3 hypotheses → return the diagnosis**; every file it touched (for the regression band); the containment line. **Felt-impact fork → `status: needs-decision`** + the fork, never a silent pick.
+   - **pipeline-review:** wave-dispatched fix **leaves**, non-overlapping file sets, parallel (subagent-policy Rule 6) — Opus for structural/logic, Sonnet for token/markup/copy. Each brief carries: its failures verbatim (never summarized); spec paths (`requirements.md`, `plan.md`, and the design source — `handover.md` on the external track, the mockups on `claude-code`); the verify commands; **`/code-harness` discipline — verify-script red first, implement, green after, no fix without a passing verify-script**; **root cause only — no refactoring, no scope/spec change; >3 hypotheses → return the diagnosis**; every file it touched (for the regression band); the containment line. **Felt-impact fork → `status: needs-decision`** + the fork, never a silent pick.
    - **standalone-dogfood:** fix inline on main, root cause only, **commit each fix atomically** (`fix: [one-line]`) before re-verifying.
 3. Wait for all agents; read summaries (what fixed, what didn't, files touched). **Any `needs-decision`:** surface the fork now (`AskUserQuestion`), re-dispatch a fresh leaf with the pick. Union touched-files for the regression band; resolve cross-agent interface mismatches inline. (pipeline)
 4. **Targeted re-verify — not a full re-round:**
@@ -154,7 +155,7 @@ The verification gate for any implementation outside `/build`. Uses the app via 
 
 ---
 
-## Dogfood handoff (pipeline-review only — this skill owns it)
+## Dogfood handoff (pipeline-review, and standalone when it closes a narrow phase — this skill owns it)
 
 Runs as the body of `phase-complete`, before any "phase complete" message. **Idempotent + re-entrant:** if `dogfoodPid` is non-null and `kill -0 <pid>` succeeds, print a one-line reminder of URL + credentials + bullets — do NOT start a duplicate server; **still run step 1** (commit+push is idempotent — the work may not be on origin yet). If `dogfoodPid` is null/dead, run the full sequence. Skip the whole handoff only if the gate is `phase-blocked`. The dogfood server is separate from any one-shot test server Round 1 used.
 
@@ -183,7 +184,7 @@ What you can test
 - <bullet 2>
 - ...
 ```
-Close by conveying the user can say "stop dogfood" to kill the server or leave it running; then the `phase-complete` go/no-go gate is the orchestrator's.
+Close by conveying the user can say "stop dogfood" to kill the server or leave it running; then the `phase-complete` go/no-go gate is the orchestrator's — this skill holds no AUQ of its own here.
 
 **Stop / stale PID.** "stop dogfood" (or equivalent): `kill <pid>`, verify `kill -0`, escalate to `kill -9` after 2s if alive, null the field. Null but asked to stop → nothing is running; do NOT hunt processes by name. On resume with a non-null `dogfoodPid`, verify `kill -0`; if dead, null it silently.
 
@@ -203,6 +204,12 @@ Main writes it after a clean re-verify (or on Accept). Title `### Review Report 
 - **Phase Verdict** — 1–2 sentences: did the phase deliver its card contract, ready for handoff?
 
 (standalone uses the shorter closing report from its step 6 instead.)
+
+---
+
+## Completion (pipeline-review)
+
+On return do NOT yield or summarize-and-stop — hand straight back so the orchestrator auto-continues in the same turn (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/auto-continue.md`). This covers writing `phase-complete`/`phase-blocked` and flowing straight into the dogfood handoff above — the handoff's own AUQ go/no-go is the genuine stop, not this return.
 
 ---
 

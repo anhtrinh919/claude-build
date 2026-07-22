@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.0 — 2026-07-22
+
+Audit-and-repair pass over 1.1.0: eight full-read auditors across every skill file, then three adversarial review rounds. 1.1.0 shipped several half-landed fixes; these are the rest.
+
+**Narrow-ceremony phases were unbuildable.** The resume ladder's `spec-complete` row routed unconditionally to build-design, so a cold resume ran the design pass a narrow phase exists to skip — then design-compliance graded screens it never redesigned. `build-backend` separately stopped and told the user to run `/build-design` on exactly the phase the orchestrator skips: a hard stall. Both closed; a narrow phase's design source is now stated as the prior phases' output, and a narrow phase needing an undesigned screen surfaces as a scoping error instead of guessing. `standalone-dogfood`, which closes narrow phases, gained the automated-checks + `code-reviewer` rung it lacked — a narrow phase could reach `phase-complete` with a red typecheck and zero code review.
+
+**`roadmap-complete` was written by nothing**, making Milestone 3 unreachable except by invoking `/build-deploy` by hand. The `phase-complete` row now writes it when no roadmap phase is left, runs replan first (so the final phase's branch actually merges), and continues into deploy without a second go/no-go.
+
+**`stack` only landed on one path.** It was written at the first state write and nowhere else, so a project resumed from `mission.md` with no state file stayed permanently stackless — the exact misroute the field was added to prevent. Every state write now backfills it, including build-spec's and build-migrate's; build-migrate also stops carrying the retired `baselines` field into upgraded projects.
+
+**`gates.md` finished its conversion.** 1.1.0 relabelled it the external track's catalogue but left the checks written against live code — grep the CSS, run axe, load the mockup in a browser. Every check is now native to exported static images; what a flat image genuinely cannot answer (focus states, keyboard order, motion) reports `— not observable`, names its build-time check, and does not block, so an external design can't be blocked forever by an unanswerable gate. `G-REFERENCE` no longer tells the agent to fix a design that belongs to the user.
+
+**Contract repairs.** `build-backend` and `build-review` no longer cite `handover.md` on the claude-code track, where it doesn't exist. `build-polish` lost an entry guard that pointed it through an orchestrator with no route back. `build-deploy`'s re-deploy mode is named in the exemption list. The external design hand-off is a named stop in `auto-continue.md`, and a returning user's brief is no longer silently rewritten. `living-docs.md` credits `build-design` rather than a `/frontend` skill retired months ago.
+
 ## 1.1.0 — 2026-07-22
 
 Three cleanups to the /build stack.
