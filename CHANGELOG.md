@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2 — 2026-07-22
+
+Milestone 1 restructured into six literal steps (concept interview, 3C research, bad-idea gate, product interview, constitution writing, roadmap), each resumable on its own. New Milestone 3 (`build-deploy`): whole-codebase review, whole-app blind dogfood, merge verification, real deploy step. New consolidated pivot-protocol doc. Drilling-discipline and roadmap-axis doctrine extracted to `_shared/`.
+
 ## 1.0.0 — 2026-07-06
 
 Complete rebuild of the SDD stack, published as the `build` plugin.
