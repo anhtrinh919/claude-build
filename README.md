@@ -2,11 +2,11 @@
 
 **Spec-Driven Development for non-devs.** A [Claude Code](https://claude.com/claude-code) plugin that turns an idea into a shipped, dogfooded product one vertical slice at a time — gating the build so the AI can't steamroll you with unreviewed decisions.
 
-You describe what you want. `/build` runs a disciplined pipeline: it pressure-tests the idea, drills you for a product constitution, then builds each phase as a real end-to-end slice — spec → design → backend → review — pausing only at outcome-level go/no-go gates. It resumes mid-phase after a context reset, because the state lives in a file, not the chat.
+You describe what you want. `/build` runs a disciplined pipeline: it pressure-tests the idea, drills you for a product constitution, then builds each phase as a real end-to-end slice — spec → design → backend → review — pausing only at outcome-level go/no-go gates, and closes with a whole-product deploy milestone. It resumes mid-phase after a context reset, because the state lives in a file, not the chat.
 
 ## What you get
 
-One command, `/build`, orchestrating eight skills:
+One command, `/build`, orchestrating nine skills:
 
 | Skill | Role |
 |---|---|
@@ -16,6 +16,7 @@ One command, `/build`, orchestrating eight skills:
 | `build-design` | Designs the UI (in-code mockups) or reviews your external design, against one UX / craft / accessibility gate. |
 | `build-backend` | Wave-dispatched implementation; every API contract integration-tested. |
 | `build-review` | Code review + a real browser dogfood, with silent auto-fix. |
+| `build-deploy` | Whole-codebase review, whole-app dogfood, merge verification, then a real deploy step. |
 | `build-polish` | Batch backlog drainer for bugs and small improvements. |
 | `build-migrate` | Upgrades a project built on an older version of the stack. |
 

@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "build",
-      "description": "SDD build stack: shaping gate → constitution → per-phase spec → design → backend → review, one dogfooded slice per phase. Eight skills, state-file-driven, re-entrant.",
+      "description": "SDD build stack: shaping gate → constitution → per-phase spec → design → backend → review, one dogfooded slice per phase, then a deploy milestone. Nine skills, state-file-driven, re-entrant.",
       "source": "./",
       "category": "workflow"
     }
