@@ -1,7 +1,7 @@
 ---
 name: build-spec
 description: >
-  The SDD spec authority — it drills the user live AND authors the docs, merging BA + spec + baseline into one skill. Explicit mode arg: constitution / phase / replan / baseline. **constitution** — reads the locked Product Shape + research.md, drills the constitution (mission, tech, roadmap slicing, Safety Defaults, Master User Journey, baseline pick), then authors mission.md/product.md/tech-stack.md/roadmap.md via Opus drafter leaf agents and scaffolds the living docs. **phase** — runs per-phase feature research, drills scope + stories + screens, owns the Outcome Card gate (the only user approval at spec time), then two parallel Opus drafters write requirements/plan/validation, drift-reviewed against the card. **baseline** — adds engineering-hygiene coverage to an existing project. **replan** — updates living docs, runs the changelog, merges the branch. Runs inline; orchestrates Opus drafter + Sonnet research leaf agents. Owns the Outcome Card gate and the baseline selection. Invoked by /build; never standalone except `baseline`.
+  The SDD spec authority — it drills the user live AND authors the docs, merging BA + spec + baseline into one skill. Explicit mode arg: constitution / phase / replan / baseline. **constitution** — reads the locked Product Shape + research.md, runs Steps 1.4-1.6 of the master flow: 1.4 a second, deeper grill-me interview (mission + tech constraints), 1.5 constitution writing (Safety Defaults, Master User Journey, baseline pick, authors mission.md/product.md/tech-stack.md via Opus drafters), 1.6 roadmap (drill + draft + author roadmap.md + patch product.md's phase labels). **phase** — runs per-phase feature research, drills scope + stories + screens, owns the Outcome Card gate (the only user approval at spec time), then two parallel Opus drafters write requirements/plan/validation, drift-reviewed against the card. **baseline** — adds engineering-hygiene coverage to an existing project. **replan** — updates living docs, runs the changelog, merges the branch. Runs inline; orchestrates Opus drafter + Sonnet research leaf agents. Owns the Outcome Card gate and the baseline selection. Invoked by /build; never standalone except `baseline`.
 ---
 
 # /build-spec — Drill + Author
@@ -16,7 +16,7 @@ Mechanism is **inline** always: you hold live user gates (drilling, the Outcome 
 
 | Mode | Reads | Authors | Leaf agents | Terminal `step` |
 |---|---|---|---|---|
-| **constitution** | locked **Product Shape** + `research.md` (from build-shape) | `mission.md` · `product.md` · `tech-stack.md` · `roadmap.md` + living-docs scaffold + `baselines` persisted | Opus drafters (core docs) | **none** — you return the product story + latent decisions; the **orchestrator** writes `constitution-complete` after its user boundary gate |
+| **constitution** (Steps 1.4-1.6) | locked **Product Shape** + `research.md` (from build-shape) | `mission.md` · `product.md` · `tech-stack.md` · `roadmap.md` + living-docs scaffold + `baselines` persisted | Opus drafters (core docs) | **none** — `step` rides on build-shape's `shape-complete` the whole time, `currentSubStep` tracks 1.4/1.5/1.6; you return the product story + latent decisions; the **orchestrator** writes `constitution-complete` after its user boundary gate |
 | **phase** | constitution docs · `roadmap.md` · `backlog.md` | user-approved `outcome-card.md` + `specs/YYYY-MM-DD-[feature]/{requirements,plan,validation}.md` + `requirementsHash` | 1 Sonnet feature-research agent + 2 Opus drafters | **`spec-complete`** — you write it on clean exit (also writes `requirementsHash`) |
 | **baseline** | `mission.md` · `tech-stack.md` · current `validation.md` | updated `baselines` + injected sections (if a spec dir exists) | none | none |
 | **replan** | just-completed phase spec + `roadmap.md` | living docs reconciled to as-built · `CHANGELOG.md` · merged branch | none | none — orchestrator owns the next-phase write |
@@ -43,21 +43,7 @@ When a technical choice produces a **felt** difference — how a flow works, or 
 
 ## Drilling discipline (constitution + phase)
 
-This is a **relentless interview**, not a checklist — modeled on the "grill me" approach: walk the topic as a **tree of decisions**, resolve dependencies one by one, and don't stop until you and the user share real understanding of what's being built. A question count hit is never the reason to stop; an unresolved branch is always the reason to continue.
-
-- **Always ask via `AskUserQuestion`.** Every question with options or a yes/no goes through the option-picker — never list options in chat and ask the user to type back which one. Plain text is only for orientation, summarizing what was collected, or a single open-ended push. Inline numbered "which one?" lists are forbidden.
-- **Treat the topic as a decision tree — resolve parent before child.** Before drilling, the topic is a branching set of decisions, not a flat script. Fully resolve a decision (including its follow-ups) before opening any child branch whose shape depends on it. When an answer reshapes the tree — opens a branch you hadn't anticipated, closes one that's now moot — follow the new shape live; never push through a pre-written list that's stopped matching what you've learned.
-- **Walk the tree top-down — trunk, then branches, then leaves — and show it to the user before the first question.** Sketching it only in your head is not enough; write the tree out so the user can see where each question sits and fix the structure before answering thirty questions inside a wrong branch.
-  - **Trunk** — changes what the product fundamentally *is*. **Branch** — shapes one area, given the trunk. **Leaf** — a detail inside an already-settled branch.
-  - **Classify every question before asking it. Never ask more than one level below the deepest closed level.** Asking which panel a feature lives in before settling what the product is produces answers that feel arbitrary — because they are.
-  - **The premature-question test — run it on every question.** Could any unresolved higher-level answer flip and make this question moot, or change its options? If yes it is premature: ask the higher one instead. This test is what prevents leaf-jumping; the instruction to "use a decision tree" demonstrably does not.
-  - **Announce level transitions.** State plainly what a level settled before opening the next ("Level 1 closed: A, B, C. Opening level 2") — a cheap checkpoint where the user can correct course before the cost compounds.
-  - **Batch within a level, never across levels.** Same-level questions are usually independent, so several in one `AskUserQuestion` call is efficient. Mixing a trunk question with a leaf question in one call is not.
-  - **If the user says the questions feel random, fringe, scattered, or disconnected — stop immediately.** That is the signature of skipped levels, not of bad individual questions. Return to the trunk and re-derive rather than patching the current question.
-- **Go deep on one branch before opening the next.** When a topic surfaces, keep following up — name the role, the consequence, what they said, an alternative they tried — until the branch is genuinely exhausted, never on a token number of questions. If you're tempted to move on, check all four: did I get the specific person, the consequence, the workaround, and an alternative they considered? Any one missing means you're not done.
-- **Every question carries your recommended answer** — not just felt-impact forks. State your default and why; the user reacts to it instead of drafting from a blank page. This is what makes a long, deep session tractable instead of exhausting.
-- **Stop condition is tree-completeness, not a count or a duration.** Keep going until every branch relevant to this topic is resolved and no latent ambiguity remains — there is deliberately no target number of questions or minutes here; the user has explicitly said not to rush this by aiming for one. If you're tempted to wrap up, ask: is there a branch I opened and didn't close, or an answer that implied a question I never asked?
-- **User reacts; he doesn't pre-spec.** Show options, ask him to choose. Take a position on every answer — "that could work" is banned; say whether it will work and what evidence would change your mind.
+Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/drilling-discipline.md` at full depth — every drilling session in this mode (the Step 1.4 product interview, the phase-mode scope grill) runs at this discipline, no exceptions.
 
 ## Latent decisions — collection + routing (constitution + phase)
 
@@ -82,31 +68,24 @@ Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/brain.md` with `$AGENT=spec` a
 
 **Read first — the shape is settled.** build-shape passes a locked **Product Shape** (what it is / who it's for / the core job / the forks already chosen — single vs. multi, the spine, the boundary / what's kept out of the core shape) and `research.md`. These big-shape decisions are **settled**, and **demand was already validated at the shape gate** — do NOT re-drill demand or re-open the shape. Confirm each shape element in passing ("Building this for just you, one shop — right?") and drill the *details* within it. If a drill answer genuinely contradicts the shape, surface it as a shape change and confirm — don't silently re-derive.
 
-### A. Constitution grill
+### Step 1.4 — Grill-me product interview
 
-This is the design-concept / mental-model grill — run it at full Drilling discipline depth (tree-completeness, not a count). Cover in however many `AskUserQuestion` rounds it takes; every blank fills before authoring.
+Write `currentSubStep: "spec.1.4"` (`step` stays `shape-complete` — build-shape already wrote it; only `currentSubStep` moves through this mode).
+
+A second, deeper trunk/branch/leaf tree-walk — run at full Drilling discipline depth (tree-completeness, not a count) — covering Mission and Tech-stack constraints only; roadmap is its own step (1.6).
 
 - **Mission:** what does this do for the user (one sentence — outcome, not features)? What does it NOT do? What experience should it create (tone/feeling — one paragraph)?
 - **Tech stack:** any language/framework constraints, infra/hosting requirements, or technologies explicitly ruled out? Only surface *genuine* business constraints or existing infrastructure — you decide the rest silently.
-- **Roadmap — the user drives the slicing (most important part to get right).** Full discipline: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/roadmap.md`. Two fixed shapes:
-  - **Phase 0 is always Foundation** — scaffold + app shell + the full planned UI built to polished static (every screen, mock data, design-locked, nothing wired). Automatic; the user doesn't sequence it.
-  - **Phases 1–n are vertical slices** — each ONE feature wiring one already-built screen to real data + behavior end-to-end, tested and polished before the next.
 
-  Drill, then collaborate: ask for the full feature set roughly (list, don't scope) → draft Phase 0 + one feature per phase ordered by value + dependency → surface the drafted list via `AskUserQuestion` (confirm order / reorder / resize / change which comes first), loop until the user is happy → ask what is globally out of scope. **Slice test:** every Phase 1+ must let the user *do* something new end-to-end after it. Never draft a horizontal phase ("build the backend," "all the APIs") — a slice the user can't act on fails the test; re-slice it. Never thin a slice — split an oversized one.
+No gate — auto-move to 1.5, transition announcement ("Mission and tech constraints settled. Writing the constitution next.").
 
-  **Choose the axis before you order anything — this is where roadmaps actually fail.** State your slicing axis in one sentence before drafting, and slice by *what the product is and what it can do* — the capabilities a user would name out loud. Check the axis against all of these:
-  - **Banned — the pipeline's own work order.** "Collect input → process → generate → review" is the order *you* do work in, not a sequence of things a user can do. A horizontal roadmap wearing vertical clothing.
-  - **Banned — a ladder of output classes.** "Read-only version → editable version → multi-user version" reduces the product to whatever its output happens to be, and reads as a lesser product rather than an earlier one.
-  - **Banned — a property of one imagined output.** If the product builds arbitrary things for its users, no lifecycle detail of a single hypothetical artifact can be the axis; you'd be slicing a strawman.
-  - **Every seam must exist in the user's reality.** Before proposing a boundary, name the moment the user would experience it. If two capabilities are one act on one surface, they are ONE phase — splitting them because it makes the engineering smaller is the single most common failure in this step.
-  - **Failure signal.** If the user says the roadmap "has no logic," or singles out one phase as odd or weird, **the axis is wrong — not that phase.** Reslice from a different axis; never patch the odd phase and re-present the same shape.
-  - **When a draft misses twice, explore before committing.** Fan out 3-4 leaf agents on genuinely distinct axes (value moment, risk-first, depth of guarantee, free choice) with the same product shape and the rejected axes named, then compare their tables and pick or synthesize. Cheaper than a third rejected draft.
+### Step 1.5 — Constitution writing
 
-  **Deferring phases 1+ is legitimate.** When the product's final shape isn't yet concrete enough to derive a sequence, say so and defer rather than guessing: Phase 0 builds every planned screen to polished static, which *is* the final shape — once it exists the roadmap becomes derivable. Author `roadmap.md` with Phase 0 fully specified and phases 1+ marked deferred with the reason, then sequence them at the Phase 0 wrap.
+Write `currentSubStep: "spec.1.5"`. No gate — auto-move. Three labeled subsections, each kept individually legible, run in order:
 
-### B. Safety Defaults (SD1–SD5)
+#### Safety Defaults (SD1–SD5)
 
-After the grill, ask these 5. Answers go verbatim into `tech-stack.md ## Safety Defaults` — the baseline injection reads exact values, so do not paraphrase. `AskUserQuestion` caps at 4 per call → two batches.
+Ask these 5. Answers go verbatim into `tech-stack.md ## Safety Defaults` — the baseline injection reads exact values, so do not paraphrase. `AskUserQuestion` caps at 4 per call → two batches.
 
 **SD1 (plain text first):** the production URL (convey: e.g. `myapp.com`, "TBD" if undecided). → Default **TBD**; CORS uses an env variable and the safety review blocks until it's set.
 
@@ -116,7 +95,7 @@ After the grill, ask these 5. Answers go verbatim into `tech-stack.md ## Safety 
 - **SD4 Error tracking** — how should you be alerted when something breaks in production? *Sentry — free tier, 5-min setup (recommended) / Logs only.* → Sentry: wire SDK + `SENTRY_DSN` in `.env.example`. Logs only: note in README that serverless log retention is short (Vercel free: ~1 hour).
 
 **Batch 2 — SD5 in one `AskUserQuestion` call:**
-- **SD5 Deployment platform** — where will this deploy? *Vercel / Railway / Render / Other.* → shapes README, health checks, env-var workflow.
+- **SD5 Deployment platform** — where will this deploy? *Vercel / Railway / Render / Other.* → shapes README, health checks, env-var workflow, and later Step 3.4's deploy execution.
 
 Persist verbatim as this block (missing value → safe default: `TBD` / `no` / `no` / `logs` / `other`):
 
@@ -129,15 +108,15 @@ error_tracking: [sentry / logs]
 deploy_platform: [vercel / railway / render / other]
 ```
 
-### C. Master User Journey
+#### Master User Journey
 
 Map the full product journey across three layers. Becomes `## Master User Journey` in `mission.md` — the end-to-end anchor every phase's user stories cite.
 
 - **Layer 1 — Core Jobs (JTBD):** per actor, 1–2 statements "When [situation], I need to [goal], so I can [outcome]." 3–5 total. Motivation-level only — no feature names.
 - **Layer 2 — Named Flows:** 3–6 named flows, each 3–5 steps at verb-noun granularity. Example — **Onboarding:** Register → Connect data → Configure → First run. Draft from the conversation, then one `AskUserQuestion` (complete / missing something / needs reordering); adjust once.
-- **Layer 3 — Flow-to-phase mapping:** label each step with the roadmap phase that delivers it, e.g. `Register (Ph1) → Connect data (Ph1) → Configure (Ph2)`. A gap signals a missing phase or a mis-sequenced roadmap — raise it before authoring.
+- **Layer 3 — Flow-to-phase mapping:** label each step with the roadmap phase that delivers it, e.g. `Register (Ph1) → Connect data (Ph1) → Configure (Ph2)`. A gap signals a missing phase — flag it as a note to resolve at Step 1.6, don't block here (the roadmap doesn't exist yet).
 
-### D. Baseline recommendation (folds in baseline Mode 1)
+#### Baseline recommendation (folds in baseline Mode 1)
 
 Baselines are engineering-hygiene layers a senior dev installs on day 1 but a non-dev builder never thinks of. Evaluate each against the project shape with these deterministic rules; on ambiguity apply the tie-break:
 
@@ -151,14 +130,14 @@ Baselines are engineering-hygiene layers a senior dev installs on day 1 but a no
 
 Present as a plain-language table — describe what the user experiences, never what the code does. One `AskUserQuestion`: *Confirm all / Remove one or more / Add one or more* (up to 2 follow-ups to identify edits, then re-surface and ask "Confirmed?"). When one is removed, state the consequence once, e.g. remove **Observability** → "no crash alerts or uptime monitoring — you'd only know something broke when a user reports it." Ambiguous Observability → skip and say: "skipping Observability for now since this looks like an internal tool — run /build-spec baseline any time to add it when you go public."
 
-### Author + scaffold
+#### Author + scaffold
 
-Spawn Opus drafter leaf agent(s) with a context-isolated brief — the Product Shape, `research.md`, the drilling decisions, and the four schema paths — to author the four core docs. They return raw markdown; you write to disk. (Core docs are Opus-authored, never Sonnet — judged on completeness, not brevity.) Brief ends with **containment: no spawning agents, no /build*, no `claude -p`, no commit, no server, don't address the user — return content/paths only.**
+Spawn Opus drafter leaf agent(s) with a context-isolated brief — the Product Shape, `research.md`, the drilling decisions, and the schema paths — to author `mission.md` and `tech-stack.md` in full, plus `product.md` **except** its Screen Inventory phase-label column and App Map phase-coloring (leave both as `TBD — patched at Step 1.6`; phase numbers don't exist until the roadmap is drafted). Do NOT author `roadmap.md` here — that's Step 1.6. They return raw markdown; you write to disk. (Core docs are Opus-authored, never Sonnet — judged on completeness, not brevity.) Brief ends with **containment: no spawning agents, no /build*, no `claude -p`, no commit, no server, don't address the user — return content/paths only.**
 
-**Core docs** (schemas under `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/`, every field filled):
-- **`mission.md`** — purpose (one crisp sentence), named/specific target users, one-paragraph vision, observable success, `## Master User Journey` from Part C.
-- **`product.md`** — End-State Vision; Screen Inventory (every screen, phase-labeled); Navigation Structure (flat map); **App Map** (one Mermaid `flowchart` — screens as nodes, user actions as edges, each node colored by the phase that builds it: the single human-facing diagram in the stack, regenerated from the two sections above, never hand-maintained); Core Feature Surface; Named Flows (phase-labeled); Phase 0 Foundation Scope (every screen to final visual polish, static, mock data — the instruction to build-design to build the full IA to polished static in Phase 0).
-- **`tech-stack.md`** — every choice filled; constraints/non-negotiables explicit (e.g. "strict TypeScript from commit 1", "all deps pinned exactly — no `^`/`~`"); exclusions named with reasoning; Key Technical Decisions table seeded. Plus the `## Safety Defaults` block (Part B) and:
+**Core docs** (schemas under `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/`, every field filled except the two roadmap-dependent ones noted above):
+- **`mission.md`** — purpose (one crisp sentence), named/specific target users, one-paragraph vision, observable success, `## Master User Journey`.
+- **`product.md`** — End-State Vision; Screen Inventory (every screen, phase-label column `TBD` for now); Navigation Structure (flat map); **App Map** (one Mermaid `flowchart` — screens as nodes, user actions as edges; phase-coloring `TBD` for now — the single human-facing diagram in the stack, regenerated from the two sections above, never hand-maintained); Core Feature Surface; Named Flows (phase-label `TBD`); Phase 0 Foundation Scope (every screen to final visual polish, static, mock data — the instruction to build-design to build the full IA to polished static in Phase 0).
+- **`tech-stack.md`** — every choice filled; constraints/non-negotiables explicit (e.g. "strict TypeScript from commit 1", "all deps pinned exactly — no `^`/`~`"); exclusions named with reasoning; Key Technical Decisions table seeded. Plus the `## Safety Defaults` block above and:
 
   ```markdown
   ## Baselines
@@ -166,13 +145,26 @@ Spawn Opus drafter leaf agent(s) with a context-isolated brief — the Product S
   ```
 
   List only the confirmed keys; omit deselected ones. This is the durable carrier the baseline injection reads when `.build-state.json` is absent. `tech-stack.md` is the **widest-read doc** in the stack — every phase skill reads it as the constraints authority.
-- **`roadmap.md`** — Phase 0 (Foundation) first, then one vertical slice per phase; carry the user's slice sequence verbatim; each phase names feature + what it delivers + why it's at that position; global out-of-scope named.
 
-**Scaffold living docs** per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md` (headers only — an empty section is fine, fake content is not): `CLAUDE.md` (index + `## Project directives`, no prefix), `backlog.md` (empty buckets, no prefix), `README.md` (mission + status "constitution complete, Phase 0 not started", no prefix), `CHANGELOG.md`, `docs/architecture.md`, `docs/api.md`, `docs/decisions.md`. Every agent-facing living doc (`docs/architecture.md`, `docs/api.md`, `docs/decisions.md`) opens with the exact first line `> Agent context — not for human reading.`; `README.md` and `CLAUDE.md` do NOT. Seed `docs/decisions.md ## User decisions` with the forks already resolved (the Product Shape's chosen forks + any felt-impact calls answered during the grill), each as `[Decision] — Chose: X. Why: … Options were: … (Phase 0 · date)`; seed `## Technical decisions` from the tech-stack Key Technical Decisions table.
+**Scaffold living docs** per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md` (headers only — an empty section is fine, fake content is not): `CLAUDE.md` (index + `## Project directives`, no prefix), `backlog.md` (empty buckets, no prefix), `README.md` (mission + status "constitution in progress, roadmap not yet drafted", no prefix), `CHANGELOG.md`, `docs/architecture.md`, `docs/api.md`, `docs/decisions.md`. Every agent-facing living doc (`docs/architecture.md`, `docs/api.md`, `docs/decisions.md`) opens with the exact first line `> Agent context — not for human reading.`; `README.md` and `CLAUDE.md` do NOT. Seed `docs/decisions.md ## User decisions` with the forks already resolved (the Product Shape's chosen forks + any felt-impact calls answered during the grill), each as `[Decision] — Chose: X. Why: … Options were: … (Phase 0 · date)`; seed `## Technical decisions` from the tech-stack Key Technical Decisions table. None of this scaffolding depends on `roadmap.md`.
 
 **Persist `baselines`** to both `.build-state.json` (the `baselines` array) and `tech-stack.md ## Baselines` (written above). If the drilling produced no baseline confirmation, default to `["repo"]`.
 
-**State checkpoint:** write `.build-state.json` with `phase: 1`, `feature` (kebab slug of Phase 0 from roadmap), `step: "constitution-complete"`, `reviewIteration: 0`, `requirementsHash: ""`, `currentSubStep: null`, `dogfoodPid: null`, `baselines: [...]`. This is the resume anchor — without it a compaction during the user's pause restarts at Mode constitution.
+Transition announcement into 1.6.
+
+### Step 1.6 — Roadmap
+
+Write `currentSubStep: "spec.1.6"`.
+
+**The user drives the slicing — the most important step to get right.** Full discipline: `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/roadmap.md`. Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/roadmap-axis.md` for the slicing axis doctrine.
+
+Drill, then collaborate: ask for the full feature set roughly (list, don't scope) → draft Phase 0 + one feature per phase ordered by value + dependency → surface the drafted list via `AskUserQuestion` (confirm order / reorder / resize / change which comes first), loop until the user is happy → ask what is globally out of scope. If the Master User Journey's Layer 3 flagged a flow-to-phase gap at Step 1.5, resolve it here — it usually means a missing phase.
+
+**Author `roadmap.md`** — Phase 0 (Foundation) first, then one vertical slice per phase; carry the user's slice sequence verbatim; each phase names feature + what it delivers + why it's at that position; global out-of-scope named. Author `roadmap.md` with Phase 0 fully specified and phases 1+ marked deferred with the reason if the shape isn't concrete enough yet, then sequence them at the Phase 0 wrap.
+
+**Patch `product.md`** — fill in the Screen Inventory's phase-label column and regenerate the App Map's phase-coloring now that phases exist. This is a mechanical edit against the doc authored at Step 1.5, not a re-author.
+
+**State checkpoint:** write `.build-state.json` with `phase: 1`, `feature` (kebab slug of Phase 0 from roadmap), `reviewIteration: 0`, `requirementsHash: ""`, `currentSubStep: null`, `dogfoodPid: null`, `baselines: [...]` — `step` stays `shape-complete` (this mode never writes its own terminal step; see below). This is the resume anchor — without it a compaction during the user's pause restarts at Step 1.4.
 
 ### Return (do NOT write the terminal step)
 
@@ -344,7 +336,7 @@ Run in the **same session** the phase completed. Reconcile every living doc to *
 
 - **`product.md` is the phase-start drift anchor — keep it as-built.** New screens → add rows, Status `built`. Cut screens → keep the row, Status `removed` + one-line why. Reshaped screens → Status `changed`, note how. Regenerate the App Map + Navigation Structure. Never leave a removed/pivoted screen showing as planned.
 - **`tech-stack.md` is the widest-read doc — keep it as-built.** New dependency/library/service → add it with its pinned version. Changed pattern/decision → update the Key Technical Decisions table and cross-link the `docs/decisions.md` entry holding the *why*. Anything ruled out earlier but adopted (or dropped) → correct it. A stale line here misleads every phase skill.
-- **`mission.md` is constitution-frozen — do NOT silently edit.** If the phase outgrew the mission (scope expanded past what the product does/doesn't do), that's a **constitution change** — surface it to the user as one; don't quietly redefine the product. Only `CLAUDE.md`'s one-line product description refreshes, and only if `mission.md` was deliberately changed through that flow.
+- **`mission.md` is constitution-frozen — do NOT silently edit.** A phase that outgrew the mission is a pivot: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/pivot-protocol.md`.
 - **`docs/api.md`, `docs/decisions.md`, `docs/architecture.md`, `README.md`, `CLAUDE.md`** — update per living-docs.md (api.md always-current; decisions.md gets new non-obvious calls; CLAUDE.md index + directive sweep — append durable project-scoped user directives stated this phase, 0–2 lines typical).
 
 **Backlog triage (silent — no user interaction).** In `backlog.md`: completed `open` item → `done YYYY-MM-DD`; `DF-N` verified fixed → `resolved YYYY-MM-DD` (obsolete/non-reproducing → `dropped`); superseded/off-roadmap task → `dropped`; an open item that merits a full phase → note it for the roadmap; leave genuinely-pending items `open`. Write it back before the changelog.

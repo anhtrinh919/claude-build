@@ -27,14 +27,16 @@ One owner per field; separate fields prevent write races.
 | `step` | see Resume ladder | see *Terminal-step ownership* below |
 | `reviewIteration` | fix-loop counter, cap 3 | build-review |
 | `requirementsHash` | sha256 of requirements.md (drift detector) | build-spec (phase mode) |
-| `currentSubStep` | breadcrumb e.g. `"design.phase-1"`; null on clean exit | whichever step is running |
+| `currentSubStep` | breadcrumb e.g. `"design.phase-1"`, `"shape.1.2"`, `"deploy.3.4"`; null on clean exit | whichever step is running |
 | `dogfoodPid` | running dogfood server PID; null on stop | build-review |
 | `baselines` | array of active baseline ids | build-spec (constitution mode) |
 | `phaseCeremony` | `"full"` \| `"narrow"` — set per phase at Outcome Card approval | build-spec (phase mode) |
 
 No `foundationStatus` — there is no background foundation build in v2.
 
-**Terminal-step ownership.** Steps with no gate before the next stage are written by the sub-skill on clean exit: `spec-complete` (build-spec phase), `phase-complete`/`phase-blocked` (build-review). Gated transitions are written by the **orchestrator** after its gate: `constitution-complete` (after the user boundary gate), `design-complete` (after design-compliance), `backend-complete` (after backend-compliance) — and any rollback. So build-design and build-backend return without writing a terminal step; the orchestrator writes it once the compliance gate passes.
+**Milestone 1 breadcrumbs.** `currentSubStep` takes values `"shape.1.1"`/`"shape.1.2"`/`"shape.1.3"` during build-shape and `"spec.1.4"`/`"spec.1.5"`/`"spec.1.6"` during build-spec constitution mode — one per literal step (see Resume ladder). A resume mid-step continues the interview at that step, it never restarts the whole grill. **Milestone 3 breadcrumbs** take `"deploy.3.1"`…`"deploy.3.4"` during build-deploy, same convention.
+
+**Terminal-step ownership.** Steps with no gate before the next stage are written by the sub-skill on clean exit: `shape-complete` (build-shape, on Proceed), `spec-complete` (build-spec phase), `phase-complete`/`phase-blocked` (build-review), `deploy-complete`/`deploy-blocked` (build-deploy). Gated transitions are written by the **orchestrator** after its gate: `constitution-complete` (after the user boundary gate), `design-complete` (after design-compliance), `backend-complete` (after backend-compliance) — and any rollback. So build-design, build-backend, and build-spec constitution mode all return without writing a terminal step; `step` simply rides on whichever terminal step preceded them (`spec-complete` through build-design/build-backend; `shape-complete` through build-spec constitution mode) while `currentSubStep` tracks live position, cleared to null on that sub-skill's clean return — the orchestrator writes the next terminal step once its gate passes. `shaping-in-progress` is the one true exception: build-shape has no prior terminal step to ride on (it's the project's first write), so it's a dedicated bootstrap marker, written once before Step 1.1's first question and left in place until `shape-complete` supersedes it.
 
 **Legacy state files.** A `.build-state.json` from the retired v1 stack carries a `foundationStatus` field and/or old enums (`*-approved`, bare `complete`, `frontend-complete`); a project from before the build-2→build rename carries a `.build2-state.json` instead. For a clean resume you may tolerate the old enums (`*-approved` / bare `complete` → the matching `*-complete` / `roadmap-complete`) and rewrite on the next gate write — but if you see `foundationStatus`, a `frontend-*` step, or a stray `.build2-state.json`, run `/build-migrate` first to upgrade the project properly.
 
@@ -43,7 +45,9 @@ Within-phase gates **auto-continue in the same turn** — no stop, no phase-wrap
 
 | `step` | Resume at | Gate type |
 |---|---|---|
-| *(no state, no mission.md)* | build-shape (new-project shaping gate) | conversation-only (no state until constitution) |
+| *(no state, no mission.md)* | build-shape Step 1.1 — write `shaping-in-progress` + `currentSubStep: "shape.1.1"` before the first question | conversation-only until this first write |
+| `shaping-in-progress` | build-shape, at `currentSubStep` — continue the interview there, never restart the tree | conversation-continues, no re-gate |
+| `shape-complete` | build-spec constitution mode — start at Step 1.4, or resume at `currentSubStep` if one is set (mid 1.4–1.6) | auto (start) / conversation-continues (resume) |
 | *(no state, mission.md present)* | build-spec **replan** → feature cycle | — |
 | `constitution-complete` | Feature cycle → Phase 0 spec | **Boundary** — `/eli` wrap + AUQ go/no-go |
 | `spec-complete` | build-design | Within-phase — auto |
@@ -51,7 +55,9 @@ Within-phase gates **auto-continue in the same turn** — no stop, no phase-wrap
 | `backend-complete` | build-review | Within-phase — auto (silent handoff) |
 | `phase-complete` | check `dogfoodPid` → dogfood handoff if needed → `/eli` wrap + AUQ go/no-go → (Proceed) build-spec replan → next phase spec | **Boundary** — AUQ go/no-go |
 | `phase-blocked` | surface open issues — never auto-resume | Always stops |
-| `roadmap-complete` | "Nothing left to build." Stop. | — |
+| `roadmap-complete` | build-deploy — Milestone 3 (whole-codebase review, whole-app dogfood, merge check, deploy) | **Boundary** — `/eli` wrap + AUQ go/no-go into Milestone 3 |
+| `deploy-complete` | "Nothing left to build or deploy." Stop. | — |
+| `deploy-blocked` | surface open issues — never auto-resume | Always stops |
 
 ## Transition gates (automated — replace the old restated auto-continue prose)
 After a sub-skill returns, before writing its terminal `step`, run its gate. Pass → write `step`, auto-continue. Fail → orchestrator writes `step` back (rollback) and re-runs the named skill; loop until pass. These never stop for the user.
@@ -74,6 +80,7 @@ Every sub-skill runs **inline** (it orchestrates its own leaf workers, or holds 
 | build-backend | implementation agents — Opus (arch/data/API) + Sonnet (leaf/UI/config), wave-dispatched |
 | build-review | Sonnet browse; Opus architecture + correctness review; wave-dispatched fix agents |
 | build-polish | Sonnet/Haiku dogfood + fix agents |
+| build-deploy | 1 `ponytail-review` skill invocation (3.1); 1 `dogfood` agent, unscoped (3.2); Sonnet fix leaves |
 
 **Core docs are Opus-authored** — constitution (mission/product/tech-stack/roadmap), phase specs (requirements/plan/validation), the design brief (design-brief.md). Sonnet/Haiku only *execute a settled plan* (browse, render, implementation, report write-ups). Test: authoring/deciding → Opus; executing → Sonnet. **Ponytail full** governs all implementation work the whole build; it does not apply to core-doc authoring (judged on completeness, not brevity).
 
@@ -89,18 +96,20 @@ Each sub-skill declares its own `## Invocation contract` (model · mechanism · 
 | build-design | `requirements.md` | `design-brief.md` + `design-tokens.css` + (`claude-code`: `mockups/` + gate report, decisions→`docs/decisions.md`, **no handover**) / (`external`: exported images + `design-comment.md` + `handover.md` screen→image index) |
 | build-backend | `requirements.md` `plan.md` `design-tokens.css` + design source (`claude-code`: `mockups/` + `docs/decisions.md`; `external`: `handover.md` + images) | working, integration-tested API |
 | build-review | `validation.md` `outcome-card.md`, running app | review report + silent fixes + **dogfood handoff** + `phase-complete`\|`phase-blocked` |
+| build-deploy | `roadmap.md` (complete), `tech-stack.md ## Safety Defaults`, `mission.md ## Master User Journey`, every `outcome-card.md` | optional cleanup/fix commits, `docs/deployment.md` or a live deploy, `deploy-complete`\|`deploy-blocked` |
 
 **Narrow-phase note (`phaseCeremony: "narrow"`):** build-spec phase mode's narrow output omits `validation.md`. build-design/build-backend rows above don't apply — design is skipped, backend runs unchanged. build-review is explicitly invoked in `standalone-dogfood` mode instead of the pipeline-review row above, and — only because the orchestrator names this as a phase closure — still writes `phase-complete`/`phase-blocked` on exit (build-review's own Mode detection covers the rest).
 
 **Contracts that never move:** `outcome-card.md` = the user's contract (frozen on approval; a card change restarts build-spec phase mode). `requirements.md` = the machine contract shared by design + backend (hashed). `mission.md` frozen after constitution. `tech-stack.md` is the widest-read doc (carries `## Safety Defaults` + `## Baselines`).
 
 ## Loop control
-- **New project** (no mission.md): build-shape → build-spec constitution → constitution boundary gate → Feature cycle at Phase 0.
+- **New project** (no mission.md): build-shape (Steps 1.1 concept interview → 1.2 3C research → 1.3 bad-idea gate) → build-spec constitution (Steps 1.4 product interview → 1.5 constitution writing → 1.6 roadmap) → constitution boundary gate → Feature cycle at Phase 0. Six literal steps, each its own `currentSubStep` breadcrumb — see Resume ladder.
 - **Feature cycle** (per phase): build-spec phase → build-design → *design-compliance* → build-backend → *backend-compliance* → build-review → phase-complete boundary gate.
 - **Feature cycle, narrow variant** (`phaseCeremony: "narrow"`, set by build-spec at Outcome Card approval): build-spec phase (narrow — no drafters/reconciliation/drift-review/baseline ceremony, no `validation.md`) → build-backend directly (same `requirements.md`+`plan.md` contract, unaffected) → *backend-compliance* → build-review, explicitly invoked in `standalone-dogfood` mode as this phase's closure → phase-complete boundary gate. build-design and *design-compliance* are skipped entirely — Phase 0 already built every screen to polished static, and a narrow phase by definition touches none that don't already exist.
 - **Next feature** (mission.md exists, no active phase): build-spec replan → Feature cycle for the next roadmap phase.
+- **Milestone 3 — Deploy** (`roadmap-complete`, no next phase left): build-deploy (Steps 3.1 whole-codebase review → 3.2 whole-app blind dogfood → 3.3 merge verification → 3.4 deploy) → `deploy-complete`/`deploy-blocked` terminal. See `build-deploy/SKILL.md`.
 - **Roadmap discipline:** Phase 0 = Foundation (scaffold + app shell + the full planned UI as polished static — every screen, mock data, design-locked, unwired; type `initial`). Phases 1+ = vertical slices (one user-facing capability each, wired end-to-end, built→tested→reviewed before the next; type `feature`/`rebuild`). **Slice test:** after this phase can the user *do* something new end-to-end? Horizontal phases ("build all the APIs") are banned. Never thin a slice — split an oversized one into narrower slices. User is the PM; build-spec drafts the sequence, user confirms.
-- **Axis before order — roadmaps fail at the axis, not the sequencing.** Slice by what the product *is and can do*. Banned axes, each a horizontal roadmap in disguise: the pipeline's own work order ("collect → process → generate → review" is *your* order, not something a user can do); a ladder of output classes ("read-only → editable → multi-user", which reads as a lesser product rather than an earlier one); and any lifecycle property of one imagined output (a strawman, when the product builds arbitrary things for users). Every seam must exist in the user's reality — before proposing a boundary, name the moment they'd experience it; two capabilities that are one act on one surface are ONE phase, and splitting them to make the engineering smaller is the most common failure here. **"I don't see the logic" or "phase N is weird" means the axis is wrong, not that phase** — reslice from a different axis, never patch the odd phase and re-present. When a draft misses twice, fan out 3-4 leaf agents on genuinely distinct axes and pick or synthesize; cheaper than a third rejected draft. **Deferring phases 1+ until after Phase 0 is legitimate** when the shape isn't concrete enough to derive a sequence — Phase 0 builds every planned screen to polished static, which *is* the final shape, after which the roadmap is derivable instead of guessable.
+- **Axis before order.** `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/roadmap-axis.md` — governs Step 1.6's roadmap draft (build-spec constitution mode).
 
 ## Ground rules (canon in `_shared/`; one line each)
 1. **/eli after every gate write and sub-skill return**, before any further action — auto-continue gates included.
@@ -110,3 +119,4 @@ Each sub-skill declares its own `## Invocation contract` (model · mechanism · 
 5. **Agent containment (`subagent-policy.md`).** Every leaf brief carries: no spawning agents, no `/build*`, no `claude -p`, no commit, no server, don't address the user — return content/paths only. Never brief "read and execute a SKILL.md" (that risks a second-level spawn); give a concrete task + file list. After every return: `git log <pre>..HEAD` (unexpected commit = runaway) + `ps ax | grep "[c]laude -p"` (stray worker); kill/reset before continuing. One builder per branch; **agents never commit** (orchestrator commits).
 6. **Fix commits state root cause.** One-line "where it's first wrong" + a tag: `[root-cause]` / `[symptom-patch]` / `[heuristic]`. The last two need explicit user opt-in — no silent band-aids.
 7. All user questions via `AskUserQuestion`. Cap-hit / blocker surfaces are binary: "Accept anyway, or Stop?"
+8. **Pivoting.** `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/pivot-protocol.md` — read when a phase reverses a settled decision or the mission itself. Not a new mechanism: mid-phase is rule 2's fork, post-ship is replan's changelog/decisions convention, mission-outgrown is a constitution-change tripwire.
