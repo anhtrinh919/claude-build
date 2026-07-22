@@ -5,7 +5,7 @@ A gate is only as strong as its verifiability. The agent cannot pass a gate by a
 - **Tier 1 — deterministic (hard-block).** A script/scanner/grep returns pass/fail; the agent pastes the output. You cannot fake `axe: 0 violations` or a wireflow with an orphan node.
 - **Tier 2 — evidence (artifact required).** For what only vision can judge (density, overlap, clipping, "matches the intent"), the gate is not "did you check" — it's "save the screenshot to `.review/` and judge it against the named gate's check." No artifact → not done.
 
-**Key to design-stage checking:** the mockups are *real rendered HTML*. So the accessibility, token, and visual gates run **directly against the mockups** with the browser tool you already have — they are as real here as they are on the shipped app. The structural gates (reach/states/nav) run against the **Milestone-1 wireflow**, because the routes don't exist as code yet — the map is the artifact.
+**Which track runs this.** On `claude-code`, **impeccable** owns every check below against its own live mockups — this catalogue is not invoked there. This doc is the **external** track's review catalogue: the "how to check" steps below are written against rendered HTML (their original claude-code form); on external you **adapt each to the exported static image** — the deterministic grep/axe checks become per-image vision estimates (see each gate's own external note, and G-A11Y), the structural gates run against the screen→image index as the wireflow. Where a check reads "the mockup," read "the exported image" on this track.
 
 Each gate lists: **tier · what it verifies · how to check (existing tooling only) · evidence · applicable when.** IDs map to rule IDs in [ux-rules.md](ux-rules.md).
 
@@ -55,7 +55,7 @@ Each gate lists: **tier · what it verifies · how to check (existing tooling on
 ## Accessibility — deterministic, run against the mockup HTML
 
 **G-A11Y-AXE** — *Tier 1, hard-block.* axe-core passes: contrast ≥4.5:1 (3:1 large), name/role/value, ARIA correctness, alt text.
-- **Check:** load each mockup in `/browse` or the puppeteer MCP, inject axe-core, run `axe.run()`, collect violations (recipe in [toolkit.md](toolkit.md) §Eyes). *This is the single strongest gate available at design stage — the mockups are real HTML, so axe is fully valid here.*
+- **Check:** runnable code only — load each mockup in `/browse`, inject axe-core, run `axe.run()`, collect violations. On the `claude-code` track impeccable owns this against its live mockups; on `external` (static exported images) axe can't run — estimate contrast/name-role-value per image and tell the designer to verify with a checker, don't assert a false-precise result.
 - **Evidence:** axe summary — **0 violations** (or documented, justified exceptions) + saved `.review/axe.json`.
 - **Applies:** always.
 
@@ -109,9 +109,9 @@ Each gate lists: **tier · what it verifies · how to check (existing tooling on
 
 ---
 
-## The gate report (what Milestone 4 emits)
+## The gate report (what the external design review emits)
 
-A table of `gate · tier · applies · status · evidence`, plus the **visual-shown log** proving the Show Rule was honored. Rules:
+A table of `gate · tier · applies · status · evidence` — the backing detail behind `design-comment.md`. Rules:
 
 1. Run **every applicable** gate. Scope with "applicable when" — don't block a marketing page on `G-AUTH-SET`.
 2. **You may not report design complete while any applicable gate is unknown or failing.** Tier-1 blocks on its output; Tier-2 blocks on a missing artifact.

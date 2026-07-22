@@ -17,11 +17,16 @@ Where a quoted string is user-facing, it's the *intent* to convey in plain langu
 ## Read-first on cold start (once per session, first action only)
 Read `.build-state.json` → find `step` in the **Resume ladder** → resume there. Also read `product.md` (screen inventory + App Map = strongest as-built anchor) and `docs/decisions.md ## User decisions` (settled choices = anti-overturn anchor). Skip either if missing (pre-constitution). If the task is clearly not build orchestration, ignore the state file — it's a resume anchor, not a coercion.
 
+**One door.** This orchestrator is the *only* entry point. A resume routes through here, never straight into a sub-skill — the sub-skill would run without the resume ladder, ground rules, and auto-continue below. The `stack` field says which orchestrator owns the project (`"build"` here). Full rule: `_shared/entry-point.md`.
+
+**One turn per phase.** Internal step and milestone boundaries are not stopping points — cross them silently. You stop and yield the turn ONLY at the named user gates (constitution, each phase-complete, deploy, a felt-impact fork, a cap-hit binary). No "next I'll…", no permission-to-proceed, no pause narration. Full contract: `_shared/auto-continue.md`.
+
 ## State schema — `.build-state.json`
 One owner per field; separate fields prevent write races.
 
 | Field | Values | Owner |
 |---|---|---|
+| `stack` | `"build"` \| `"build-lite"` — which orchestrator owns this project; set at the first state write, carried forever | orchestrator (first write) |
 | `phase` | number (0 = Foundation) | orchestrator |
 | `feature` | slug | orchestrator |
 | `step` | see Resume ladder | see *Terminal-step ownership* below |
@@ -29,7 +34,6 @@ One owner per field; separate fields prevent write races.
 | `requirementsHash` | sha256 of requirements.md (drift detector) | build-spec (phase mode) |
 | `currentSubStep` | breadcrumb e.g. `"design.phase-1"`, `"shape.1.2"`, `"deploy.3.4"`; null on clean exit | whichever step is running |
 | `dogfoodPid` | running dogfood server PID; null on stop | build-review |
-| `baselines` | array of active baseline ids | build-spec (constitution mode) |
 | `phaseCeremony` | `"full"` \| `"narrow"` — set per phase at Outcome Card approval | build-spec (phase mode) |
 
 No `foundationStatus` — there is no background foundation build in v2.
@@ -41,11 +45,11 @@ No `foundationStatus` — there is no background foundation build in v2.
 **Legacy state files.** A `.build-state.json` from the retired v1 stack carries a `foundationStatus` field and/or old enums (`*-approved`, bare `complete`, `frontend-complete`); a project from before the build-2→build rename carries a `.build2-state.json` instead. For a clean resume you may tolerate the old enums (`*-approved` / bare `complete` → the matching `*-complete` / `roadmap-complete`) and rewrite on the next gate write — but if you see `foundationStatus`, a `frontend-*` step, or a stray `.build2-state.json`, run `/build-migrate` first to upgrade the project properly.
 
 ## Resume ladder
-Within-phase gates **auto-continue in the same turn** — no stop, no phase-wrap ("Phase N is built"), no "paused" framing. Phase-boundary gates present a go/no-go `AskUserQuestion` (Proceed / Stop-for-now) — never tell the user to retype `/build`.
+Within-phase gates **auto-continue in the same turn** (`_shared/auto-continue.md`) — no stop, no phase-wrap ("Phase N is built"), no "paused" framing. Only the **Boundary** rows below yield the turn: a go/no-go `AskUserQuestion` (Proceed / Stop-for-now) — never tell the user to retype `/build`.
 
 | `step` | Resume at | Gate type |
 |---|---|---|
-| *(no state, no mission.md)* | build-shape Step 1.1 — write `shaping-in-progress` + `currentSubStep: "shape.1.1"` before the first question | conversation-only until this first write |
+| *(no state, no mission.md)* | build-shape Step 1.1 — write `stack: "build"` + `shaping-in-progress` + `currentSubStep: "shape.1.1"` before the first question | conversation-only until this first write |
 | `shaping-in-progress` | build-shape, at `currentSubStep` — continue the interview there, never restart the tree | conversation-continues, no re-gate |
 | `shape-complete` | build-spec constitution mode — start at Step 1.4, or resume at `currentSubStep` if one is set (mid 1.4–1.6) | auto (start) / conversation-continues (resume) |
 | *(no state, mission.md present)* | build-spec **replan** → feature cycle | — |
@@ -90,29 +94,30 @@ Each sub-skill declares its own `## Invocation contract` (model · mechanism · 
 | Sub-skill | Reads | Writes |
 |---|---|---|
 | build-shape | the idea | **Product Shape** (prose, no file) + `research.md` |
-| build-spec · constitution | Product Shape, `research.md` | `mission.md` `product.md` `tech-stack.md` `roadmap.md` + living-docs scaffold + `baselines` |
+| build-spec · constitution | Product Shape, `research.md` | `mission.md` `product.md` `tech-stack.md` `roadmap.md` + living-docs scaffold |
 | build-spec · phase | constitution, `roadmap.md`, `backlog.md` | user-approved `outcome-card.md` + `specs/YYYY-MM-DD-[feature]/{requirements,plan,validation}.md` + `requirementsHash` |
 | build-spec · replan | phase-just-completed | living-docs updated, changelog, branch merged |
-| build-design | `requirements.md` | `design-brief.md` + `design-tokens.css` + (`claude-code`: `mockups/` + gate report, decisions→`docs/decisions.md`, **no handover**) / (`external`: exported images + `design-comment.md` + `handover.md` screen→image index) |
+| build-design | `requirements.md` | `design-brief.md` + `design-tokens.css` + (`claude-code`: `mockups/` (impeccable-owned), decisions→`docs/decisions.md`, **no handover**) / (`external`: exported images + `design-comment.md` + `handover.md` screen→image index) |
 | build-backend | `requirements.md` `plan.md` `design-tokens.css` + design source (`claude-code`: `mockups/` + `docs/decisions.md`; `external`: `handover.md` + images) | working, integration-tested API |
 | build-review | `validation.md` `outcome-card.md`, running app | review report + silent fixes + **dogfood handoff** + `phase-complete`\|`phase-blocked` |
-| build-deploy | `roadmap.md` (complete), `tech-stack.md ## Safety Defaults`, `mission.md ## Master User Journey`, every `outcome-card.md` | optional cleanup/fix commits, `docs/deployment.md` or a live deploy, `deploy-complete`\|`deploy-blocked` |
+| build-deploy | `roadmap.md` (complete), `tech-stack.md ## Choices` (hosting), `mission.md ## Master User Journey`, every `outcome-card.md` | optional cleanup/fix commits, `docs/deployment.md` or a live deploy, `deploy-complete`\|`deploy-blocked` |
 
 **Narrow-phase note (`phaseCeremony: "narrow"`):** build-spec phase mode's narrow output omits `validation.md`. build-design/build-backend rows above don't apply — design is skipped, backend runs unchanged. build-review is explicitly invoked in `standalone-dogfood` mode instead of the pipeline-review row above, and — only because the orchestrator names this as a phase closure — still writes `phase-complete`/`phase-blocked` on exit (build-review's own Mode detection covers the rest).
 
-**Contracts that never move:** `outcome-card.md` = the user's contract (frozen on approval; a card change restarts build-spec phase mode). `requirements.md` = the machine contract shared by design + backend (hashed). `mission.md` frozen after constitution. `tech-stack.md` is the widest-read doc (carries `## Safety Defaults` + `## Baselines`).
+**Contracts that never move:** `outcome-card.md` = the user's contract (frozen on approval; a card change restarts build-spec phase mode). `requirements.md` = the machine contract shared by design + backend (hashed). `mission.md` frozen after constitution. `tech-stack.md` is the widest-read doc (stack choices + non-negotiables).
 
 ## Loop control
 - **New project** (no mission.md): build-shape (Steps 1.1 concept interview → 1.2 3C research → 1.3 bad-idea gate) → build-spec constitution (Steps 1.4 product interview → 1.5 constitution writing → 1.6 roadmap) → constitution boundary gate → Feature cycle at Phase 0. Six literal steps, each its own `currentSubStep` breadcrumb — see Resume ladder.
 - **Feature cycle** (per phase): build-spec phase → build-design → *design-compliance* → build-backend → *backend-compliance* → build-review → phase-complete boundary gate.
-- **Feature cycle, narrow variant** (`phaseCeremony: "narrow"`, set by build-spec at Outcome Card approval): build-spec phase (narrow — no drafters/reconciliation/drift-review/baseline ceremony, no `validation.md`) → build-backend directly (same `requirements.md`+`plan.md` contract, unaffected) → *backend-compliance* → build-review, explicitly invoked in `standalone-dogfood` mode as this phase's closure → phase-complete boundary gate. build-design and *design-compliance* are skipped entirely — Phase 0 already built every screen to polished static, and a narrow phase by definition touches none that don't already exist.
+- **Feature cycle, narrow variant** (`phaseCeremony: "narrow"`, set by build-spec at Outcome Card approval): build-spec phase (narrow — no drafters/reconciliation/drift-review, no `validation.md`) → build-backend directly (same `requirements.md`+`plan.md` contract, unaffected) → *backend-compliance* → build-review, explicitly invoked in `standalone-dogfood` mode as this phase's closure → phase-complete boundary gate. build-design and *design-compliance* are skipped entirely — Phase 0 already built every screen to polished static, and a narrow phase by definition touches none that don't already exist.
 - **Next feature** (mission.md exists, no active phase): build-spec replan → Feature cycle for the next roadmap phase.
 - **Milestone 3 — Deploy** (`roadmap-complete`, no next phase left): build-deploy (Steps 3.1 whole-codebase review → 3.2 whole-app blind dogfood → 3.3 merge verification → 3.4 deploy) → `deploy-complete`/`deploy-blocked` terminal. See `build-deploy/SKILL.md`.
-- **Roadmap discipline:** Phase 0 = Foundation (scaffold + app shell + the full planned UI as polished static — every screen, mock data, design-locked, unwired; type `initial`). Phases 1+ = vertical slices (one user-facing capability each, wired end-to-end, built→tested→reviewed before the next; type `feature`/`rebuild`). **Slice test:** after this phase can the user *do* something new end-to-end? Horizontal phases ("build all the APIs") are banned. Never thin a slice — split an oversized one into narrower slices. User is the PM; build-spec drafts the sequence, user confirms.
+- **Roadmap discipline:** Phase 0 = Foundation (scaffold + app shell + the full planned UI as polished static — every screen, mock data, design-locked, unwired). Phases 1+ = vertical slices (one user-facing capability each, wired end-to-end, built→tested→reviewed before the next). **Slice test:** after this phase can the user *do* something new end-to-end? Horizontal phases ("build all the APIs") are banned. Never thin a slice — split an oversized one into narrower slices. User is the PM; build-spec drafts the sequence, user confirms.
 - **Axis before order.** `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/roadmap-axis.md` — governs Step 1.6's roadmap draft (build-spec constitution mode).
 
 ## Ground rules (canon in `_shared/`; one line each)
-1. **/eli after every gate write and sub-skill return**, before any further action — auto-continue gates included.
+0. **One door + one turn per phase.** Resume only through this orchestrator (never straight into a sub-skill), routed by the `stack` field (`_shared/entry-point.md`). Cross every internal step/milestone silently; stop only at the named user gates (`_shared/auto-continue.md`).
+1. **/eli only at the user-gate boundaries** — the wrap before a constitution / phase-complete / deploy go/no-go. Internal step and sub-skill-return transitions auto-continue silently, no summary (a summary at every internal step reads as a stop — don't).
 2. **User gates are outcome-only; every felt decision is a fork.** User approves: the shape, the product story (never spec files or `tech-stack.md`), the Outcome Card, the design, the phase-end dogfood. Any decision with felt product impact (UX or performance) → surface as a fork (options + each option's plain tradeoff + a recommended default), front-loaded at the shape/scope/design gate; if it emerges mid-build, ask then — a felt fork overrides auto-continue. Invisible plumbing → decide silently → `docs/decisions.md`. (`_shared/voice.md`)
 3. **Settled decisions are canon.** `docs/decisions.md ## User decisions` is the anti-overturn ledger. Check it before re-asking any fork; record every resolved fork. Never silently overturn one after compaction.
 4. **Backlog capture.** User defers a request → append a dated one-liner to `backlog.md` immediately and confirm by ID ("Noted as T-7"); dogfood bugs thread as `DF-N`. Refer by ID — deferred asks vanish at compaction.

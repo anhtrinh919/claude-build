@@ -2,9 +2,9 @@
 
 ## How phases are sliced (read before filling)
 
-**Phase 0 — Foundation (always first, automatic).** Repo + data-layer scaffold + app shell + **the full planned UI built to final visual polish** (every screen, static, mock data, pixel-complete, not wired). Product *looks* finished and is clickable; it just doesn't *do* anything yet. Type: `initial`.
+**Phase 0 — Foundation (always first, automatic).** Repo + data-layer scaffold + app shell + **the full planned UI built to final visual polish** (every screen, static, mock data, pixel-complete, not wired). Product *looks* finished and is clickable; it just doesn't *do* anything yet.
 
-**Phases 1–n — Vertical slices (one feature each).** Each phase wires one feature end-to-end (screen → API → data), tested and polished before the next starts. The visuals exist from Phase 0; a slice brings them to life. Type: `feature` (or `rebuild` for a visual redesign).
+**Phases 1–n — Vertical slices (one feature each).** Each phase wires one feature end-to-end (screen → API → data), tested and polished before the next starts. The visuals exist from Phase 0; a slice brings them to life.
 
 **Slice test — every Phase 1+ must pass:** after this phase, can the user *do* something new end-to-end? "No, but a layer is now in place" = invalid slice.
 

@@ -4,10 +4,10 @@ The concrete specification of the standard app shell every `ui: true` project bu
 
 **Best of both:** the concrete measurements/patterns below are the buildable spec; each element is tagged with the [ux-rules.md](ux-rules.md) rule (`N/F/A#`) and the [gates.md](gates.md) gate it must satisfy, so the shell is traceable to the correctness bar and both the claude-code-track and external-design-track gates check the same things they specify. Where a rule needs its full rationale, ux-rules carries it — this doc stays concrete so an injected requirement is self-contained.
 
-**When this applies** (from `mission.md`/phase type):
-- `ui: true` + `initial` (Phase 0) → **BUILD** the shell this phase.
-- `ui: true` + `feature` → **INHERIT**; note only shell deltas; validation adds a regression check that the shell still works.
-- `ui: true` + `rebuild` → **REDESIGN**; fill from scratch, overriding Phase 0.
+**When this applies** (by phase number):
+- `ui: true`, Phase 0 → **BUILD** the shell this phase.
+- `ui: true`, Phase 1+ → **INHERIT**; note only shell deltas; validation adds a regression check that the shell still works.
+- `ui: true`, a phase that deliberately redesigns the shell → **REDESIGN**; fill from scratch, overriding Phase 0.
 - `ui: false` → skip entirely.
 
 ---
@@ -42,7 +42,7 @@ The concrete specification of the standard app shell every `ui: true` project bu
 The complete set — sign up · log in · log out · password reset · error handling for each — is mandatory where accounts exist.
 
 **Login gate**
-- **Layout:** centered card 400px desktop / full-width mobile (24px padding), ~40% from top. Hold the product's design language — don't bolt on a generic centered-card that breaks character (craft).
+- **Layout:** centered card 400px desktop / full-width mobile (24px padding), ~40% from top. Hold the product's design language — don't bolt on a generic centered-card that breaks character.
 - **Contents:** logo (48–64px) · headline · email · password with visibility toggle (**F14** — no confirm-password field) · "Forgot password?" right-aligned below password (**F17**) · primary CTA ("Sign in", full-width) · divider "or" · social login (Google first; GitHub for dev tools / Apple for consumer) · "Don't have an account? Sign up".
 - **Errors:** inline below the field; color + icon, never color alone (**F33**, **A**-use-of-color); keep field values on error (**N16**); generic message ("email or password is incorrect") — never enumerate which was wrong (**F20**).
 - **Post-login redirect:** restore `returnUrl` if bounced from a protected route; else default home.

@@ -6,6 +6,8 @@ user-invocable: true
 argument-hint: "[the idea — or a feature/change to challenge in verdict mode]"
 ---
 
+> **Part of `/build`.** On a resume with an active `.build-state.json`, enter through the `/build` orchestrator — it routes here; don't drive this skill off the state file directly (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/entry-point.md`, which also lists the standalone-invocable modes).
+
 # /build-shape — shape the product, or cold-shower an idea
 
 Part of **/build**; runs **inline** in the orchestrator's session (it holds a live user gate and spawns a research leaf — either forces inline). The rest of the build stack is biased toward validating what the user asks for; this skill is the inverse. **Default stance: the idea is bad until every lens has fired and returned clean** — the bar to clear is "all lenses fired clean," never "I couldn't immediately think of an objection."

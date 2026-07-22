@@ -7,7 +7,7 @@ Phase: [N], Feature slug: [slug], Spec directory: specs/YYYY-MM-DD-[slug]/
 Tech stack: [paste tech-stack.md constraints and non-negotiables]
 
 Write requirements.md using schema at ${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/requirements.md. Fill every section:
-- Frontmatter block: phase (integer), type (initial | feature | rebuild)
+- Frontmatter block: phase (integer), ui (true | false)
 - Scope: one paragraph on what this phase delivers
 - User stories: one per major user action, each referencing its Named Flow + step from product.md, format [Flow name, Step N]
 - UI requirements: every screen + every state (default, empty, loading, error, mobile) — behavior and key elements only, no visual treatment

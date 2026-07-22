@@ -3,6 +3,8 @@ name: build-polish
 description: Batch-mode backlog drainer for the /build stack — standalone, never auto-fired by the orchestrator. Ingests open items from backlog.md (T-N / DF-N) plus an optional external source named at invocation (Notion / Linear / GitHub / a shared doc — never assumed or hardcoded), spawns a Sonnet subagent to ground + diagnose every ticket up front, then groups closely-related bugs/improvements into batches (high-impact/visual first), proposes the batches to the user. Works each batch's items in isolation — restate → root-cause diagnose → anti-hack gate → fix → scoped verify (via /build-review's browser engine) → atomic commit → sync backlog + external source — then pauses after the batch for the user's own hands-on dogfood before continuing. One item is still one commit; batching groups the queue and the pause point, never the commits. Resumable via .polish-state.json. Trigger on /build-polish, "work the backlog", "fix the open bugs by batches", "polish pass", "drain the tracker".
 ---
 
+> **Part of `/build`.** On a resume with an active `.build-state.json`, enter through the `/build` orchestrator — it routes here; don't drive this skill off the state file directly (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/entry-point.md`, which also lists the standalone-invocable modes).
+
 # /build-polish — Bug-Fix Mode (batched, with discipline)
 
 Standalone backlog-drainer for the `/build` stack — a sibling, not a pipeline step. `/build` never fires this; the user invokes it directly, between phases or after a dogfood pass. Distinct from `/build-review` (in-pipeline phase gate) and a one-off scoped fix (no skill needed): this drains **many** items, grouped into batches, one full loop per item and one dogfood pause per batch.

@@ -18,6 +18,8 @@ user-invocable: true
 argument-hint: "pipeline-review | standalone-dogfood | [feature description to dogfood]"
 ---
 
+> **Part of `/build`.** On a resume with an active `.build-state.json`, `pipeline-review` mode must enter through the `/build` orchestrator — it routes here; don't drive this skill off the state file directly (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/entry-point.md`, which also lists the standalone-invocable modes — `standalone-dogfood` is one).
+
 # /build-review — Code review and functional dogfood
 
 One skill, two shared agents, two modes. **pipeline-review** is the `/build` phase gate; **standalone-dogfood** is the verification gate for any implementation that finishes outside the pipeline.
@@ -61,9 +63,9 @@ Standalone is **first-class**, not a fallback. It is the auto-verification gate 
 
 `subagent_type: code-reviewer` (see its own definition for the full lens/Fowler/ponytail/correctness catalog and output format) covers Round 1's judgment; `subagent_type: dogfood` (blind first-impression, then a spec-aware story walk, in one continuous session) covers Round 2's. Each mode supplies the scope and inputs; the agents own the catalog and the discipline.
 
-**Briefing `dogfood`.** Pass: the optional persona line, the **one-sentence user goal** (pipeline: the app-purpose sentence from `outcome-card.md`; standalone: the *Original problem* sentence), the optional memorable-thing line from `design-brief.md ## Design intent`, the URL, login credentials, and — on a `feature`/`rebuild` phase — a one-line **scope fence** (below), then (for its Phase 2) the phase's stories/`validation.md` checks/outcome-card. **Never brief:** `requirements.md` (full), `plan.md`, `handover.md`, the diff, what was built, the implementation conversation, or any hint about *how* anything works — the agent's own blindness discipline depends on the caller actually withholding this.
+**Briefing `dogfood`.** Pass: the optional persona line, the **one-sentence user goal** (pipeline: the app-purpose sentence from `outcome-card.md`; standalone: the *Original problem* sentence), the optional memorable-thing line from `design-brief.md ## Design intent`, the URL, login credentials, a one-line **scope fence** (below), then (for its Phase 2) the phase's stories/`validation.md` checks/outcome-card. **Never brief:** `requirements.md` (full), `plan.md`, `handover.md`, the diff, what was built, the implementation conversation, or any hint about *how* anything works — the agent's own blindness discipline depends on the caller actually withholding this.
 
-**Scope fence (feature/rebuild only — stops the blind pass scoring not-yet-built surfaces as defects).** Main holds full context and hands the agent ONE plain line: the capability that is *live this phase* (a door that opens) and the surfaces that are *intentional placeholder scaffolding, wired in a later phase* (doors painted on). Derived from `outcome-card.md` primary outcomes + `product.md` App Map — never from `requirements.md`/`plan.md`/the diff. On an `initial` phase the fence instead reads: every screen is intentional static preview this phase — judge whether screens render, navigate, and read clearly, not whether tasks complete.
+**Scope fence (always — stops the blind pass scoring not-yet-built surfaces as defects).** Main holds full context and hands the agent ONE plain line: the capability that is *live this phase* (a door that opens) and the surfaces that are *intentional placeholder scaffolding, wired in a later phase* (doors painted on). Derived from `outcome-card.md` primary outcomes + `product.md` App Map — never from `requirements.md`/`plan.md`/the diff. When this phase delivers no live task flow (a Phase-0 shell/preview), the fence reads: every screen is intentional static preview this phase — judge whether screens render, navigate, and read clearly, not whether tasks complete.
 
 **Reading `dogfood`'s return.** It already reports the three-signal gate verdict (functional / problem-resolved / no severe friction) and a severity-tagged finding list — main triages those into the fix loop, it doesn't re-derive the gate. A finding on a surface this phase's card does not deliver → `expected-not-built`: LOW informational, never a fix-trigger, regardless of what severity the agent proposed.
 
@@ -77,16 +79,9 @@ Input: `specs/YYYY-MM-DD-[feature]/validation.md`. Read it first; if missing, st
 
 **Sequence:** Step 0 scope pre-check → Round 1 (code review, no browser) → Round 2 (dogfood) → fix loop → dogfood handoff → write terminal step. Round 2 is one continuous session (empty → populated, **no DB resets between sub-passes**) — a real user doesn't reset state. Dead-ends and orphan endpoints are caught at spec time (`/build-spec` reconciliation checks 7–8), not re-derived here.
 
-### Phase-type detection
+### Round scope
 
-Read `requirements.md` frontmatter `type`. **Missing/unrecognized → default `initial`** (full coverage is safer than narrowing on ambiguity).
-
-| `type` | Shell regression (guided walk) | Blind scope |
-|---|---|---|
-| `initial` | Skip | Explore the entire app |
-| `feature` | Run | New screens + connection points (reachable from existing nav? can you return to the main app from inside?) |
-| `rebuild` | Skip (shell redesigned this phase) | Explore the entire app |
-| `ui: false` | — | **Skip Round 2 entirely — Round 1 only** |
+`ui: false` → **skip Round 2 entirely, Round 1 only.** Phase 0 → the guided walk explores the whole app, no shell regression (the shell is being built this phase). Phase 1+ → shell regression runs (below) on top of the story walk.
 
 ### Step 0 — Scope drift pre-check
 
@@ -110,7 +105,7 @@ Write `currentSubStep: "review.code"`. The single code-quality gate — checks, 
 
 One continuous session inside the `dogfood` agent, empty → populated. Write `currentSubStep: "review.dogfood"`. **Browser-optional ladder — drive `/browse` only where it earns it:** an outcome already proven at Round 1's automated rung (tsc, unit/component tests, one curl per API contract) is not re-driven in the browser; the guided walk browser-verifies only the last mile a test can't — that the UI is *wired* to the behavior and *visibly confirms* success. A pure data/logic outcome with no new UI to exercise → assert it at the cheapest sufficient rung, no browser.
 
-**Dispatch `subagent_type: dogfood`** with: the app-purpose sentence from `outcome-card.md`, URL, credentials, the scope fence (above), and — for its Phase 2 — every user story in **this** phase's `requirements.md` (never re-walk prior phases), every manual check in `validation.md`, and this phase's outcome-card. Feature phases also ask it to name the new screens, confirm they're reachable from existing nav, and confirm return-to-main-app works.
+**Dispatch `subagent_type: dogfood`** with: the app-purpose sentence from `outcome-card.md`, URL, credentials, the scope fence (above), and — for its Phase 2 — every user story in **this** phase's `requirements.md` (never re-walk prior phases), every manual check in `validation.md`, and this phase's outcome-card. Phase 1+ also asks it to name the screens added this phase, confirm they're reachable from existing nav, and confirm return-to-main-app works.
 
 **Shell regression (Phase 1+, hardcoded, on top of the agent's own story walk — always runs regardless of `validation.md`):** (1) global nav renders + interactive on a Phase-0 screen; (2) logo/home reaches the dashboard from a route added this phase; (3) auth still gates Phase-2 routes — unauthenticated → login redirect; (4) toast fires on a Phase-2 action; (5) any nav item added this phase is in the right place and clickable. Fold these into the same dispatch as extra items to walk.
 

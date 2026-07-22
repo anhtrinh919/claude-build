@@ -1,8 +1,10 @@
 ---
 name: build-spec
 description: >
-  The SDD spec authority — it drills the user live AND authors the docs, merging BA + spec + baseline into one skill. Explicit mode arg: constitution / phase / replan / baseline. **constitution** — reads the locked Product Shape + research.md, runs Steps 1.4-1.6 of the master flow: 1.4 a second, deeper grill-me interview (mission + tech constraints), 1.5 constitution writing (Safety Defaults, Master User Journey, baseline pick, authors mission.md/product.md/tech-stack.md via Opus drafters), 1.6 roadmap (drill + draft + author roadmap.md + patch product.md's phase labels). **phase** — runs per-phase feature research, drills scope + stories + screens, owns the Outcome Card gate (the only user approval at spec time), then two parallel Opus drafters write requirements/plan/validation, drift-reviewed against the card. **baseline** — adds engineering-hygiene coverage to an existing project. **replan** — updates living docs, runs the changelog, merges the branch. Runs inline; orchestrates Opus drafter + Sonnet research leaf agents. Owns the Outcome Card gate and the baseline selection. Invoked by /build; never standalone except `baseline`.
+  The SDD spec authority — it drills the user live AND authors the docs, merging BA + spec into one skill. Explicit mode arg: constitution / phase / replan. **constitution** — reads the locked Product Shape + research.md, runs Steps 1.4-1.6 of the master flow: 1.4 a second, deeper grill-me interview (mission + tech constraints), 1.5 constitution writing (Master User Journey, authors mission.md/product.md/tech-stack.md via Opus drafters), 1.6 roadmap (drill + draft + author roadmap.md + patch product.md's phase labels). **phase** — runs per-phase feature research, drills scope + stories + screens, owns the Outcome Card gate (the only user approval at spec time), then two parallel Opus drafters write requirements/plan/validation, drift-reviewed against the card. **replan** — updates living docs, runs the changelog, merges the branch. Runs inline; orchestrates Opus drafter + Sonnet research leaf agents. Owns the Outcome Card gate. Invoked by /build.
 ---
+
+> **Part of `/build`.** On a resume with an active `.build-state.json`, enter through the `/build` orchestrator — it routes here; don't drive this skill off the state file directly (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/entry-point.md`).
 
 # /build-spec — Drill + Author
 
@@ -16,12 +18,11 @@ Mechanism is **inline** always: you hold live user gates (drilling, the Outcome 
 
 | Mode | Reads | Authors | Leaf agents | Terminal `step` |
 |---|---|---|---|---|
-| **constitution** (Steps 1.4-1.6) | locked **Product Shape** + `research.md` (from build-shape) | `mission.md` · `product.md` · `tech-stack.md` · `roadmap.md` + living-docs scaffold + `baselines` persisted | Opus drafters (core docs) | **none** — `step` rides on build-shape's `shape-complete` the whole time, `currentSubStep` tracks 1.4/1.5/1.6; you return the product story + latent decisions; the **orchestrator** writes `constitution-complete` after its user boundary gate |
+| **constitution** (Steps 1.4-1.6) | locked **Product Shape** + `research.md` (from build-shape) | `mission.md` · `product.md` · `tech-stack.md` · `roadmap.md` + living-docs scaffold | Opus drafters (core docs) | **none** — `step` rides on build-shape's `shape-complete` the whole time, `currentSubStep` tracks 1.4/1.5/1.6; you return the product story + latent decisions; the **orchestrator** writes `constitution-complete` after its user boundary gate |
 | **phase** | constitution docs · `roadmap.md` · `backlog.md` | user-approved `outcome-card.md` + `specs/YYYY-MM-DD-[feature]/{requirements,plan,validation}.md` + `requirementsHash` | 1 Sonnet feature-research agent + 2 Opus drafters | **`spec-complete`** — you write it on clean exit (also writes `requirementsHash`) |
-| **baseline** | `mission.md` · `tech-stack.md` · current `validation.md` | updated `baselines` + injected sections (if a spec dir exists) | none | none |
 | **replan** | just-completed phase spec + `roadmap.md` | living docs reconciled to as-built · `CHANGELOG.md` · merged branch | none | none — orchestrator owns the next-phase write |
 
-Model **Opus** (you and the drafters). Feature-research leaf **Sonnet**. State file: **`.build-state.json`**. Mode is passed explicitly by the orchestrator (`constitution` / `phase` / `baseline` / `replan`) — do not auto-detect; act on the arg.
+Model **Opus** (you and the drafters). Feature-research leaf **Sonnet**. State file: **`.build-state.json`**. Mode is passed explicitly by the orchestrator (`constitution` / `phase` / `replan`) — do not auto-detect; act on the arg.
 
 ## The two research jobs (read before anything — R1)
 
@@ -81,32 +82,7 @@ No gate — auto-move to 1.5, transition announcement ("Mission and tech constra
 
 ### Step 1.5 — Constitution writing
 
-Write `currentSubStep: "spec.1.5"`. No gate — auto-move. Three labeled subsections, each kept individually legible, run in order:
-
-#### Safety Defaults (SD1–SD5)
-
-Ask these 5. Answers go verbatim into `tech-stack.md ## Safety Defaults` — the baseline injection reads exact values, so do not paraphrase. `AskUserQuestion` caps at 4 per call → two batches.
-
-**SD1 (plain text first):** the production URL (convey: e.g. `myapp.com`, "TBD" if undecided). → Default **TBD**; CORS uses an env variable and the safety review blocks until it's set.
-
-**Batch 1 — SD2–SD4 in one `AskUserQuestion` call:**
-- **SD2 Billing** — does this app charge users money? *Yes / Planned for later / No.* → Yes/Planned: scaffold Stripe + webhook signature check.
-- **SD3 Sensitive data** — does it handle money, health records, or legal documents? *Yes / No.* → Yes: scaffold an append-only `audit_log` table + middleware. Use outcome-only framing — do NOT say "audit log" to the user.
-- **SD4 Error tracking** — how should you be alerted when something breaks in production? *Sentry — free tier, 5-min setup (recommended) / Logs only.* → Sentry: wire SDK + `SENTRY_DSN` in `.env.example`. Logs only: note in README that serverless log retention is short (Vercel free: ~1 hour).
-
-**Batch 2 — SD5 in one `AskUserQuestion` call:**
-- **SD5 Deployment platform** — where will this deploy? *Vercel / Railway / Render / Other.* → shapes README, health checks, env-var workflow, and later Step 3.4's deploy execution.
-
-Persist verbatim as this block (missing value → safe default: `TBD` / `no` / `no` / `logs` / `other`):
-
-```markdown
-## Safety Defaults
-production_domain: [value or TBD]
-billing: [yes / planned / no]
-sensitive_data: [yes / no]
-error_tracking: [sentry / logs]
-deploy_platform: [vercel / railway / render / other]
-```
+Write `currentSubStep: "spec.1.5"`. No gate — auto-move. Two labeled subsections, each kept individually legible, run in order:
 
 #### Master User Journey
 
@@ -116,20 +92,6 @@ Map the full product journey across three layers. Becomes `## Master User Journe
 - **Layer 2 — Named Flows:** 3–6 named flows, each 3–5 steps at verb-noun granularity. Example — **Onboarding:** Register → Connect data → Configure → First run. Draft from the conversation, then one `AskUserQuestion` (complete / missing something / needs reordering); adjust once.
 - **Layer 3 — Flow-to-phase mapping:** label each step with the roadmap phase that delivers it, e.g. `Register (Ph1) → Connect data (Ph1) → Configure (Ph2)`. A gap signals a missing phase — flag it as a note to resolve at Step 1.6, don't block here (the roadmap doesn't exist yet).
 
-#### Baseline recommendation (folds in baseline Mode 1)
-
-Baselines are engineering-hygiene layers a senior dev installs on day 1 but a non-dev builder never thinks of. Evaluate each against the project shape with these deterministic rules; on ambiguity apply the tie-break:
-
-| Baseline | Key | Recommend when | Tie-break |
-|---|---|---|---|
-| App Shell | `app-shell` | project has a user-facing UI | ON if any UI screens described |
-| Production Safety | `safety` | has a backend (any server / serverless functions) | ON if backend presence uncertain |
-| Repo | `repo` | **always** — every project incl. scripts/one-offs | ON |
-| DX | `dx` | has a build step (package.json, pyproject.toml, Cargo.toml, …) | ON if any package manager mentioned |
-| Observability | `observability` | has a backend AND deploys to a public URL with real users | **default OFF** — only ON when "this will be public" is confirmed |
-
-Present as a plain-language table — describe what the user experiences, never what the code does. One `AskUserQuestion`: *Confirm all / Remove one or more / Add one or more* (up to 2 follow-ups to identify edits, then re-surface and ask "Confirmed?"). When one is removed, state the consequence once, e.g. remove **Observability** → "no crash alerts or uptime monitoring — you'd only know something broke when a user reports it." Ambiguous Observability → skip and say: "skipping Observability for now since this looks like an internal tool — run /build-spec baseline any time to add it when you go public."
-
 #### Author + scaffold
 
 Spawn Opus drafter leaf agent(s) with a context-isolated brief — the Product Shape, `research.md`, the drilling decisions, and the schema paths — to author `mission.md` and `tech-stack.md` in full, plus `product.md` **except** its Screen Inventory phase-label column and App Map phase-coloring (leave both as `TBD — patched at Step 1.6`; phase numbers don't exist until the roadmap is drafted). Do NOT author `roadmap.md` here — that's Step 1.6. They return raw markdown; you write to disk. (Core docs are Opus-authored, never Sonnet — judged on completeness, not brevity.) Brief ends with **containment: no spawning agents, no /build*, no `claude -p`, no commit, no server, don't address the user — return content/paths only.**
@@ -137,18 +99,9 @@ Spawn Opus drafter leaf agent(s) with a context-isolated brief — the Product S
 **Core docs** (schemas under `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/`, every field filled except the two roadmap-dependent ones noted above):
 - **`mission.md`** — purpose (one crisp sentence), named/specific target users, one-paragraph vision, observable success, `## Master User Journey`.
 - **`product.md`** — End-State Vision; Screen Inventory (every screen, phase-label column `TBD` for now); Navigation Structure (flat map); **App Map** (one Mermaid `flowchart` — screens as nodes, user actions as edges; phase-coloring `TBD` for now — the single human-facing diagram in the stack, regenerated from the two sections above, never hand-maintained); Core Feature Surface; Named Flows (phase-label `TBD`); Phase 0 Foundation Scope (every screen to final visual polish, static, mock data — the instruction to build-design to build the full IA to polished static in Phase 0).
-- **`tech-stack.md`** — every choice filled; constraints/non-negotiables explicit (e.g. "strict TypeScript from commit 1", "all deps pinned exactly — no `^`/`~`"); exclusions named with reasoning; Key Technical Decisions table seeded. Plus the `## Safety Defaults` block above and:
-
-  ```markdown
-  ## Baselines
-  active: [app-shell, safety, repo, dx, observability]
-  ```
-
-  List only the confirmed keys; omit deselected ones. This is the durable carrier the baseline injection reads when `.build-state.json` is absent. `tech-stack.md` is the **widest-read doc** in the stack — every phase skill reads it as the constraints authority.
+- **`tech-stack.md`** — every choice filled; constraints/non-negotiables explicit (e.g. "strict TypeScript from commit 1", "all deps pinned exactly — no `^`/`~`"); exclusions named with reasoning; Key Technical Decisions table seeded. `tech-stack.md` is the **widest-read doc** in the stack — every phase skill reads it as the constraints authority.
 
 **Scaffold living docs** per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md` (headers only — an empty section is fine, fake content is not): `CLAUDE.md` (index + `## Project directives`, no prefix), `backlog.md` (empty buckets, no prefix), `README.md` (mission + status "constitution in progress, roadmap not yet drafted", no prefix), `CHANGELOG.md`, `docs/architecture.md`, `docs/api.md`, `docs/decisions.md`. Every agent-facing living doc (`docs/architecture.md`, `docs/api.md`, `docs/decisions.md`) opens with the exact first line `> Agent context — not for human reading.`; `README.md` and `CLAUDE.md` do NOT. Seed `docs/decisions.md ## User decisions` with the forks already resolved (the Product Shape's chosen forks + any felt-impact calls answered during the grill), each as `[Decision] — Chose: X. Why: … Options were: … (Phase 0 · date)`; seed `## Technical decisions` from the tech-stack Key Technical Decisions table. None of this scaffolding depends on `roadmap.md`.
-
-**Persist `baselines`** to both `.build-state.json` (the `baselines` array) and `tech-stack.md ## Baselines` (written above). If the drilling produced no baseline confirmation, default to `["repo"]`.
 
 Transition announcement into 1.6.
 
@@ -164,7 +117,7 @@ Drill, then collaborate: ask for the full feature set roughly (list, don't scope
 
 **Patch `product.md`** — fill in the Screen Inventory's phase-label column and regenerate the App Map's phase-coloring now that phases exist. This is a mechanical edit against the doc authored at Step 1.5, not a re-author.
 
-**State checkpoint:** write `.build-state.json` with `phase: 1`, `feature` (kebab slug of Phase 0 from roadmap), `reviewIteration: 0`, `requirementsHash: ""`, `currentSubStep: null`, `dogfoodPid: null`, `baselines: [...]` — `step` stays `shape-complete` (this mode never writes its own terminal step; see below). This is the resume anchor — without it a compaction during the user's pause restarts at Step 1.4.
+**State checkpoint:** write `.build-state.json` with `phase: 1`, `feature` (kebab slug of Phase 0 from roadmap), `reviewIteration: 0`, `requirementsHash: ""`, `currentSubStep: null`, `dogfoodPid: null` — `step` stays `shape-complete` (this mode never writes its own terminal step; see below). This is the resume anchor — without it a compaction during the user's pause restarts at Step 1.4.
 
 ### Return (do NOT write the terminal step)
 
@@ -192,12 +145,6 @@ Every decision this phase that the user will *feel* — how a flow works, what a
 
 This is the design-concept / mental-model grill for the phase — run it at full Drilling discipline depth (tree-completeness, not a count).
 
-- **Phase type (ask first — shapes everything downstream).** One `AskUserQuestion`: "What kind of phase is this?"
-  - `initial` — first build of a new product area (no existing UI to honor)
-  - `feature` — adds capability to an existing product (follows existing patterns)
-  - `rebuild` — visual or structural redesign (overrides existing patterns)
-
-  This lands in `requirements.md` frontmatter and governs backend behavior — getting it wrong silently fails later.
 - **What this phase delivers:** quote the roadmap entry verbatim and ask if it still matches. What can the user do at the end they couldn't before? What's explicitly out of scope even if related? Scope was set at constitution — confirm and detail, don't re-scope. If the roadmap entry feels wrong, that's a constitution change — surface it, ask whether to update `roadmap.md` first.
 - **Who and why:** who uses this feature specifically? What's the consequence if it doesn't exist or doesn't work? What does "this works" look like from their perspective?
 
@@ -230,18 +177,16 @@ Spec files are machine-validated downstream and never shown to the user — the 
 
 ### Ceremony scope (evaluate before presenting the card)
 
-Most phases don't need the full ceremony. A genuinely narrow phase can be built directly and dogfooded — skipping spec-authoring and design ceremony entirely — for real token and time savings. Recommend **narrow** only when every check below holds; any one false → recommend **full** (tie-break: default to the safer, fuller path, same convention as Baseline recommendation further down).
+Most phases don't need the full ceremony. A genuinely narrow phase can be built directly and dogfooded — skipping spec-authoring and design ceremony entirely — for real token and time savings. Recommend **narrow** only when every check below holds; any one false → recommend **full** (tie-break: default to the safer, fuller path).
 
 | Check | Narrow requires |
 |---|---|
-| Phase type | `feature` (never `initial` or `rebuild` — those genuinely need fresh design) |
 | New screens | zero — every screen this phase touches already exists to polished static from a prior phase (Phase 0 built the full IA; most later phases only wire behavior into it) |
 | Primary flow | exactly 1 story |
 | Mechanism | no Behavioral-mechanism-diagram trigger (no async/background jobs, real-time sync, multi-actor flow, state machine, role/permission model) |
-| Baseline | no baseline newly activated this phase (an already-active baseline is fine — see the narrow Author branch below) |
 | API surface | ≤3 endpoints, all simple CRUD |
 
-State the verdict plainly when you present the card, in one line of *why* (e.g. "this phase only wires the existing list screen to real data — one story, no new screens, no new baseline — I'd build this directly rather than write full specs").
+State the verdict plainly when you present the card, in one line of *why* (e.g. "this phase only wires the existing list screen to real data — one story, no new screens — I'd build this directly rather than write full specs").
 
 ### Scope challenge (before authoring)
 
@@ -255,9 +200,9 @@ Create the feature branch `phase-N-[feature-slug]` (N from `roadmap.md`) either 
 - **Requirements drafter** — `${CLAUDE_PLUGIN_ROOT}/skills/build-spec/briefs/drafter-requirements.md` → `requirements.md` + `validation.md`.
 - **Plan drafter** — `${CLAUDE_PLUGIN_ROOT}/skills/build-spec/briefs/drafter-plan.md` → `plan.md`.
 
-Each brief ends with the containment line and instructs the drafter to return raw markdown + a `## Latent decisions` list, writing no files. Then run Reconciliation, Drift review, and Baseline injection below.
+Each brief ends with the containment line and instructs the drafter to return raw markdown + a `## Latent decisions` list, writing no files. Then run Reconciliation and Drift review below.
 
-**Narrow ceremony — you author directly.** No leaf-agent spawn, no reconciliation, no drift review, no baseline injection ceremony. Write `requirements.md` + `plan.md` yourself, in one pass, to the same schemas the drafters would otherwise produce — every field still filled; narrow means less process around the docs, not thinner docs. If a baseline is already active from a prior phase and this phase adds a genuinely new endpoint, add its routine one-line row per the Phase-detection rule in Baseline injection below — nothing more. Do **not** write `validation.md`. Skip straight to Write + auto-proceed.
+**Narrow ceremony — you author directly.** No leaf-agent spawn, no reconciliation, no drift review. Write `requirements.md` + `plan.md` yourself, in one pass, to the same schemas the drafters would otherwise produce — every field still filled; narrow means less process around the docs, not thinner docs. Do **not** write `validation.md`. Skip straight to Write + auto-proceed.
 
 ### Reconciliation — the 8 checks (full ceremony only)
 
@@ -286,23 +231,6 @@ You hold all three docs + the card in context; every fix is an inline doc edit. 
 
 Fix everything by editing the docs. Surface to the user only a hole you cannot close alone (e.g. the card is internally contradictory): one `AskUserQuestion` in outcome language — never a raw findings list.
 
-### Baseline injection (folds in baseline Mode 2; full ceremony only — narrow's routine endpoint row is handled in Author above)
-
-Read the active `baselines` from `.build-state.json` (fallback: `tech-stack.md ## Baselines active:`; neither found → treat as `["repo"]` and note in `docs/decisions.md` that baseline coverage can be expanded). For each active key, read its file and inject:
-
-| Key | File | → `requirements.md` | → `validation.md` |
-|---|---|---|---|
-| `app-shell` | `${CLAUDE_PLUGIN_ROOT}/skills/build-design/references/app-shell-spec.md` | `## App Shell` | app-shell block |
-| `safety` | `${CLAUDE_PLUGIN_ROOT}/skills/build/production-safety-baseline.md` | `## Safety Baseline` | S1–S8 blocks |
-| `repo` | `${CLAUDE_PLUGIN_ROOT}/skills/build/repo-baseline.md` | `## Repo Conventions` | R1–R3 block |
-| `dx` | `${CLAUDE_PLUGIN_ROOT}/skills/build/dx-baseline.md` | `## Developer Tooling` | D1–D4 block |
-| `observability` | `${CLAUDE_PLUGIN_ROOT}/skills/build/observability-baseline.md` | `## Observability` | O1–O4 block |
-
-- **Phase detection:** if this baseline's validation header already exists in a prior phase's `validation.md`, mark it inherited in `requirements.md` and add only new endpoint rows; else full injection.
-- **Health-check conflict (single owner — here):** if both `safety` and `observability` are active, before injecting O4 remove **only** this line from the S6 block — `- [ ] Health endpoint: curl <host>/api/health → HTTP 200, JSON with status and ts fields` — keep the rest of S6, then inject O4 (deep health check with DB ping). Only one health check ends up in `validation.md`.
-- **SD answers:** for `safety` and `observability`, read the 5 values from `tech-stack.md ## Safety Defaults` (absent → apply `TBD / no / no / logs / other` and note the assumption in `docs/decisions.md`).
-- **Skip behavior:** a baseline not in the array leaves zero trace. build-review only enforces what's in `validation.md`.
-
 ### Write + auto-proceed
 
 **Full ceremony:** write the three reconciled, drift-reviewed files under `specs/YYYY-MM-DD-[slug]/`: `requirements.md`, `plan.md`, `validation.md` (`outcome-card.md` is already there).
@@ -314,19 +242,7 @@ Either way, then:
 1. `sha256sum specs/YYYY-MM-DD-[slug]/requirements.md | cut -d' ' -f1` — the hash is taken **after** drift review (full) or immediately after authoring (narrow), never mid-review. Only phase mode writes `requirementsHash`.
 2. Write `.build-state.json`: `requirementsHash` (computed), `step: "spec-complete"`, `phase` + `feature` (from roadmap), `reviewIteration: 0`, `currentSubStep: null`, `dogfoodPid` preserved, `phaseCeremony: "full"` or `"narrow"` (from the card's approval choice).
 
-No user gate — the card was the contract. Downstream skills recompute the hash on entry; on mismatch they surface once (requirements changed since approval → *Continue / restart spec*), never auto-block. For `phaseCeremony: "narrow"`, the orchestrator's Loop control skips build-design/design-compliance entirely and routes straight to build-backend (unaffected — same `requirements.md`+`plan.md` contract, just thinner); build-review runs its `standalone-dogfood` mode instead of pipeline-review, and still writes `phase-complete`/`phase-blocked` on exit (see build-review's Mode detection). Convey to the orchestrator: phase spec written (and drift-reviewed, if full); the spec dir and branch; ceremony scope chosen and why; counts (stories, screens, API contracts, plan groups, validation checks where applicable); how many drift issues were fixed against the card (full only).
-
----
-
-## Mode: baseline (standalone)
-
-Add or change engineering-hygiene coverage on an existing project (invoked as `/build-spec baseline` or when the constitution/phase flow points here).
-
-1. **Understand shape** — read `mission.md` + `tech-stack.md`; without them, ask for a one-line description.
-2. **Detect active baselines** — in the current spec dir's `validation.md`, grep for `## App Shell` / `## Safety Baseline Checks` / `## Repo Baseline Checks` / `## DX Baseline Checks` / `## Observability Baseline Checks`. No `validation.md` → all inactive.
-3. **Recommend the inactive ones only** — run the Part D recommend logic for what's NOT yet active; never re-confirm what's already on.
-4. **Persist** — `.build-state.json` present → update its `baselines`; else write `tech-stack.md ## Baselines` (create if absent) and tell the user "saved — new baselines inject next time the phase spec runs."
-5. **Inject** — if a spec dir exists, run the phase-mode Baseline injection into its files; else skip (injection happens automatically when phase mode next runs).
+No user gate — the card was the contract; on return do NOT yield or summarize-and-stop — hand straight back so the orchestrator auto-continues to build-design in the same turn (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/auto-continue.md`). Downstream skills recompute the hash on entry; on mismatch they surface once (requirements changed since approval → *Continue / restart spec*), never auto-block. For `phaseCeremony: "narrow"`, the orchestrator's Loop control skips build-design/design-compliance entirely and routes straight to build-backend (unaffected — same `requirements.md`+`plan.md` contract, just thinner); build-review runs its `standalone-dogfood` mode instead of pipeline-review, and still writes `phase-complete`/`phase-blocked` on exit (see build-review's Mode detection). Convey to the orchestrator: phase spec written (and drift-reviewed, if full); the spec dir and branch; ceremony scope chosen and why; counts (stories, screens, API contracts, plan groups, validation checks where applicable); how many drift issues were fixed against the card (full only).
 
 ---
 

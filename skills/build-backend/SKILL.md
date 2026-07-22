@@ -1,12 +1,14 @@
 ---
 name: build-backend
 description: >
-  Backend implementation skill for the /build SDD stack. Reads requirements.md (API contracts, data model, phase type), plan.md (dependency-ordered task groups), design-tokens.css, and the design source — track-dependent: on the claude-code track the mockups in specs/<phase>/mockups/ (they ARE the design, no handover doc) plus docs/decisions.md for non-visual choices; on the external track a bare screen→image index in handover.md pointing at the exported images. Implements plan.md groups wave-by-wave — topologically sorted by Depends-on, non-overlapping file sets per agent, Opus for architectural/data/API groups, Sonnet for leaf/UI/config — then integration-tests every API contract in requirements.md (every endpoint, every error path, both 401 cases). Runs inline in the /build session; wave agents never commit, never start servers, never address the user. Enforces the shared test standard (references/test-standard.md) on every test written. Returns without a terminal state — the /build orchestrator runs backend-compliance and writes backend-complete. Trigger on /build-backend, or when /build reaches the backend step.
+  Backend implementation skill for the /build SDD stack. Reads requirements.md (API contracts, data model), plan.md (dependency-ordered task groups), design-tokens.css, and the design source — track-dependent: on the claude-code track the mockups in specs/<phase>/mockups/ (they ARE the design, no handover doc) plus docs/decisions.md for non-visual choices; on the external track a bare screen→image index in handover.md pointing at the exported images. Implements plan.md groups wave-by-wave — topologically sorted by Depends-on, non-overlapping file sets per agent, Opus for architectural/data/API groups, Sonnet for leaf/UI/config — then integration-tests every API contract in requirements.md (every endpoint, every error path, both 401 cases). Runs inline in the /build session; wave agents never commit, never start servers, never address the user. Enforces the shared test standard (references/test-standard.md) on every test written. Returns without a terminal state — the /build orchestrator runs backend-compliance and writes backend-complete. Trigger on /build-backend, or when /build reaches the backend step.
 ---
+
+> **Part of `/build`.** On a resume with an active `.build-state.json`, enter through the `/build` orchestrator — it routes here; don't drive this skill off the state file directly (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/entry-point.md`).
 
 # /build-backend — Backend Implementation
 
-Find the most recent `specs/YYYY-MM-DD-[feature]/` directory and read: `requirements.md` (contract — start with frontmatter `type`), `plan.md` (task groups in build order), `design-tokens.css` if `ui: true`, and the **design source** (track-dependent, `mission.md ## Design Tool`): **`claude-code`** → the mockups in `specs/<phase>/mockups/` (they ARE the design) + `docs/decisions.md` (non-visual design decisions) — there is no handover doc on this track; **`external`** → `handover.md` (the screen→image index) + the exported images it points to. `requirements.md`/`plan.md` missing, or (for `ui: true`) the design source missing → stop: "No phase spec/design found — run `/build-spec` and `/build-design` for this phase first."
+Find the most recent `specs/YYYY-MM-DD-[feature]/` directory and read: `requirements.md` (contract), `plan.md` (task groups in build order), `design-tokens.css` if `ui: true`, and the **design source** (track-dependent, `mission.md ## Design Tool`): **`claude-code`** → the mockups in `specs/<phase>/mockups/` (they ARE the design) + `docs/decisions.md` (non-visual design decisions) — there is no handover doc on this track; **`external`** → `handover.md` (the screen→image index) + the exported images it points to. `requirements.md`/`plan.md` missing, or (for `ui: true`) the design source missing → stop: "No phase spec/design found — run `/build-spec` and `/build-design` for this phase first."
 
 ## What this skill is
 
@@ -24,18 +26,6 @@ Find the most recent `specs/YYYY-MM-DD-[feature]/` directory and read: `requirem
 This session owns wave dispatch, interface cross-checks, commits, and integration testing. Wave agents never commit, never start servers, never address the user (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/subagent-policy.md` — Rule 6 governs the dispatch below).
 
 Voice: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`. Brain: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/brain.md`, `$AGENT=backend`, `$TAGS` from `tech-stack.md`. **Friction trigger:** a group needed a meaningfully different second approach after code-harness rejected the first — one entry per group, title `Phase <N> backend friction: <issue>`. **Phase-wrap trigger:** once, after Stage 3 passes — title `Phase <N> backend: <summary>`.
-
----
-
-## Phase type (requirements.md frontmatter)
-
-| `type` | Rule |
-|---|---|
-| `initial` | Greenfield — design file is the sole visual authority, no legacy patterns to honor |
-| `feature` | Additive — follow existing codebase patterns; design covers only new surface area |
-| `rebuild` | Design file overrides existing structure unconditionally — delete the sidebar if design shows a top-header. Code-harness's "no invented abstractions" still governs utilities/logic, never visual layout |
-
-Missing `type`: check `mission.md` — Phase 0 still in progress → stop and ask (genuinely ambiguous between `initial`/`rebuild`); otherwise default `feature`. Unrecognized `type` → stop and ask.
 
 ---
 
@@ -118,7 +108,7 @@ Test the **full API surface** against every contract in `requirements.md` — al
 
 Write the phase-wrap brain entry (once, after Stage 3 passes). Report to the orchestrator: what the backend provides (one sentence), endpoint count (all integration-tested), status (`ready` / `has known issues` / `blocked`), one line on anything fragile.
 
-**Do not** write `.build-state.json`'s `step` — terminal-state ownership belongs to the orchestrator. Null `currentSubStep` on return (it should have carried a `"backend.group-N"` breadcrumb while a group was in flight, for crash-resume). **Do not** invoke `/build-review` — the orchestrator runs the `backend-compliance` gate first and decides: pass writes `backend-complete`; fail rolls back to `design-complete` and re-runs this skill.
+**Do not** write `.build-state.json`'s `step` — terminal-state ownership belongs to the orchestrator. Null `currentSubStep` on return (it should have carried a `"backend.group-N"` breadcrumb while a group was in flight, for crash-resume). **Do not** invoke `/build-review` — the orchestrator runs the `backend-compliance` gate first and decides: pass writes `backend-complete`; fail rolls back to `design-complete` and re-runs this skill. On return do NOT yield or summarize-and-stop — hand straight back so the orchestrator auto-continues in the same turn (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/auto-continue.md`).
 
 ---
 

@@ -12,7 +12,7 @@ This project is built by the `/build` SDD stack. **Before touching code, read th
 
 ## Living docs — read the one that fits
 - `mission.md` / `product.md` — what the product is, for whom; screen inventory, named flows, App Map.
-- `tech-stack.md` — stack + non-negotiables (e.g. strict TypeScript, pinned deps). Also `## Safety Defaults` and `## Baselines`.
+- `tech-stack.md` — stack + non-negotiables (e.g. strict TypeScript, pinned deps).
 - `roadmap.md` — ordered phase list.
 - `specs/YYYY-MM-DD-<feature>/` — per-phase `requirements.md` · `plan.md` · `validation.md` (frozen after spec approval).
 - `docs/decisions.md` — technical forks + why + alternatives rejected.

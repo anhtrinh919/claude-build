@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 — 2026-07-22
+
+Three cleanups to the /build stack.
+
+**claude-code design track = impeccable, whole.** The `claude-code` track is now nothing but "invoke the `impeccable` skill and let it work" + a close-out (write `design-tokens.css` + non-visual decisions). The milestone/gate-report/structure-map/self-critique scaffold, the visual-shown log, and the internal design-brief schema are gone — impeccable owns structure, a11y, craft, the mockups, and the live show-and-fork. The `external` track (brief → wait → review vs `gates.md` → `design-comment.md` → screen→image index) is unchanged; `gates.md` reframed as the external track's catalogue. Deleted `references/toolkit.md` and `schemas/design-brief-internal.md`.
+
+**Cut Safety Defaults, baselines, and phase-type.** Removed SD1–SD5 and the standalone `baseline` mode from `build-spec`, the four `*-baseline.md` reference files, the `baselines` state field, and the `initial`/`feature`/`rebuild` phase-type across `build-backend`/`build-review`/`build-deploy`/schemas. Shell/regression logic is now keyed on phase number (Phase 0 vs 1+). `build-deploy` reads the hosting target from `tech-stack.md ## Choices` and asks at deploy time if unset.
+
+**Flow control — one door, one turn per phase.** New `stack` field in `.build-state.json` names the owning orchestrator so a resume never jumps straight into a sub-skill; every non-standalone sub-skill carries an entry guard routing back through `/build`; a single auto-continue contract (`_shared/{entry-point,auto-continue}.md`) names the only stop points (the user gates) and holds `/eli` to those boundaries.
+
 ## 1.0.3 — 2026-07-22
 
 claude-code design track now invokes the `impeccable` plugin for craft judgment (register, color, type, layout, motion, anti-slop) instead of an inline `craft.md` ruleset (deleted). Milestones, gate report, forks, and backend handoff unchanged. README/plugin.json/marketplace.json corrected to list all nine skills (`build-deploy` was missing from the count).
