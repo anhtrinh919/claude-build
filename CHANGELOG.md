@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1 — 2026-07-26
+
+Fresh-eyes review of 1.3.0 caught a real regression: phase mode's Scope grill still asked "who uses this feature specifically" — a trunk-level actor question — despite `phase-scope` mode's own gate table saying trunk always collapses there since the actor was already settled at constitution. Removed; the roadmap-entry root is now explicitly marked cited-not-re-derived, and the remaining branch/leaf questions are level-labeled so the drilling actually routes through the gated mechanism instead of reading as an unlabeled checklist next to it.
+
 ## 1.3.0 — 2026-07-26
 
 **The drilling mechanism rewritten — root cause of three reported bugs was the same self-contradiction.** The tree's own Parent Test says a child may not exist until its parent is answered, yet the four-step shape demanded the *whole* tree be authored before anyone answered anything — that's what produced stray off-tree questions (a second, untested "trunk/branch/leaf" ritual lived inside `build-shape`'s Step 1.1, explicitly exempted from the validity tests), drift across batches (no committed structure to return to), and irrelevant artifact rows (children guessed for a parent answer that hadn't happened). Fixed: reveal one level at a time — root → trunk → branch → leaf, walked depth-first, one open thread at a time — each level derived only from the answer just given, gated by both the existing structural tests and a new mode-specific semantic gate. A level that fails either gate collapses instead of being manufactured to complete the shape. `decision-tree.md` is now a living document appended to as each level resolves, not authored once upfront; anything discovered mid-session (previously routed through `build-spec`'s undocumented "Latent decisions" side-channel) is now appended into the same tree instead of asked as a bare `AskUserQuestion`.

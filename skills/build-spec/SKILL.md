@@ -148,12 +148,12 @@ Every decision this phase that the user will *feel* — how a flow works, what a
 
 ### A. Scope grill
 
-This is the design-concept / mental-model grill for the phase — run it at full Drilling discipline depth (tree-completeness, not a count).
+`phase-scope` mode: root is cited, not re-derived; trunk (the actor/need) is already settled upstream and collapses straight to branch — do not ask a fresh "who is this for" question here. Run branch + leaf at full Drilling discipline depth (tree-completeness, not a count).
 
-- **What this phase delivers:** quote the roadmap entry verbatim and ask if it still matches. What can the user do at the end they couldn't before? What's explicitly out of scope even if related? Scope was set at constitution — confirm and detail, don't re-scope. If the roadmap entry feels wrong, that's a constitution change — surface it, ask whether to update `roadmap.md` first.
-- **Who and why:** who uses this feature specifically? What's the consequence if it doesn't exist or doesn't work? What does "this works" look like from their perspective?
+- **Root, cited:** quote the roadmap entry verbatim and confirm it still matches. What can the user do at the end they couldn't before? Scope was set at constitution — confirm and detail, don't re-scope. If the roadmap entry feels wrong, that's a constitution change — surface it, ask whether to update `roadmap.md` first.
+- **Branch — open scope decisions:** what's explicitly out of scope even if related? What does "this works" look like from the already-settled actor's perspective — use it to pressure-test scope boundaries, not to re-derive who they are.
 
-### B. User stories + screen inventory
+### B. User stories + screen inventory (leaf)
 
 - **User stories:** per major action, "As [actor], I can [specific action] so that [specific outcome]." Push for specificity — "As a manager, I can filter the product list by supplier so that I see only their items" is a story; "I can manage the list" is not.
 - **Screen inventory:** per story — what does the user see? Empty state? Loading? Error? Mobile? Edge cases (double-submit, session expired, back button mid-action)? Format: Screen / State / Key UI elements / Primary user action.
