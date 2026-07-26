@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 — 2026-07-26
+
+**Drilling discipline rewritten as a four-step shape.** What was a single list of rules for tree-walking a conversation is now sequenced: batched orientation (`AskUserQuestion` in 4-5 question groups) → author `decision-tree.md` → convert it into a fillable artifact → analyze the returned answers as a set (contradictions, rejected options, revealing blanks) before folding anything into docs. Added explicit validity tests for deriving a tree (parent, fan-out, single-child, settled-fact) so a tree is derived, not imposed. `build-shape`'s Step 1.2 now applies the discipline for question craft only — its gate carries too few forks to justify the full four-step shape (no `decision-tree.md`, no artifact); `build-spec`'s Step 1.4 and phase-mode scope grill apply it in full, phase-mode scaled to the phase's actual decision count.
+
 ## 1.2.0 — 2026-07-22
 
 Audit-and-repair pass over 1.1.0: eight full-read auditors across every skill file, then three adversarial review rounds. 1.1.0 shipped several half-landed fixes; these are the rest.

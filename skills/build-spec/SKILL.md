@@ -46,6 +46,8 @@ When a technical choice produces a **felt** difference — how a flow works, or 
 
 Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/drilling-discipline.md` at full depth — every drilling session in this mode (the Step 1.4 product interview, the phase-mode scope grill) runs at this discipline, no exceptions.
 
+That discipline's four-step shape — batched orientation → `decision-tree.md` → fillable artifact → analyze the returned set — applies in full to **Step 1.4**, where the open-decision count is always high. In **phase** mode, run all four only when the phase's open decisions genuinely warrant it; a narrow phase resolves in batched orientation alone. `decision-tree.md` and its artifact are working documents, not deliverables: they feed the Outcome Card and are never a substitute for it. The user still approves outcomes, never the tree.
+
 ## Latent decisions — collection + routing (constitution + phase)
 
 Latent decisions are choices made silently while authoring because the drilling didn't speak to them: a tech micro-choice, a scope inference, a behavior default, an assumption about an unspecified flow.
