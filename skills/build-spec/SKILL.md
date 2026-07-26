@@ -44,9 +44,12 @@ When a technical choice produces a **felt** difference — how a flow works, or 
 
 ## Drilling discipline (constitution + phase)
 
-Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/drilling-discipline.md` at full depth — every drilling session in this mode (the Step 1.4 product interview, the phase-mode scope grill) runs at this discipline, no exceptions.
+Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/drilling-discipline.md` at full depth — every drilling session in this mode runs at this discipline, no exceptions. Two different gate presets apply, matched to what's actually still open at each point:
 
-That discipline's four-step shape — batched orientation → `decision-tree.md` → fillable artifact → analyze the returned set — applies in full to **Step 1.4**, where the open-decision count is always high. In **phase** mode, run all four only when the phase's open decisions genuinely warrant it; a narrow phase resolves in batched orientation alone. `decision-tree.md` and its artifact are working documents, not deliverables: they feed the Outcome Card and are never a substitute for it. The user still approves outcomes, never the tree.
+- **Step 1.4** — `concept-shape` mode, continuing the same tree build-shape opened. Root and trunk (demand, the primary actor) are already settled there; Step 1.4 resolves the remaining branches and leaves — mission's shape, what it explicitly does NOT do, and any tech constraint that's a genuine either/or. Don't re-open root or trunk.
+- **phase mode's scope grill** — `phase-scope` mode. Root is the phase's Outcome Card outcome (cited, not re-derived); trunk always collapses straight to branch (the actor/need is already settled upstream) — the open scope decisions — and leaf, the concrete mechanism/parameter choices.
+
+Run every level only when the open-decision count genuinely warrants it; a narrow phase resolves at root+branch alone. `decision-tree.md` and its artifact are working documents, not deliverables: they feed the Outcome Card and are never a substitute for it. The user still approves outcomes, never the tree.
 
 ## Latent decisions — collection + routing (constitution + phase)
 
@@ -56,7 +59,7 @@ Latent decisions are choices made silently while authoring because the drilling 
 
 **Routing** (you, after merging + deduping the drafters' lists — route *their* choices, don't re-derive):
 
-- **`felt-impact`** (user sees it, feels it, waits on it, or is constrained by it) → surface as a **fork** via one `AskUserQuestion` per decision (batch closely-related ones); fold the answer into the docs before you write. Record the resolved fork in `docs/decisions.md ## User decisions`.
+- **`felt-impact`** (user sees it, feels it, waits on it, or is constrained by it) → append it as a new leaf under its real parent in `decision-tree.md`, per the drilling discipline's "Latent / late-discovered decisions" — never a bare `AskUserQuestion` outside the tree. Then ask it through the same mechanism (for something discovered this late that's almost always one plain question, batched with any other closely-related latent decisions); fold the answer into the docs before you write. Record the resolved fork in `docs/decisions.md ## User decisions`.
 - **`invisible-plumbing`** (no felt difference either way) → do NOT ask; record in `docs/decisions.md ## Technical decisions` (`[Decision] — Why: … Alternatives: … rejected`).
 
 When unsure, treat as **`felt-impact`** — a 5-second fork is cheaper than a phase of rework. Before surfacing any fork, check `docs/decisions.md ## User decisions` first — if already settled, honor it, never re-litigate.
@@ -129,7 +132,7 @@ Return to the orchestrator: (1) the **latent-decisions list** (felt-impact ones 
 
 ## Mode: phase
 
-Input: the constitution docs, `roadmap.md`, `backlog.md`, and the phase/feature the orchestrator names. Read `mission.md`, `tech-stack.md`, `roadmap.md` before asking anything — never start from zero on an existing project, and never ask the grill a question those docs (or the existing codebase) already answer.
+Drilling runs in `phase-scope` mode (per the "Drilling discipline" section above) — root is the Outcome Card outcome, trunk always collapses to branch, leaf is the concrete mechanism choice. Input: the constitution docs, `roadmap.md`, `backlog.md`, and the phase/feature the orchestrator names. Read `mission.md`, `tech-stack.md`, `roadmap.md` before asking anything — never start from zero on an existing project, and never ask the grill a question those docs (or the existing codebase) already answer.
 
 ### Step 0 — Feature research (R1 — every phase, spawn first, wait for it)
 
