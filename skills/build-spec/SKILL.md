@@ -103,7 +103,7 @@ Spawn Opus drafter leaf agent(s) with a context-isolated brief — the Product S
 
 **Core docs** (schemas under `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/`, every field filled except the two roadmap-dependent ones noted above):
 - **`mission.md`** — purpose (one crisp sentence), named/specific target users, one-paragraph vision, observable success, `## Master User Journey`.
-- **`product.md`** — End-State Vision; Screen Inventory (every screen, phase-label column `TBD` for now); Navigation Structure (flat map); **App Map** (one Mermaid `flowchart` — screens as nodes, user actions as edges; phase-coloring `TBD` for now — the single human-facing diagram in the stack, regenerated from the two sections above, never hand-maintained); Core Feature Surface; Named Flows (phase-label `TBD`); Phase 0 Foundation Scope (every screen to final visual polish, static, mock data — the instruction to build-design to build the full IA to polished static in Phase 0).
+- **`product.md`** — End-State Vision; Screen Inventory (every screen, phase-label column `TBD` for now); Navigation Structure (flat map); **App Map** (one Mermaid `flowchart` — screens as nodes, user actions as edges; phase-coloring `TBD` for now — the single human-facing diagram in the stack, regenerated from the two sections above, never hand-maintained); Core Feature Surface; Named Flows (phase-label `TBD`); Phase 0 Foundation Scope (hero screens only — home/dashboard + 1-2 top nav screens, Claude's call — to final visual polish, static, mock data; the rest wait for the phase that wires them).
 - **`tech-stack.md`** — every choice filled; constraints/non-negotiables explicit (e.g. "strict TypeScript from commit 1", "all deps pinned exactly — no `^`/`~`"); exclusions named with reasoning; Key Technical Decisions table seeded. `tech-stack.md` is the **widest-read doc** in the stack — every phase skill reads it as the constraints authority.
 
 **Scaffold living docs** per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md` (headers only — an empty section is fine, fake content is not): `CLAUDE.md` (index + `## Project directives`, no prefix), `backlog.md` (empty buckets, no prefix), `README.md` (mission + status "constitution in progress, roadmap not yet drafted", no prefix), `CHANGELOG.md`, `docs/architecture.md`, `docs/api.md`, `docs/decisions.md`. Every agent-facing living doc (`docs/architecture.md`, `docs/api.md`, `docs/decisions.md`) opens with the exact first line `> Agent context — not for human reading.`; `README.md` and `CLAUDE.md` do NOT. Seed `docs/decisions.md ## User decisions` with the forks already resolved (the Product Shape's chosen forks + any felt-impact calls answered during the grill), each as `[Decision] — Chose: X. Why: … Options were: … (Phase 0 · date)`; seed `## Technical decisions` from the tech-stack Key Technical Decisions table. None of this scaffolding depends on `roadmap.md`.
@@ -174,7 +174,7 @@ Primary flow:
 
 Spec files are machine-validated downstream and never shown to the user — the card is their contract.
 
-1. **Draft** from the drilling session using `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/outcome-card.md`. Primary outcomes map **1:1** to the Primary flow stories (same count, same order). Everything in user language — no endpoints, schemas, or component names. The card records the forks the user already picked during scoping, not new decisions to discover here. Leave `approved` unset.
+1. **Draft** from the drilling session using `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/outcome-card.md` (its own Rules cover the 1:1 primary-outcome mapping). Everything in user language — no endpoints, schemas, or component names. The card records the forks the user already picked during scoping, not new decisions to discover here. Leave `approved` unset.
 2. **Write** to `specs/YYYY-MM-DD-[feature-slug]/outcome-card.md` (create the directory now; today's date from `date +%Y-%m-%d`).
 3. **Evaluate Ceremony scope** (below) and fold its recommendation into the same approval question.
 4. **Surface verbatim in chat**, then one `AskUserQuestion` to approve — convey: this card is the contract for Phase N; everything built and reviewed traces back to it. Fork: **Approve — build directly** (recommended default when Ceremony scope says narrow) / **Approve — full spec + design** (recommended default when it says full) / **Adjust** (fold in changes, re-surface, re-ask — loop until Approve).
@@ -186,7 +186,7 @@ Most phases don't need the full ceremony. A genuinely narrow phase can be built 
 
 | Check | Narrow requires |
 |---|---|
-| New screens | zero — every screen this phase touches already exists to polished static from a prior phase (Phase 0 built the full IA; most later phases only wire behavior into it) |
+| New screens | zero — every screen this phase touches already exists to polished static from a prior phase (Phase 0 covers hero screens only; a screen Phase 0 didn't build needs design first, so isn't narrow) |
 | Primary flow | exactly 1 story |
 | Mechanism | no Behavioral-mechanism-diagram trigger (no async/background jobs, real-time sync, multi-actor flow, state machine, role/permission model) |
 | API surface | ≤3 endpoints, all simple CRUD |
@@ -257,7 +257,7 @@ Run in the **same session** the phase completed. Reconcile every living doc to *
 
 - **`product.md` is the phase-start drift anchor — keep it as-built.** New screens → add rows, Status `built`. Cut screens → keep the row, Status `removed` + one-line why. Reshaped screens → Status `changed`, note how. Regenerate the App Map + Navigation Structure. Never leave a removed/pivoted screen showing as planned.
 - **`tech-stack.md` is the widest-read doc — keep it as-built.** New dependency/library/service → add it with its pinned version. Changed pattern/decision → update the Key Technical Decisions table and cross-link the `docs/decisions.md` entry holding the *why*. Anything ruled out earlier but adopted (or dropped) → correct it. A stale line here misleads every phase skill.
-- **`mission.md` is constitution-frozen — do NOT silently edit.** A phase that outgrew the mission is a pivot: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/pivot-protocol.md`.
+- **`mission.md` is an agent-authored snapshot — update it at replan like `product.md`.** Only a user-felt change needs the pivot protocol: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/pivot-protocol.md`.
 - **`docs/api.md`, `docs/decisions.md`, `docs/architecture.md`, `README.md`, `CLAUDE.md`** — update per living-docs.md (api.md always-current; decisions.md gets new non-obvious calls; CLAUDE.md index + directive sweep — append durable project-scoped user directives stated this phase, 0–2 lines typical).
 
 **Backlog triage (silent — no user interaction).** In `backlog.md`: completed `open` item → `done YYYY-MM-DD`; `DF-N` verified fixed → `resolved YYYY-MM-DD` (obsolete/non-reproducing → `dropped`); superseded/off-roadmap task → `dropped`; an open item that merits a full phase → note it for the roadmap; leave genuinely-pending items `open`. Write it back before the changelog.

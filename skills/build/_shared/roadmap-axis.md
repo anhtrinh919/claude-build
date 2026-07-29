@@ -1,6 +1,6 @@
 # Roadmap axis doctrine
 
-Two fixed shapes: **Phase 0 is always Foundation** (scaffold + app shell + the full planned UI built to polished static — every screen, mock data, design-locked, nothing wired). **Phases 1–n are vertical slices** — each ONE feature wiring one already-built screen to real data + behavior end-to-end, tested and polished before the next.
+Two fixed shapes: **Phase 0 is always Foundation** (scaffold + app shell + hero screens — home/dashboard + 1-2 top nav screens — built to polished static, mock data, design-locked, nothing wired). **Phases 1–n are vertical slices** — each ONE feature wiring one already-built screen to real data + behavior end-to-end (building that screen to polished static first if Phase 0 didn't cover it), tested and polished before the next.
 
 **Slice test:** every Phase 1+ must let the user *do* something new end-to-end after it. Never draft a horizontal phase ("build the backend," "all the APIs") — a slice the user can't act on fails the test; re-slice it. Never thin a slice — split an oversized one.
 
@@ -12,4 +12,4 @@ Two fixed shapes: **Phase 0 is always Foundation** (scaffold + app shell + the f
 - **Failure signal.** If the user says the roadmap "has no logic," or singles out one phase as odd or weird, **the axis is wrong — not that phase.** Reslice from a different axis; never patch the odd phase and re-present the same shape.
 - **When a draft misses twice, explore before committing.** Fan out 3-4 leaf agents on genuinely distinct axes (value moment, risk-first, depth of guarantee, free choice) with the same product shape and the rejected axes named, then compare their tables and pick or synthesize. Cheaper than a third rejected draft.
 
-**Deferring phases 1+ is legitimate.** When the product's final shape isn't yet concrete enough to derive a sequence, say so and defer rather than guessing: Phase 0 builds every planned screen to polished static, which *is* the final shape — once it exists the roadmap becomes derivable.
+**Deferring phases 1+ is legitimate.** When the product's final shape isn't yet concrete enough to derive a sequence, say so and defer rather than guessing: Phase 0 locks the shell + hero screens to polished static — enough for the roadmap to become derivable before every screen is drawn.

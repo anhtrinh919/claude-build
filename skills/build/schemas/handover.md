@@ -6,7 +6,7 @@
 
 > **This handover is an index, not a specification.** The exported images ARE the design; backend builds each screen to match its image. This file only says *which image is which screen* — it never restates colors, spacing, or layout (those are in the images + tokens).
 
-- **Images path:** `[folder or list of exported image files]` — **backend builds each screen to match its image.**
+- **Images path:** `[folder or list of exported image files]`
 - **Tokens file:** `specs/YYYY-MM-DD-[feature]/design-tokens.css` — import from the app's global stylesheet; reference via CSS variables (`var(--surface-primary)`), never duplicate hex/px into component styles.
 
 ## Fonts

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.0 — 2026-07-29
+
+**Phase 0 scoped down to shell + hero screens.** It used to mandate the entire planned UI built to polished static before any phase 1 work started — expensive, and it made every reachability gate (`G-REACH`) check against the full end-state inventory instead of what actually exists yet. Phase 0 now builds only the shell + hero screens (home/dashboard + 1-2 top nav screens, Claude's call); every gate that checks orphans/dead-ends now scopes to "screens built so far" — a deferred screen is bookkeeping, not a bug. Vertical slices that touch a screen Phase 0 didn't cover build it to static first, same phase.
+
+**Design-track stickiness.** The claude-code/external design-tool choice used to be re-derived every phase from scratch — a project could flip tools mid-build with no real reason to. If Phase 0 picked `claude-code`, every later phase now reuses it automatically, no re-ask, regardless of how much new visual vocabulary that phase introduces. `external` keeps its existing per-phase recommend-and-ask logic.
+
+**Dogfood gained a structural nav check.** The existing gates covered orphan screens on the external track's static exports only — never the live app, never `claude-code`-track screens post-backend. Phase 1's dogfood pass now runs three checks against the running app before any story walk: way back to home, settings/account reachable if the product has user-configurable state, current location legible without guessing.
+
+**Living-docs reclassified by actual approval status.** Several docs were called "frozen after approval" when the user never saw or approved them — only the Outcome Card is genuinely shown to the user verbatim and approved. `mission.md`/`requirements.md`/`plan.md`/`validation.md`/the design hand-off docs are now correctly framed as agent-authored snapshots, updatable without ceremony as reality diverges (a user-*felt* change still routes through the standard felt-impact-fork rule; `requirements.md`'s within-phase drift-hash contract is untouched — that's a design/backend execution guarantee, not a user-approval claim). Caught and fixed two other files that still asserted the old "frozen" framing (`schemas/living-docs.md`'s own `docs/api.md` description, `schemas/claude-md.md`'s scaffold text) — both were stamping the reversed doctrine into every new project's `CLAUDE.md`.
+
+**Mobbin MCP grounds competitor research and claude-code design hand-offs** in real shipped screens instead of write-ups and training-data priors alone.
+
+**Best-practice tightening:** project directives are captured the instant they're stated, from any skill, not just at replan; validation checks are held to an observable, walkable-sentence standard; outcome-card exclusions are named and concrete, not categorical; `docs/decisions.md` is now a stated input to both review skills, with settled decisions read, not re-litigated; `GLOSSARY.md` added as a conditional living doc, `INTERACTIONS.md` evaluated and deliberately skipped.
+
+**One real regression caught by the fresh-eyes review pass this batch of fixes required:** `build-spec/SKILL.md`'s narrow-ceremony table still justified its "zero new screens" check by "Phase 0 built the full IA" — stale, contradicting the hero-screens-only scope above. Fixed to reflect that a screen Phase 0 didn't build needs design first.
+
 ## 1.3.1 — 2026-07-26
 
 Fresh-eyes review of 1.3.0 caught a real regression: phase mode's Scope grill still asked "who uses this feature specifically" — a trunk-level actor question — despite `phase-scope` mode's own gate table saying trunk always collapses there since the actor was already settled at constitution. Removed; the roadmap-entry root is now explicitly marked cited-not-re-derived, and the remaining branch/leaf questions are level-labeled so the drilling actually routes through the gated mechanism instead of reading as an unlabeled checklist next to it.

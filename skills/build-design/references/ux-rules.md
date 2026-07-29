@@ -135,17 +135,3 @@ Rule: components reference semantic tokens; semantic tokens reference primitives
 - Bake contrast into token pairs so every text-on-surface combo pre-clears 4.5:1 (3:1 large / UI boundaries).
 - Light/dark: don't invert — define a parallel semantic set (dark surfaces are dark gray, not pure black; reduce saturated fills) and re-check contrast in both.
 
----
-
-## Pre-ship structural checklist
-
-- [ ] Every screen maps to one job and one primary action (F1, F3)
-- [ ] No two actions have equal visual weight (F2)
-- [ ] Every screen has a forward path and a back/exit (N10, F6)
-- [ ] Every screen is reachable from a start point
-- [ ] All error, empty, loading, not-found, offline states designed — none dead-end (N13–N17)
-- [ ] Main nav visible; user always knows "you are here" (N3, N6)
-- [ ] Auth set complete where accounts exist: sign up, log in, log out, forgot-password + error states (F13–F20)
-- [ ] Destructive actions have specific confirmation and/or undo, no dangerous default (F24–F28)
-- [ ] Forms: visible labels, inline-on-blur validation, field-adjacent errors, correct input types (F29–F34)
-- [ ] Onboarding skippable, not blocking core value (F9–F12)

@@ -39,9 +39,9 @@ The **app-shell spec** (`references/app-shell-spec.md`) is not a runtime mode of
 
 ## Track resolution (first action)
 
-Track is an explicit arg. Absent → it's a **felt tooling fork** — resolve it, don't guess. Check `docs/decisions.md ## User decisions` first (a settled track is honored, not re-asked). Otherwise recommend by the principle *"does this phase establish new visual language?"*, then one `AskUserQuestion`, recommended option first:
+Track is an explicit arg. Absent → check `docs/decisions.md ## User decisions` for any **prior** phase's track pick: found `claude-code` → **stays `claude-code` forever, no ask**. Found `external` or none yet (Phase 0) → it's a **felt tooling fork** — resolve it, don't guess, by the principle *"does this phase establish new visual language?"*, then one `AskUserQuestion`, recommended option first:
 
-- **Phase 0 (Foundation)** → recommend **external** — it designs every screen and locks the tokens + visual language; a dedicated design tool is materially stronger at the whole-product visual pass.
+- **Phase 0 (Foundation)** → recommend **external** — it designs the shell + hero screens and locks the tokens + visual language; a dedicated design tool is materially stronger at that founding pass.
 - **Phase 1+** → **external** if the phase adds a *new visual vocabulary* (new token family, a component category not in `design-tokens.css`, ~3+ new screens); **`claude-code`** otherwise (new elements within existing tokens, on existing/near-clone screens).
 
 Record the chosen track to `mission.md ## Design Tool` (`build-review` reads it back to pick compliance rules) and the fork to `docs/decisions.md`.
@@ -54,7 +54,7 @@ Record the chosen track to `mission.md ## Design Tool` (`build-review` reads it 
 
 **Invoke the `impeccable` skill and let it work.** It is a complete design skill — it owns structure, navigation, accessibility, craft (register, color, type, layout, motion, anti-slop), the mockups, the live browser show, and the felt-decision forks with the user. Do not re-derive any of that here, do not wrap it in a milestone/gate scaffold, do not restate a craft or structural ruleset — hand it the context and trust it.
 
-Hand impeccable: the **north star**, the **screens this phase must cover** (from `requirements.md`; on `phase: 0` that's the *whole* `product.md` Screen Inventory to final static polish — realistic mock data, pixel-complete, clickable, unwired), the **existing `design-tokens.css`** if a prior phase set one (so it extends the locked language, doesn't reinvent it), and the project's **actual stack** (`tech-stack.md`). Point it at `specs/<phase>/mockups/` as the output home so backend and the design-compliance gate find the mockups where they expect. Let impeccable run its own process to approval with the user.
+Hand impeccable: the **north star**, the **screens this phase must cover** (from `requirements.md`; on `phase: 0` that's the shell + hero screens from `product.md`'s Phase 0 Foundation Scope, to final static polish — realistic mock data, pixel-complete, clickable, unwired), the **existing `design-tokens.css`** if a prior phase set one (so it extends the locked language, doesn't reinvent it), **2-3 real reference screens for this screen type from the Mobbin MCP**, and the project's **actual stack** (`tech-stack.md`). Point it at `specs/<phase>/mockups/` as the output home so backend and the design-compliance gate find the mockups where they expect. Let impeccable run its own process to approval with the user.
 
 **Spec gap.** If the design needs an endpoint or screen not in `requirements.md`, **stop and name it** ("design needs X, not in the spec — the spec must update before backend"); never invent past it.
 

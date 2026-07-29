@@ -95,21 +95,5 @@ Danger Zone         → Delete account, export data — ALWAYS last, visually se
 
 ---
 
-## Key measurements reference
-
-| Element | Value | | Element | Value |
-|---|---|---|---|---|
-| Sidebar expanded | 256px | | Toast: success | 3–5s |
-| Sidebar collapsed | 56px | | Toast: error | Persistent |
-| Mobile drawer | 280px | | Toast: desktop pos | Bottom-right |
-| Drawer animation | 300ms cubic-bezier(0.4,0,0.2,1) | | Toast: mobile pos | Top-center |
-| Sidebar item height | 36px mouse / 44px touch | | Profile avatar | 32–36px |
-| Bottom nav height | 56px + safe-area-inset | | Notification panel | 360–400px |
-| Bottom nav items | 3–5 | | Command palette | 560–640px + Cmd/Ctrl+K |
-| Icon size | 24px | | Skeleton shimmer | 1.5s infinite |
-| Touch target min | 44×44px (A1) | | Breakpoints | md 768 / lg 1024 |
-
----
-
 ## Sources
 Material Design 3, Apple HIG, NN/g (nav/breadcrumb/empty-state studies), WCAG 2.2, Linear, Vercel, Notion sidebar, shadcn/ui Sidebar + Sonner, PatternFly notification drawer, Intercom placement, Authgear login UX, Smashing Magazine back-button UX, Tailwind responsive docs. (Rule/gate tags map to [ux-rules.md](ux-rules.md) and [gates.md](gates.md).)

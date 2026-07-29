@@ -14,7 +14,7 @@ This project is built by the `/build` SDD stack. **Before touching code, read th
 - `mission.md` / `product.md` — what the product is, for whom; screen inventory, named flows, App Map.
 - `tech-stack.md` — stack + non-negotiables (e.g. strict TypeScript, pinned deps).
 - `roadmap.md` — ordered phase list.
-- `specs/YYYY-MM-DD-<feature>/` — per-phase `requirements.md` · `plan.md` · `validation.md` (frozen after spec approval).
+- `specs/YYYY-MM-DD-<feature>/` — per-phase `requirements.md` · `plan.md` · `validation.md` (agent-authored snapshots, not user-approved).
 - `docs/decisions.md` — technical forks + why + alternatives rejected.
 - `docs/architecture.md` / `docs/api.md` — current component map & live API surface.
 - `backlog.md` — short-term task lake: roll-in candidates, dogfood polish, side tasks. Transient — things to do that don't fit the current phase's spec. Read at phase start; appended any time the user defers a request mid-build.

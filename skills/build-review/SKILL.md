@@ -34,14 +34,14 @@ One skill, two shared agents, two modes. **pipeline-review** is the `/build` pha
 
 | Mode | Model | Mechanism | Inputs | Outputs | Terminal state |
 |---|---|---|---|---|---|
-| **pipeline-review** | Opus (main); `code-reviewer` + `dogfood` agents; Opus fix leaves | **inline** (in the `/build` session) | spec dir, `validation.md`, `outcome-card.md`, `requirements.md`, running app | review report + silent fixes + dogfood handoff | `phase-complete` (convergence or Accept) / `phase-blocked` (Stop) — **this skill writes it** |
+| **pipeline-review** | Opus (main); `code-reviewer` + `dogfood` agents; Opus fix leaves | **inline** (in the `/build` session) | spec dir, `validation.md`, `outcome-card.md`, `requirements.md`, `docs/decisions.md`, running app | review report + silent fixes + dogfood handoff | `phase-complete` (convergence or Accept) / `phase-blocked` (Stop) — **this skill writes it** |
 | **standalone-dogfood** | Opus (main); `code-reviewer` + `dogfood` agents; Opus fix work | **inline** | recent implementation context (spec, git diff, or described feature), running app | gate report + silent fixes | **none** — writes nothing to build state, needs no `.build-state.json` or spec dir. **Exception:** invoked by the orchestrator as a narrow-phase closure → writes `phase-complete`/`phase-blocked` |
 
 **Inline, always.** It orchestrates leaf agents (`code-reviewer`, `dogfood`, fix), and subagents can't spawn subagents — so it runs inline in the `/build` session and is never itself spawned as a subagent (one-level nesting, `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/subagent-policy.md` Rule 1); fix leaves inherit the session model.
 
 **Leaf containment — every brief ends with this. exact:** *no spawning, no /build\*, no claude -p, no commit, no server, don't address the user — return content/paths only.* Agents never commit; **this skill commits.** Any "surface to user / stop" rule inside a leaf becomes `status: blocked|needs-decision` + diagnosis — main decides.
 
-**Image hygiene (Rule 8).** Main **never holds base64** — every browse leaf saves screenshots to `/tmp/` and returns paths + a text verdict; main triages on text, opening one flagged screenshot only when a verdict is genuinely ambiguous.
+**Image hygiene (Rule 9).** Main **never holds base64** — every browse leaf saves screenshots to `/tmp/` and returns paths + a text verdict; main triages on text, opening one flagged screenshot only when a verdict is genuinely ambiguous.
 
 ---
 
@@ -69,7 +69,7 @@ Standalone is **first-class**, not a fallback. It is the auto-verification gate 
 
 **Reading `dogfood`'s return.** It already reports the three-signal gate verdict (functional / problem-resolved / no severe friction) and a severity-tagged finding list — main triages those into the fix loop, it doesn't re-derive the gate. A finding on a surface this phase's card does not deliver → `expected-not-built`: LOW informational, never a fix-trigger, regardless of what severity the agent proposed.
 
-**Fresh instance per iteration.** Once an agent has seen a discrepancy it is no longer a clean read — re-verify always spawns a fresh instance (subagent-policy Rule 7).
+**Fresh instance per iteration.** Once an agent has seen a discrepancy it is no longer a clean read — re-verify always spawns a fresh instance (subagent-policy Rule 8).
 
 ---
 
@@ -139,7 +139,7 @@ The verification gate for any implementation outside `/build`. Uses the app via 
 
 1. Collect every failure verbatim into a fix brief — failing checks with output, failing story/check records, outcome-card gaps — plus the verify command for each.
 2. **Dispatch** —
-   - **pipeline-review:** wave-dispatched fix **leaves**, non-overlapping file sets, parallel (subagent-policy Rule 6) — Opus for structural/logic, Sonnet for token/markup/copy. Each brief carries: its failures verbatim (never summarized); spec paths (`requirements.md`, `plan.md`, and the design source — `handover.md` on the external track, the mockups on `claude-code`); the verify commands; **`/code-harness` discipline — verify-script red first, implement, green after, no fix without a passing verify-script**; **root cause only — no refactoring, no scope/spec change; >3 hypotheses → return the diagnosis**; every file it touched (for the regression band); the containment line. **Felt-impact fork → `status: needs-decision`** + the fork, never a silent pick.
+   - **pipeline-review:** wave-dispatched fix **leaves**, non-overlapping file sets, parallel (subagent-policy Rule 7) — Opus for structural/logic, Sonnet for token/markup/copy. Each brief carries: its failures verbatim (never summarized); spec paths (`requirements.md`, `plan.md`, and the design source — `handover.md` on the external track, the mockups on `claude-code`); the verify commands; **`/code-harness` discipline — verify-script red first, implement, green after, no fix without a passing verify-script**; **root cause only — no refactoring, no scope/spec change; >3 hypotheses → return the diagnosis**; every file it touched (for the regression band); the containment line. **Felt-impact fork → `status: needs-decision`** + the fork, never a silent pick.
    - **standalone-dogfood:** fix inline on main, root cause only, **commit each fix atomically** (`fix: [one-line]`) before re-verifying.
 3. Wait for all agents; read summaries (what fixed, what didn't, files touched). **Any `needs-decision`:** surface the fork now (`AskUserQuestion`), re-dispatch a fresh leaf with the pick. Union touched-files for the regression band; resolve cross-agent interface mismatches inline. (pipeline)
 4. **Targeted re-verify — not a full re-round:**
@@ -226,3 +226,4 @@ Apply `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/brain.md` with `$AGENT=review`
 - **Round 1 checks green before the browser (pipeline).** `code-reviewer` findings merge into the SAME fix loop as `dogfood` findings — never a second loop.
 - **All HIGH + MEDIUM auto-fix silently (pipeline); a felt-impact fork is never a silent pick** — surface it. Agents never commit; this skill commits. Cap 3 → Accept/Stop binary, no further attempts unless the user asks.
 - **Terminal state before any user-facing output (pipeline); standalone writes no build state.** User is non-technical — they see only the final report, the cap-hit binary, or a fork. Never ask which bug to prioritize or whether a deviation matters.
+- **`docs/decisions.md` is read, not re-litigated:** don't reopen a settled entry; code that contradicts one is a HIGH finding, not a silent pick.

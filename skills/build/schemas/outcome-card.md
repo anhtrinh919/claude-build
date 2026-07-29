@@ -30,8 +30,8 @@ and see it appear on the store screen" — not "order management".>
 <Secondary outcomes — nice-to-haves shipping in this phase. "None" is valid.>
 
 ## Not in this phase
-<Explicit exclusions, named. Things a reasonable person might assume are included
-but aren't.>
+<Explicit exclusions, named and concrete, this phase only — "no search over the list,"
+not "no advanced features": things a reasonable person might assume are included but aren't.>
 
 ## Success looks like
 <One line per PRIMARY outcome: the recognizable on-screen signal that it worked.

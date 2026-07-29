@@ -7,7 +7,7 @@
 the experience: pace, density, complexity level, primary metaphor.]
 
 ## Screen Inventory
-All screens in the finished product. `/build-spec` (replan mode) updates status each phase.
+All screens, built or planned. `/build-spec` (replan mode) updates status each phase. Only `built`/`changed` rows are App Map/reachability nodes — `planned` is future bookkeeping.
 
 **Status:** `built` · `planned` · `removed` (keep row, note why) · `changed` (note how in Purpose).
 
@@ -49,7 +49,7 @@ These are the anchor — user stories in each phase spec reference these flows b
 - **[Flow name]:** Step 1 (Ph1) → Step 2 (Ph1) → Step 3 (Ph2) → Step 4 (Ph3)
 
 ## Phase 0 Foundation Scope
-[Every screen built to final visual polish — static, mock data, pixel-complete, not wired. Lists every screen and the slice that wires it live.]
+[The shell + hero screens (home/dashboard + 1-2 top nav screens) built to final visual polish — static, mock data, pixel-complete, not wired. Non-hero screens are built in their own phase, not here.]
 
-- [Screen name] — built static in Phase 0; wired live in Phase [N] ([feature])
-- [Screen name] — built static in Phase 0; wired live in Phase [N] ([feature])
+- [Hero screen name] — built static in Phase 0; wired live in Phase [N] ([feature])
+- [Hero screen name] — built static in Phase 0; wired live in Phase [N] ([feature])

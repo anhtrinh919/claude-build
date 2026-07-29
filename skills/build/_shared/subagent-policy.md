@@ -37,7 +37,11 @@ The blind-reviewer hard rule (see the `dogfood` agent's Phase 1) is the strictes
 
 Never trust a subagent's "done" claim. After every return: check the expected outputs exist, or re-run the previously-failing check from scratch. A missing output is surfaced, not papered over.
 
-## Rule 6 — Parallel dispatch (fanning out implementation agents)
+## Rule 6 — Capture project directives on the spot
+
+The instant a durable project-scoped rule surfaces, from any skill, append a dated line to `CLAUDE.md ## Project directives` — don't wait for replan.
+
+## Rule 7 — Parallel dispatch (fanning out implementation agents)
 
 When a skill dispatches multiple agents to build in parallel (e.g. `/backend` Stage 2):
 
@@ -48,11 +52,11 @@ When a skill dispatches multiple agents to build in parallel (e.g. `/backend` St
 - **Felt-impact fork mid-build → `status: needs-decision`, never a silent pick.** If an agent hits a decision the user will *feel* — a UX or performance choice with no strictly-better option, not already settled in the spec — it returns `status: needs-decision` + the fork (the genuine options, each option's one-line plain-language tradeoff, a recommended default) and stops that group. It does NOT choose and proceed. The orchestrator surfaces the fork to the user (`AskUserQuestion`, plain language) and re-dispatches a fresh agent with the answer. Reserve this for *real* forks — invisible plumbing the agent decides itself and records in `docs/decisions.md` (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`).
 - Escalation: if non-overlapping file sets are genuinely impossible for a phase, use worktree isolation (`isolation: "worktree"`) — expensive, last resort.
 
-## Rule 7 — Fresh instance per retry
+## Rule 8 — Fresh instance per retry
 
 Once a subagent has seen a discrepancy or a failed attempt, it is no longer a clean read. Re-verification, repeat skeptic rounds, and fleet re-runs always spawn **fresh** instances with the same brief shape — never continue a contaminated one. (Same rule the `code-reviewer` and `dogfood` agents both depend on for re-verify.)
 
-## Rule 8 — Image hygiene: main session never holds base64 images
+## Rule 9 — Image hygiene: main session never holds base64 images
 
 The orchestrator (main session) must never contain base64 image data in its context. Any work that produces screenshots, design-frame captures, rendered mockups, or PDF pages must run inside a subagent. The subagent saves output files to `/tmp/` and returns file paths + a text verdict. The main session receives paths only — if it must reference an image for the user, it posts the path and lets the terminal/IDE render it; it never embeds the raw bytes.
 

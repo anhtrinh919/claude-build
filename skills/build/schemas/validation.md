@@ -2,6 +2,8 @@
 
 This is the test contract for `/build-review` (pipeline-review mode). Every check listed here must pass before the phase is approved.
 
+Every check reads as an observable, walkable sentence — "Rename to `../evil`: rejected inline with a plain message," not "works correctly."
+
 ## Automated Checks
 
 Run these commands. Each must exit 0.

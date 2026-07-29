@@ -23,7 +23,7 @@ Find the most recent `specs/YYYY-MM-DD-[feature]/` directory and read: `requirem
 |---|---|---|---|---|---|
 | single | Opus (session default) + wave-dispatched Opus/Sonnet agents | inline, in the `/build` session | requirements.md + plan.md + design-tokens.css + design source (`claude-code`: mockups + `docs/decisions.md`; `external`: `handover.md` index + exported images) | implemented backend, integration-tested against every requirements.md API contract | none — this skill returns; the orchestrator runs backend-compliance and writes `backend-complete` (fail → rollback `step` to `design-complete`, re-run this skill) |
 
-This session owns wave dispatch, interface cross-checks, commits, and integration testing. Wave agents never commit, never start servers, never address the user (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/subagent-policy.md` — Rule 6 governs the dispatch below).
+This session owns wave dispatch, interface cross-checks, commits, and integration testing. Wave agents never commit, never start servers, never address the user (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/subagent-policy.md` — Rule 7 governs the dispatch below).
 
 Voice: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`. Brain: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/brain.md`, `$AGENT=backend`, `$TAGS` from `tech-stack.md`. **Friction trigger:** a group needed a meaningfully different second approach after code-harness rejected the first — one entry per group, title `Phase <N> backend friction: <issue>`. **Phase-wrap trigger:** once, after Stage 3 passes — title `Phase <N> backend: <summary>`.
 
@@ -60,7 +60,7 @@ Map the dependency graph from the remaining groups: read each group's `Depends o
 
 **Per-wave brief, every agent gets:** full `requirements.md` + `plan.md` + the design source + `tech-stack.md`; its assigned group numbers only; prior waves' implemented API surface + changed-file list (pasted, not referenced); the per-group procedure below; **containment — no spawning agents, no `/build*`, no `claude -p`, no commit, no server, don't address the user — return content/paths/status only**; any stop condition (3 failed hypotheses, thrashing, 2× estimate) → return immediately, do not surface to the user itself.
 
-**Felt-impact fork → `status: needs-decision`, never a silent pick.** A UX or performance choice with no strictly-better option, not already settled in `requirements.md`/`plan.md` → stop that group, return the fork: genuine options, each option's one-line plain-language tradeoff, a recommended default. Invisible plumbing the agent decides itself and records in `docs/decisions.md`.
+**Felt-impact fork → `status: needs-decision`, never a silent pick** (`_shared/subagent-policy.md` Rule 7) — scoped here to a choice not already settled in `requirements.md`/`plan.md`; invisible plumbing → `docs/decisions.md`.
 
 **Return format, per group, no commentary:**
 ```
@@ -72,7 +72,7 @@ Fork: [options + tradeoffs + recommended default]   (needs-decision only)
 ```
 
 **Wave barrier (this session):**
-1. Collect returns. `blocked` → retry with a fresh agent carrying the diagnosis (policy Rule 7), reassign inline, or surface as last resort. `needs-decision` → surface the fork now via `AskUserQuestion`, then re-dispatch a fresh agent with the answer — a felt decision overrides auto-continue, even mid-phase.
+1. Collect returns. `blocked` → retry with a fresh agent carrying the diagnosis (policy Rule 8), reassign inline, or surface as last resort. `needs-decision` → surface the fork now via `AskUserQuestion`, then re-dispatch a fresh agent with the answer — a felt decision overrides auto-continue, even mid-phase.
 2. Cross-check interfaces between agents (function signatures, API shapes, shared types); fix mismatches inline.
 3. **Commit per group** — this session only, plain-English summary, only that group's listed files.
 4. Re-run every verify script from scratch — never trust an agent's claim (policy Rule 5). Green → next wave.

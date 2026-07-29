@@ -2,7 +2,7 @@
 
 ## How phases are sliced (read before filling)
 
-**Phase 0 — Foundation (always first, automatic).** Repo + data-layer scaffold + app shell + **the full planned UI built to final visual polish** (every screen, static, mock data, pixel-complete, not wired). Product *looks* finished and is clickable; it just doesn't *do* anything yet.
+**Phase 0 — Foundation (always first, automatic).** Repo + data-layer scaffold + app shell + **hero screens built to final visual polish** (home/dashboard + 1-2 top nav screens; static, mock data, pixel-complete, not wired — the rest are drawn in their own phase). The shell *looks* finished and is clickable; it just doesn't *do* anything yet.
 
 **Phases 1–n — Vertical slices (one feature each).** Each phase wires one feature end-to-end (screen → API → data), tested and polished before the next starts. The visuals exist from Phase 0; a slice brings them to life.
 
@@ -15,7 +15,7 @@
 ## Phases
 Phase 0 is fixed; user (as PM) shapes Phase 1+ order.
 
-0. **Phase 0 — Foundation:** Scaffolding + app shell + full planned UI (polished static, mock data). The whole product, clickable and visually final; nothing wired yet.
+0. **Phase 0 — Foundation:** Scaffolding + app shell + hero screens (polished static, mock data). The core shell, clickable and visually final; nothing wired yet.
 1. **Phase 1 — [Feature Name]:** [The one feature this slice brings to life, end-to-end. Why it comes first.]
 2. **Phase 2 — [Feature Name]:** [The one feature this slice delivers. Why here.]
 3. **Phase 3 — [Feature Name]:** [...]

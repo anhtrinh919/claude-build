@@ -97,8 +97,10 @@ products sharing the same core user job. For each product find: concept (what it
 value prop), key user-facing features, notable UI/navigation patterns worth adopting or avoiding, and
 stack/architecture if open-source (skip if unavailable).
 
-Use WebSearch + WebFetch — prefer official sites, GitHub, Product Hunt, long-form product/design
-retrospectives. Then extract 5–10 durable, specific learnings from Part B, each tagged To-do (worth
+Use the Mobbin MCP for each competitor's real screen-by-screen flows, plus WebSearch + WebFetch —
+prefer official sites, GitHub, Product Hunt, long-form product/design retrospectives — for concept,
+features, and stack. Then extract 5–10
+durable, specific learnings from Part B, each tagged To-do (worth
 adopting / inspired by) or NOT-to-do (known failure mode / antipattern). Write {project_root}/research.md
 in exactly this format:
 

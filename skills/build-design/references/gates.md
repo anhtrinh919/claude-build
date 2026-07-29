@@ -18,7 +18,7 @@ Each gate lists: **tier · what it verifies · how to check · evidence · appli
 **G-REACH** — *Tier 1, high value.* No orphan and no dead-end screens (N10, F3, F6).
 - **Check:** from the screen→image index and each image's visible nav/links, build the adjacency list: does every screen have ≥1 inbound path from a reachable start AND ≥1 outbound forward action + a back path?
 - **Evidence:** the adjacency list + a `0 orphans, 0 dead-ends` line.
-- **Applies:** always.
+- **Applies:** always, scoped to screens built so far (`product.md`'s `built`/`changed` rows) — an unbuilt screen isn't an orphan.
 
 **G-STATES** — *Tier 1.* Every data-driven screen ships Loading + Empty + Error + Not-found + Offline (N13–N17).
 - **Check:** per screen on the map, list which of the five states are designed; a data screen missing any fails.
