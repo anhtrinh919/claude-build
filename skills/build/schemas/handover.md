@@ -1,17 +1,17 @@
 # Phase [N] Frontend Handover — [Feature Name]
 
-**External track only.** This file is the **bare screen→image index** for a design the user made in their own tool and exported as images. (The `claude-code` track writes no handover — its mockups are real code in `specs/<phase>/mockups/` and backend builds from them directly.)
+**External track only.** This file is the **bare screen→image index** for a design the user made in their own tool and exported as images. (The `claude-code` track writes no handover — its mockups are real code in `specs/<phase>/mockups/`.)
 
 ## Design source — the exported images
 
-> **This handover is an index, not a specification.** The exported images ARE the design; backend builds each screen to match its image. This file only says *which image is which screen* — it never restates colors, spacing, or layout (those are in the images + tokens).
+> **This is an index, not a specification.** The exported images ARE the design; backend builds each screen to match its image. This file never restates colors, spacing, or layout.
 
 - **Images path:** `[folder or list of exported image files]`
-- **Tokens file:** `specs/YYYY-MM-DD-[feature]/design-tokens.css` — import from the app's global stylesheet; reference via CSS variables (`var(--surface-primary)`), never duplicate hex/px into component styles.
+- **Tokens file:** `specs/YYYY-MM-DD-[feature]/design-tokens.css` — import from the app's global stylesheet; reference via CSS variables (`var(--surface-primary)`), never duplicate hex/px values into component styles.
 
 ## Fonts
 
-Every font family the design uses. Backend configures loading once (e.g. `next/font/google` or local `@font-face`) and wires the variables into `design-tokens.css`.
+Every font family the design uses.
 
 | Role | Family | Weights used |
 |------|--------|--------------|
@@ -21,7 +21,7 @@ Every font family the design uses. Backend configures loading once (e.g. `next/f
 
 ## Screen → image index
 
-The mapping from each requirement-spec state to the exact exported image. Backend opens the named image to build that state.
+The mapping from each requirement-spec state to the exact exported image.
 
 | Requirement state | Image file | Notes |
 |-------------------|------------|-------|
@@ -34,7 +34,7 @@ Every state listed in `requirements.md` UI Requirements must appear here. A stat
 
 ## Reusable components
 
-Visual elements that repeat across screens (e.g. "Phase Card / Running"). Backend implements each as one reusable component with state variants — never inline-duplicated per screen.
+Visual elements that repeat across screens. Backend implements each as one reusable component with state variants — never inline-duplicated per screen.
 
 | Component name | Appears in screens |
 |----------------|--------------------|
@@ -43,7 +43,7 @@ Visual elements that repeat across screens (e.g. "Phase Card / Running"). Backen
 
 ## Deviations from requirements spec
 
-Any design that diverges from `requirements.md`. What and why.
+Any design that diverges from `requirements.md`.
 
 - **[What deviated]:** [Why] — **Impact on backend:** [None / describe]
 
@@ -51,7 +51,7 @@ Any design that diverges from `requirements.md`. What and why.
 
 ## Layout / IA notes
 
-Only structural patterns an implementer might miss by pattern-matching existing code (e.g. "No left sidebar — top-header throughout." "Card detail is a right-side sheet, not a modal."). Never restate what the images show.
+Structural patterns an implementer might miss by pattern-matching existing code.
 
 *No IA deviations — design follows existing app structure.* [Delete if there are notes]
 

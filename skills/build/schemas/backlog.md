@@ -2,16 +2,16 @@
 
 > Agent context — not for human reading.
 
-Short-term task lake. This is NOT the roadmap (committed phases) and NOT `CLAUDE.md ## Project directives` (durable preferences). It is transient: things to do that don't belong in the current phase's spec.
+The transient task lake: `DF-N` dogfood threads and `T-N` tasks. Not the roadmap (committed phases), not `CLAUDE.md ## Project directives` (durable preferences). Things to do that don't belong in the current phase's spec.
 
 ## Numbering & communication — read this first
 
-**Every item has a stable ID, and you ALWAYS tell the user the ID.** This is how you and the user stay grounded — so "is DF-3 fixed?" and "roll T-7 into this phase" mean the same thing to both of you.
+Every item has a stable ID. Always tell the user the ID.
 
 - `DF-N` — **Reports** (threaded dogfood bugs/feedback).
 - `T-N` — **Tasks** (flat: roll-in / polish / side).
-- IDs are monotonic per project and **never reused** — pick the next number above the current max of that prefix. To find it, scan this file.
-- **When you file an item, say the ID in chat** ("Filed as DF-3", "Noted as T-7"). **When you resolve or discuss one, refer to it by ID** ("DF-3 fixed — toast added"). Never discuss a backlog item without its ID.
+- IDs are monotonic per project and never reused. Scan this file for the current max of that prefix, then pick the next number.
+- Say the ID when you file, resolve, or discuss an item ("Filed as DF-3", "DF-3 fixed — toast added"). Never discuss an item without its ID.
 
 **Status markers:** `open` · `fixed YYYY-MM-DD` · `wontfix` · `rolled-into-Phase-N` · `done YYYY-MM-DD` · `dropped YYYY-MM-DD`
 
@@ -19,7 +19,7 @@ Short-term task lake. This is NOT the roadmap (committed phases) and NOT `CLAUDE
 
 ## Reports (dogfood — threaded)
 
-Bugs and feedback the user raises while dogfooding a phase. **The user reports in chat; you file, fix, and reply in chat — the user never edits this file.** Each report is one threaded entry: the user's report (R1), your response, then any follow-up rounds (R2, R3…). One terse line per round — this is a ledger, not a transcript.
+The user reports in chat; you file, fix, and reply — the user never edits this file.
 
 Format:
 ```
@@ -38,7 +38,7 @@ Resolution routing: fixed → close it (`fixed` status). Deferred (real but not 
 
 ## Roll-in candidates
 
-Small changes or additions that could be folded into an upcoming phase without scope-creep. `/build-spec` (phase mode) reads this at phase start and surfaces any items that fit the incoming scope.
+Changes small enough to fold into an upcoming phase without scope-creep. `/build:spec` (phase mode) reads this at phase start.
 
 Format: `- [T-N] [roll-in] YYYY-MM-DD [description] — [status]`
 
@@ -48,7 +48,7 @@ Format: `- [T-N] [roll-in] YYYY-MM-DD [description] — [status]`
 
 ## Dogfood polish
 
-UX nits, visual rough edges, or small copy fixes surfaced by dogfood passes (blind or guided) but deferred because they are LOW severity and non-blocking. `/build-review` (pipeline-review mode) appends here instead of triggering the auto-fix loop for these.
+UX nits, visual rough edges, or small copy fixes from dogfood passes: LOW severity, non-blocking, deferred. `/build:review` (pipeline-review mode) appends here instead of the auto-fix loop.
 
 Format: `- [T-N] [polish] YYYY-MM-DD [Phase N] [description] — [status]`
 
@@ -58,7 +58,7 @@ Format: `- [T-N] [polish] YYYY-MM-DD [Phase N] [description] — [status]`
 
 ## Side tasks
 
-One-off user requests, deferred asks ("later, can you…"), or out-of-band tasks the user raised mid-build that don't belong in the current phase's spec. Append the moment the user defers something, then confirm in one line **with the ID** ("Noted as T-7"). Read at the start of any dogfood-polish or side-task session to stay oriented.
+One-off user requests, deferred asks ("later, can you…"), or out-of-band tasks that don't belong in the current phase's spec.
 
 Format: `- [T-N] [side] YYYY-MM-DD [description] — [status]`
 

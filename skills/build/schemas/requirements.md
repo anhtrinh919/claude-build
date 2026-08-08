@@ -7,19 +7,18 @@ ui: true | false
 
 ## UI flag
 
-- **`ui: true`** (default) — phase produces visible UI. `/build-review` (pipeline-review mode) Round 2 runs.
-- **`ui: false`** — pure backend/infra/tooling. Round 2 skipped; Round 1 still runs. Do not infer from screen count — set the flag.
+`ui: true` (default) runs `/build:review`'s dogfood step; `ui: false` skips it. Set the flag — do not infer it from screen count.
 
 ## Scope
-[What this phase delivers. What a user can do on completion that they couldn't before. One paragraph.]
+[What this phase delivers. One paragraph.]
 
 ## User Stories
 - As a [actor], I can [specific action] so that [specific outcome].
 
-[One story per major user action. "Manage content" is not a story — name the exact action.]
+[One story per user action — name the exact action.]
 
 ## UI Requirements
-Every screen in this phase. Every unique state = its own row.
+Every screen; each state is its own row.
 
 | Screen | State | Key UI Elements | Primary User Action |
 |--------|-------|-----------------|---------------------|
@@ -30,7 +29,7 @@ Every screen in this phase. Every unique state = its own row.
 | [Name] | Mobile | [Intentional layout adaptation] | |
 
 ## Data Model
-[Tables or schemas with field names and types. Include relationships.]
+[Tables or schemas: field names, types, relationships.]
 
 ```
 [Table / Schema name]
@@ -39,11 +38,11 @@ Every screen in this phase. Every unique state = its own row.
 ```
 
 ## API Contracts
-One section per endpoint. Frontend and backend both build against these exactly. Every endpoint names its consuming screen(s); every screen with data needs has a backing endpoint. `/build-spec` reconciles both ways — an endpoint no screen consumes (and isn't `internal`), or a screen with no backing endpoint, is a spec error caught before the build.
+One section per endpoint. Frontend and backend build against these exactly. Every endpoint names its consuming screen(s); every data screen has a backing endpoint. `/build:spec` reconciles both: an unused endpoint (not `internal`), or an unbacked screen, is a spec error.
 
 ### [Endpoint Name]
 - **Method + path:** `[GET/POST/PUT/DELETE] /api/[path]`
-- **Consumed by:** [screen name(s) from the UI Requirements table that call this — or `internal` for endpoints with no UI consumer, e.g. webhooks, cron, server-to-server]
+- **Consumed by:** [screen name(s) that call this, or `internal` for no UI consumer, e.g. webhooks, cron]
 - **Auth required:** Yes / No
 - **Request body:** `{ field: type }` (POST/PUT only)
 - **Query params:** `?field=type` (GET only)
@@ -55,28 +54,28 @@ One section per endpoint. Frontend and backend both build against these exactly.
   - `500`: Unexpected server error
 
 ## Constraints & Context
-[Business rules, tone, patterns to follow from tech-stack.md, non-negotiables for this phase.]
+[Business rules, tone, patterns from tech-stack.md.]
 
 - [Constraint]
 - [Pattern to follow from existing codebase]
 
 ## App Shell
 
-> **Phase 0:** Shell is built in this phase (part of the Foundation). Fill each subsection from `/build-design`'s app-shell spec reference (`${CLAUDE_PLUGIN_ROOT}/skills/build-design/references/app-shell-spec.md`), adapted to this app's specific context (section labels, icon choices, social login providers, which settings categories apply).
-> **Phase 1+:** Shell is inherited from Phase 0 — do not rebuild. Note only what this phase adds or changes (e.g. a new nav item, a new settings category). Mark unchanged items "inherited". A phase that deliberately redesigns the shell fills it from scratch, overriding Phase 0's.
+> **Phase 0:** Shell is built this phase. Fill each subsection from the app-shell spec (`${CLAUDE_PLUGIN_ROOT}/skills/design/references/app-shell-spec.md`), adapted to this app.
+> **Phase 1+:** Shell is inherited from Phase 0 — do not rebuild it. Note only what changes; mark unchanged items "inherited". A redesign fills it from scratch.
 > **`ui: false`:** Delete this section entirely.
 
 ### Navigation
-[Describe which responsive nav pattern applies (sidebar / bottom nav / rail) per the app-shell spec. Specify section labels, item order, and icon choices for this app. Note any deviation from the spec with a reason.]
+[Name the nav pattern (sidebar / bottom nav / rail) per the app-shell spec. Set section labels, item order, icon choices. Note deviations.]
 
 ### Auth
-[Confirm auth gate applies: yes/no. Name the social login providers to include (e.g. Google only, or Google + GitHub). Note any custom redirect logic or session expiry behavior.]
+[Confirm the auth gate: yes/no. Name the social login providers (e.g. Google, GitHub). Note custom redirects or session expiry.]
 
 ### Settings
-[List which settings categories are in scope. Categories from the app-shell spec that are not relevant to this app's feature set may be omitted — name them and explain why (e.g. "Billing — omitted, this app has no paid plans").]
+[List the settings categories in scope. Omit categories that don't apply — name them and say why (e.g. "Billing — omitted").]
 
 ### Universal Patterns
-[Confirm toast system, skeleton loading, error boundaries, and empty states are all in scope. Note any deviation from the spec — e.g. "No notifications bell — this app has no async background activity".]
+[Confirm toast, skeleton loading, error boundaries, and empty states are in scope. Note deviations — e.g. "No notifications bell — no async activity".]
 
 ## Excluded from This Phase
 Explicitly named. Anything not listed above is out of scope.

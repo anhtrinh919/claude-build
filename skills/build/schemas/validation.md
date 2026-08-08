@@ -1,8 +1,6 @@
 # [Feature Name] Validation
 
-This is the test contract for `/build-review` (pipeline-review mode). Every check listed here must pass before the phase is approved.
-
-Every check reads as an observable, walkable sentence — "Rename to `../evil`: rejected inline with a plain message," not "works correctly."
+This is the test contract for `/build:review` (pipeline-review mode). Every check must pass before approval. Write each check as an observable, walkable sentence — "Rename to `../evil`: rejected inline with a plain message," not "works correctly."
 
 ## Automated Checks
 
@@ -25,7 +23,7 @@ Walk through these checks in a browser. Each is pass/fail.
 - [ ] [Specific screen] — [what to check]
 - [ ] Navigation between [page] and [page] works
 
-**App Shell — Phase 0 only. Skip this block for Phase 1+; use the regression block below instead:**
+**App Shell — Phase 0 only. Skip for Phase 1+; use the regression block below:**
 - [ ] Desktop 1280px: sidebar visible, correct item highlighted as active, Cmd+B / Ctrl+B toggles collapse
 - [ ] Mobile 390px: bottom nav bar visible with correct items, hamburger opens drawer, drawer dismisses on backdrop tap
 - [ ] Auth: unauthenticated visit to protected route → redirected to login → login succeeds → returned to original page
@@ -37,13 +35,13 @@ Walk through these checks in a browser. Each is pass/fail.
 - [ ] Empty state: navigate to a screen with no data → first-use empty state shows (illustration + headline + CTA)
 - [ ] Logo / home button: clicking the logo from any page navigates back to home/dashboard
 
-**App Shell regression — Phase 1+. Replace the Phase 0 block above with this:**
+**App Shell regression — Phase 1+. Replaces the Phase 0 block:**
 - [ ] Navigation: all Phase 0 nav items still accessible; active state correct on new pages added this phase
 - [ ] Auth: unauthenticated visits to new routes in this phase redirect to login correctly
 - [ ] Toast: toast system still fires on actions added in this phase
 
 **User flows:**
-- [ ] No dead-ends: every screen in this phase is reachable from home and can return to it — no screen traps the user (the review-time backstop for `/build-spec` reconciliation check 8).
+- [ ] No dead-ends: every screen in this phase is reachable from home and can return to it — no screen traps the user (the review-time backstop for `/build:spec` reconciliation check 8).
 - [ ] [Step 1 → Step 2 → Step 3]: user sees [expected result]
 - [ ] Empty state: navigate to [screen] with no data → user sees [message] with [action]
 - [ ] Error state: [trigger condition] → user sees [specific message], not blank screen
@@ -51,7 +49,7 @@ Walk through these checks in a browser. Each is pass/fail.
 
 ## Outcome Checks
 
-One per PRIMARY outcome on `outcome-card.md` — same numbering. Binary and demonstrable on screen by a non-technical person ("the API returns 200" violates this). `/build-review` (pipeline-review mode) grades these explicitly.
+One per PRIMARY outcome on `outcome-card.md` — same numbering. Binary and demonstrable on screen by a non-technical person ("the API returns 200" violates this). `/build:review` (pipeline-review mode) grades these explicitly.
 
 - [ ] Outcome 1: [card outcome restated] → [the on-screen signal from the card's "Success looks like" — what a person sees that proves it]
 - [ ] Outcome 2: [...]

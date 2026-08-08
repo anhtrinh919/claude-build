@@ -5,7 +5,6 @@ A phase runs start-to-finish in ONE turn. Internal step and milestone boundaries
 **The ONLY places you stop and yield the turn (the user gates):**
 - the **constitution** boundary (approve the product story),
 - each **phase-complete** boundary (approve the dogfood, go/no-go the next phase),
-- the **deploy** boundary (go/no-go into Milestone 3),
 - a genuine **felt-impact fork** (a decision the user will feel, no strictly-better option — `voice.md`),
 - a **cap-hit binary** ("Accept anyway, or Stop?"),
 - the **external design hand-off** — the brief is delivered and the user goes away to design in their own tool; nothing can proceed until they return with exported images.

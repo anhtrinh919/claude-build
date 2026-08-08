@@ -1,10 +1,10 @@
 # Brain integration (OPTIONAL) — shared across SDD skills
 
-This wires in an **optional external memory system** — a local "brain" (a learnings database queried through a `bun` CLI). It is pure enrichment: past learnings sharpen a skill's judgment when the system is installed, and its absence changes nothing about how the build runs.
+An **optional external memory system** — a local learnings database queried through a `bun` CLI.
 
-**Presence guard — check first.** If `$HOME/.claude/brain` does not exist (the common case for a fresh install), **skip this entire reference**: do not run the commands below, do not log an error, just continue. Everything here is best-effort and never a gate.
+**Presence guard — check first.** If `$HOME/.claude/brain` does not exist, **skip this entire reference.** Do not run the commands below, do not log an error, just continue. Everything here is best-effort and never a gate.
 
-Each skill that loads this reference passes its own `$AGENT` (`spec`, `design`, `backend`, `review`) and its `$TAGS` (derived from `tech-stack.md`, up to 5 — e.g. `nextjs,tailwind,bun`). Constitution mode of `/build-spec` has no `tech-stack.md` yet — pass `$TAGS` empty.
+Each skill that loads this reference passes its own `$AGENT` (`spec`, `design`, `backend`, `review`) and its `$TAGS` (derived from `tech-stack.md`, up to 5 — e.g. `nextjs,tailwind,bun`). Constitution mode of `/build:spec` has no `tech-stack.md` yet — pass `$TAGS` empty.
 
 ## Read brain (only if present)
 
@@ -32,14 +32,11 @@ cd $HOME/.claude/brain && bun run cli/brain-cli.ts add --auto \
   --phase $N
 ```
 
-`--auto` makes the CLI silent (exit 0/1 only). The skill is responsible for any user-facing notification — typically none, except `/build` which announces aggregate counts.
+`--auto` makes the CLI silent, exit 0 or 1 only. The skill owns any user-facing notification — typically none, except `/build`, which announces aggregate counts.
 
 ## Title convention
 
-Titles are **scoped by phase only**, no agent prefix. Cross-skill dedup hinges on `--tags` overlap and title similarity, so an `--agent backend` "Phase 3: foo" and `--agent review` "Phase 3: foo" should converge if they're about the same learning.
-
-- ✓ `Phase 3: bcrypt salt rounds default mismatch`
-- ✗ `Phase 3 backend: bcrypt salt rounds default mismatch` ← old format; agent name is already in `--agent`
+Scope the title by phase only, with no agent prefix — the agent is already in `--agent`, and cross-skill dedup depends on `--tags` overlap plus title similarity. Write `Phase 3: bcrypt salt rounds default mismatch`.
 
 ## Trigger semantics
 

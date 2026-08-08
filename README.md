@@ -2,23 +2,22 @@
 
 **Spec-Driven Development for non-devs.** A [Claude Code](https://claude.com/claude-code) plugin that turns an idea into a shipped, dogfooded product one vertical slice at a time — gating the build so the AI can't steamroll you with unreviewed decisions.
 
-You describe what you want. `/build` runs a disciplined pipeline: it pressure-tests the idea, drills you for a product constitution, then builds each phase as a real end-to-end slice — spec → design → backend → review — pausing only at outcome-level go/no-go gates, and closes with a whole-product deploy milestone. It resumes mid-phase after a context reset, because the state lives in a file, not the chat.
+You describe what you want. `/build` runs a disciplined pipeline: it pressure-tests the idea, drills you for a product constitution, then builds each phase as a real end-to-end slice — spec → design → backend → review — pausing only at outcome-level go/no-go gates. It resumes mid-phase after a context reset, because the state lives in a file, not the chat.
 
 ## What you get
 
-One command, `/build`, orchestrating nine skills:
+One command, `/build`, orchestrating eight skills:
 
 | Skill | Role |
 |---|---|
 | `build` | The orchestrator — state-file-driven, re-entrant pipeline. |
-| `build-shape` | Front gate: validates the idea is worth building, surfaces the big forks, pressure-tests the product shape. |
-| `build-spec` | Drills you and authors the specs — constitution + per-phase requirements / plan / validation. |
-| `build-design` | Designs the UI (in-code mockups) or reviews your external design, against one UX / craft / accessibility gate. |
-| `build-backend` | Wave-dispatched implementation; every API contract integration-tested. |
-| `build-review` | Code review + a real browser dogfood, with silent auto-fix. |
-| `build-deploy` | Whole-codebase review, whole-app dogfood, merge verification, then a real deploy step. |
-| `build-polish` | Batch backlog drainer for bugs and small improvements. |
-| `build-migrate` | Upgrades a project built on an older version of the stack. |
+| `/build:shape` | Front gate: settles the product's shape — a concept interview for the big forks, then customer, category, and competitor research. |
+| `/build:spec` | Drills you and authors the specs — constitution + per-phase requirements / plan / validation. |
+| `/build:design` | Designs the UI (in-code mockups) or reviews your external design, against one UX / craft / accessibility gate. |
+| `/build:backend` | Wave-dispatched implementation; every API contract integration-tested. |
+| `/build:review` | Code review + a real browser dogfood, with silent auto-fix. |
+| `/build:polish` | Batch backlog drainer for bugs and small improvements. |
+| `/build:migrate` | Upgrades a project built on an older version of the stack. |
 
 ## Install
 
@@ -37,7 +36,7 @@ Then start a build:
 ## Requirements
 
 - **Claude Code** — the plugin host.
-- **A browser-automation tool exposed as the `/browse` skill.** The `/build-review` phase dogfoods your app in a real browser; without a `/browse` tool installed, the review phase's interactive walk can't run (the code review, type-checks, and API-contract checks still do).
+- **A browser-automation tool exposed as the `/browse` skill.** The `/build:review` phase dogfoods your app in a real browser; without a `/browse` tool installed, the review phase's interactive walk can't run (the code review, type-checks, and API-contract checks still do).
 - **Optional — `bun` + a local "brain" memory system** at `$HOME/.claude/brain`. If present, the skills pull relevant past learnings to sharpen their judgment; if absent, they skip that step cleanly. Not required.
 
 ## How it gates you

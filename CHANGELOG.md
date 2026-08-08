@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.0.0 — 2026-08-08
+
+**Breaking: every skill drops the `build-` prefix.** The plugin is already named `build`, so invoking the design skill meant typing `/build:build-design`. Skills are now `/build:spec`, `/build:design`, `/build:backend`, `/build:review`, `/build:shape`, `/build:polish`, `/build:migrate`. The orchestrator keeps its name (`/build`) — its directory also holds `_shared/` and `schemas/`, so renaming it would have rewritten 46 internal paths for no user-facing gain. `/build:migrate` sweeps this rename in existing projects: its detection ladder no longer stops flat on a current-schema project, it greps for a `build-` token and rewrites the references it finds. Without that, every project's own `CLAUDE.md` would keep naming skills that no longer answer.
+
+**The deploy milestone is gone.** `build-deploy` existed to run a whole-app review, a whole-app dogfood, a commit check that was already a no-op (every phase merges at replan), and a Vercel deploy. Only the unfenced dogfood was unique, and it now runs inside the final phase's review: when the orchestrator signals the last roadmap phase, the dogfood walk drops its scope fence and covers every Named Flow and every prior phase's outcomes. That is the stack's only cross-phase integration check. `roadmap-complete` is now a declared terminal state — `1.0.0` shipped it as a state written by nothing, and the inverse failure (written by something, handled by nothing) was the risk here.
+
+**The seven-lens bad-idea gate is gone.** `build-shape` had a cold-shower gate that looped until the user picked Proceed / Refine / Drop, plus a standalone verdict mode. It was ceremony — a gate that existed to be passed. Shaping is now two steps: a concept interview, then 3C research. Nothing in the stack now pushes back on an idea; that is deliberate. The `shape-complete` write moved to the end of the research step, which was the one thing that would otherwise have silently broken the resume ladder.
+
+**`ux-rules.md` deleted — 11364c that no step ever loaded.** It appeared only in a References list and as a cross-link; no skill read it during a run, while the rules it held were written out a second and third time in `gates.md` and `app-shell-spec.md`. Its ungated rules moved to the docs an agent actually opens. Two wrong citations died with it: a gate tag pointing at the wrong rule range, and a rule ID that never existed.
+
+**New `references/design-tokens.md` closes a real gap.** `G-TOKENS` is the *checker*, and it lives in `gates.md`, which only the external design mode loads — so the `claude-code` mode had no token standard at all. The new file loads at both modes' close-out, where `design-tokens.css` is written.
+
+**`drilling-discipline.md` was two versions behind its own source.** The repo held 14056c against a 6449c canonical file, with mismatched header hashes, on a file marked do-not-hand-edit. Re-synced. The current source drops the published-artifact interview and standardizes on batched `AskUserQuestion`; no skill depended on the artifact mechanism.
+
+**`claude-build-lite` is retired** — GitHub repo archived, `stack: "build-lite"` removed as a state value.
+
+**The whole stack was rewritten to ASD-STE100 under measured char budgets: 288138c → 192886c across 31 files, a 33% cut.** The 8 SKILL.md files came down 38%, the 23 supporting docs 24%. Cuts targeted rationale prose, worked examples that restated a rule already given, and step-by-step hand-holding a current model derives from the goal. Every gate, contract, path, command, threshold, and conflict rule was kept; schema templates were diffed field-by-field before and after, because a lost template line is a field an authored document silently drops. Several files stopped above budget at a genuine fidelity floor — `constitution.md` is 87% template, `claude-md.md` 93%, `validation.md` 87% checklist.
+
+**Structural consolidation.** Three constitution schemas merged into `schemas/constitution.md`, closing two orphan schemas that `build-spec` spawned a drafter to author without handing it either path. Two drafter briefs merged into `briefs/drafter.md`. `pivot-protocol.md` deleted — its own text said it invented nothing, and that verified. Canon is now cited, never restated: a 9-gram scan across every file pair returns only citation paths and the standard's own contract header. Skills share one spine and one vocabulary — `Mode:` for a branch, `Step N` for a sequence — enforced by a 7-point conformance check in `docs/skill-standard.md`.
+
 ## 1.4.0 — 2026-07-29
 
 **Phase 0 scoped down to shell + hero screens.** It used to mandate the entire planned UI built to polished static before any phase 1 work started — expensive, and it made every reachability gate (`G-REACH`) check against the full end-state inventory instead of what actually exists yet. Phase 0 now builds only the shell + hero screens (home/dashboard + 1-2 top nav screens, Claude's call); every gate that checks orphans/dead-ends now scopes to "screens built so far" — a deferred screen is bookkeeping, not a bug. Vertical slices that touch a screen Phase 0 didn't cover build it to static first, same phase.
