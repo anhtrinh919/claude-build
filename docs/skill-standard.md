@@ -82,3 +82,4 @@ Run against a file after any rewrite:
 5. `description` ≤300 chars. Body ≤ its budget.
 6. Every `_shared/`, `schemas/`, and `references/` path in the file resolves.
 7. Every artifact the skill authors has a schema cited.
+8. **The frontmatter parses as YAML.** Run `claude plugin tag .`, or `yaml.safe_load` the block. A `description` holding a colon-space, a `#`, or a leading quote must be wrapped in single quotes with internal `'` doubled. This fails silently: an unparsable block loads the skill with *empty* metadata, so it never triggers and nothing reports an error.

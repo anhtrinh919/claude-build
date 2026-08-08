@@ -1,6 +1,6 @@
 ---
 name: shape
-description: Front gate for a new /build project. Settles the product's shape before the constitution: a concept interview (the outcome, the user, the big either/or forks), then 3C research into customer, category, competitors. Hands the shape to /build:spec. Trigger on /build:shape or "shape this idea".
+description: 'Front gate for a new /build project. Settles the product''s shape before the constitution: a concept interview (the outcome, the user, the big either/or forks), then 3C research into customer, category, competitors. Hands the shape to /build:spec. Trigger on /build:shape or "shape this idea".'
 user-invocable: true
 argument-hint: "[the idea]"
 ---

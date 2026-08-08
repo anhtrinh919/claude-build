@@ -1,6 +1,6 @@
 ---
 name: spec
-description: The SDD spec authority: drills the user, then authors the docs. Mode arg — **constitution** (product interview, constitution docs, roadmap), **phase** (feature research, scope drill, Outcome Card gate, requirements/plan/validation), **replan** (living docs, changelog, merge). Invoked by /build.
+description: 'The SDD spec authority: drills the user, then authors the docs. Mode arg — **constitution** (product interview, constitution docs, roadmap), **phase** (feature research, scope drill, Outcome Card gate, requirements/plan/validation), **replan** (living docs, changelog, merge). Invoked by /build.'
 ---
 
 # /build:spec — drill, then author

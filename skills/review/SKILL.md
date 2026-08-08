@@ -1,6 +1,6 @@
 ---
 name: review
-description: Code review and functional dogfood. **pipeline-review** is the /build phase gate: automated checks, the `code-reviewer` agent, then a `dogfood` browser walk, with every HIGH and MEDIUM auto-fixed silently. **standalone-dogfood** fires when implementation ends outside /build.
+description: 'Code review and functional dogfood. **pipeline-review** is the /build phase gate: automated checks, the `code-reviewer` agent, then a `dogfood` browser walk, with every HIGH and MEDIUM auto-fixed silently. **standalone-dogfood** fires when implementation ends outside /build.'
 user-invocable: true
 argument-hint: "pipeline-review | standalone-dogfood | [feature description to dogfood]"
 ---
