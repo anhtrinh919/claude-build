@@ -32,7 +32,7 @@ The failure was not the catalogue alone. `validation.md`'s Phase 0 block restate
 
 ## 2026-08-08 — The design references are NOT duplicates. Do not merge them.
 
-`gates.md` loads only on /build:design external Step 3. `app-shell-spec.md` loads only in /build:spec phase mode. `design-tokens.md` loads at both design modes' close-out. **No two are ever read by the same consumer.** Where all three need the five system states or the 44px touch target, each states it in full. Collapsing that to one owner would leave a reader with a citation it never follows. This reverses the merge that the one-home-per-rule pass would otherwise have made.
+`gates.md` loads only on /build:design external Step 3. `design-tokens.md` loads at both design modes' close-out. (`app-shell-spec.md` was the third case until it was deleted — see the 2026-08-08 entry above.) **No two are ever read by the same consumer.** Where all three need the five system states or the 44px touch target, each states it in full. Collapsing that to one owner would leave a reader with a citation it never follows. This reverses the merge that the one-home-per-rule pass would otherwise have made.
 
 The rule holds generally: a repeated sentence is drift only when one reader loads both copies.
 
@@ -89,4 +89,4 @@ Four merges did land, each for a stated reason: `pivot-protocol.md` deleted (inv
 
 ## 2026-08-07 — Measured, so nobody re-argues it.
 
-Final: **8 SKILL.md files, 156790c → 97851c (38%)**; **23 supporting docs, 123901c → 94705c (24%)**. Total stack **288138c → 192886c across 31 files, a 33% cut**, plus `build-deploy`'s 8196c and `ux-rules.md`'s 11364c deleted whole. Not 75%. The remaining bulk is distinct mechanism. `/build:spec`, `/build:review`, `constitution.md` (87% template), `claude-md.md` (93% template), and `validation.md` (87% checklist) are all at a fidelity floor — a further cut there deletes a field or a rule, not prose.
+Final: **8 SKILL.md files, 156790c → 97851c (38%)**; **23 supporting docs, 123901c → 94705c (24%)**. Total stack **288138c → 182665c across 30 files, a 37% cut**, plus `build-deploy`'s 8196c and `ux-rules.md`'s 11364c deleted whole. Not 75%. The remaining bulk is distinct mechanism. `/build:spec`, `/build:review`, `constitution.md` (87% template), `claude-md.md` (93% template), and `validation.md` (87% checklist) are all at a fidelity floor — a further cut there deletes a field or a rule, not prose.
