@@ -23,22 +23,17 @@ Walk through these checks in a browser. Each is pass/fail.
 - [ ] [Specific screen] — [what to check]
 - [ ] Navigation between [page] and [page] works
 
-**App Shell — Phase 0 only. Skip for Phase 1+; use the regression block below:**
-- [ ] Desktop 1280px: sidebar visible, correct item highlighted as active, Cmd+B / Ctrl+B toggles collapse
-- [ ] Mobile 390px: bottom nav bar visible with correct items, hamburger opens drawer, drawer dismisses on backdrop tap
-- [ ] Auth: unauthenticated visit to protected route → redirected to login → login succeeds → returned to original page
-- [ ] Profile dropdown: avatar click opens menu with all standard items present; Sign Out logs user out and redirects to login
-- [ ] Settings: accessible via sidebar footer link AND profile dropdown; General and Security categories present
-- [ ] Toast: trigger a success action → toast appears bottom-right (desktop) or top-center (mobile), auto-dismisses in 3–5s
-- [ ] Skeleton: navigate to a data-fetching page → skeleton placeholder renders before data arrives, not a blank screen
-- [ ] Error boundary: with network blocked, trigger a data fetch → friendly error message with "Try again" appears, no blank screen
-- [ ] Empty state: navigate to a screen with no data → first-use empty state shows (illustration + headline + CTA)
-- [ ] Logo / home button: clicking the logo from any page navigates back to home/dashboard
+**App Shell — Phase 0 only. Skip for Phase 1+; use the regression block below.** Write one check per decision `requirements.md ## App Shell` actually states — never a check for a pattern this app did not choose. Cover, at each breakpoint the spec names:
+- [ ] Navigation: the stated pattern renders, the active item is marked, and every stated section is reachable
+- [ ] Auth (if the app has accounts): unauthenticated visit to a protected route → login → returned to the original page; sign-out returns to login
+- [ ] Settings (if in scope): reachable by every entry point the spec names; the stated categories are present
+- [ ] Each universal pattern the spec names: trigger it and confirm the stated behavior — loading shows something, an error shows a way to recover, an empty screen shows a way forward
+- [ ] Home: from any screen, the stated route home works
 
 **App Shell regression — Phase 1+. Replaces the Phase 0 block:**
 - [ ] Navigation: all Phase 0 nav items still accessible; active state correct on new pages added this phase
 - [ ] Auth: unauthenticated visits to new routes in this phase redirect to login correctly
-- [ ] Toast: toast system still fires on actions added in this phase
+- [ ] Every universal pattern from Phase 0 still fires on the surfaces added this phase
 
 **User flows:**
 - [ ] No dead-ends: every screen in this phase is reachable from home and can return to it — no screen traps the user (the review-time backstop for `/build:spec` reconciliation check 8).

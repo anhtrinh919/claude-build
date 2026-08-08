@@ -61,21 +61,21 @@ One section per endpoint. Frontend and backend build against these exactly. Ever
 
 ## App Shell
 
-> **Phase 0:** Shell is built this phase. Fill each subsection from the app-shell spec (`${CLAUDE_PLUGIN_ROOT}/skills/design/references/app-shell-spec.md`), adapted to this app.
+> **Phase 0:** Shell is built this phase. State each decision below for this app. There is no standard shell to copy — pick what this product needs.
 > **Phase 1+:** Shell is inherited from Phase 0 — do not rebuild it. Note only what changes; mark unchanged items "inherited". A redesign fills it from scratch.
 > **`ui: false`:** Delete this section entirely.
 
 ### Navigation
-[Name the nav pattern (sidebar / bottom nav / rail) per the app-shell spec. Set section labels, item order, icon choices. Note deviations.]
+[Name the nav pattern and why it fits this app. Set section labels, item order, and behavior at each breakpoint you support.]
 
 ### Auth
-[Confirm the auth gate: yes/no. Name the social login providers (e.g. Google, GitHub). Note custom redirects or session expiry.]
+[Confirm the auth gate: yes/no. Name the login methods. Note redirects and session expiry.]
 
 ### Settings
 [List the settings categories in scope. Omit categories that don't apply — name them and say why (e.g. "Billing — omitted").]
 
 ### Universal Patterns
-[Confirm toast, skeleton loading, error boundaries, and empty states are in scope. Note deviations — e.g. "No notifications bell — no async activity".]
+[Name the feedback, loading, error, and empty-state patterns this app uses, and where each appears. Only what this phase actually needs.]
 
 ## Excluded from This Phase
 Explicitly named. Anything not listed above is out of scope.

@@ -100,7 +100,6 @@ Show the verdict line and the HIGH items; the design is theirs and they fix it i
 
 - `references/gates.md` — the gate catalogue **external** runs over exported images: each gate's tier, what it verifies, the evidence it produces.
 - `references/design-tokens.md` — the standard `design-tokens.css` must meet. Read by both modes at close-out.
-- `references/app-shell-spec.md` — read by /build:spec to fill `requirements.md`'s App-Shell section, never invoked here.
 - Brain: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/brain.md`, `$AGENT=design`.
 
 ## Ground rules

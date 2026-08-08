@@ -206,7 +206,7 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 | Group 2: [Category] | 111 | — |
 | Group N: [Category] | 28 | — |
 
-### `skills/build/schemas/requirements.md` — 3204c
+### `skills/build/schemas/requirements.md` — 3108c
 
 | Section | Bytes | Subsections |
 |---|---|---|
@@ -218,10 +218,8 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 | Data Model | 168 | — |
 | API Contracts | 848 | [Endpoint Name] |
 | Constraints & Context | 140 | — |
-| App Shell | 1014 | Navigation · Auth · Settings · Universal Patterns |
+| App Shell | 920 | Navigation · Auth · Settings · Universal Patterns |
 | Excluded from This Phase | 166 | — |
-
-**Cites:** `skills/design/references/app-shell-spec.md`
 
 ### `skills/build/schemas/roadmap.md` — 1494c
 
@@ -234,17 +232,17 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 
 **Cites:** `skills/build/_shared/roadmap-axis.md`
 
-### `skills/build/schemas/validation.md` — 4072c
+### `skills/build/schemas/validation.md` — 3698c
 
 | Section | Bytes | Subsections |
 |---|---|---|
 | (intro) | 278 | — |
 | Automated Checks | 372 | — |
-| Manual Verification | 2451 | — |
+| Manual Verification | 2085 | — |
 | Outcome Checks | 432 | — |
 | Definition of Done | 480 | — |
 
-### `skills/design/SKILL.md` — 10785c
+### `skills/design/SKILL.md` — 10661c
 
 | Section | Bytes | Subsections |
 |---|---|---|
@@ -253,22 +251,10 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 | Mode resolution (first action) | 1095 | — |
 | Mode: claude-code | 1529 | — |
 | Mode: external | 4432 | Step 1 — Design brief · Step 2 — Hand off and wait · Step 3 — Review the exported images · Step 4 — Write `design-comment.md` · Step 5 — Surface, gate, index |
-| References | 477 | — |
+| References | 355 | — |
 | Ground rules | 681 | — |
 
-**Cites:** `skills/build/_shared/auto-continue.md` · `skills/build/_shared/brain.md` · `skills/build/_shared/entry-point.md` · `skills/build/_shared/subagent-policy.md` · `skills/build/_shared/voice.md` · `skills/build/schemas/design-brief-external.md` · `skills/build/schemas/handover.md` · `skills/design/references/app-shell-spec.md` · `skills/design/references/design-tokens.md` · `skills/design/references/gates.md`
-
-### `skills/design/references/app-shell-spec.md` — 9634c
-
-| Section | Bytes | Subsections |
-|---|---|---|
-| (intro) | 723 | — |
-| Breakpoints | 201 | — |
-| Navigation (responsive) | 2373 | — |
-| Auth shell | 1758 | — |
-| Onboarding | 351 | — |
-| Settings | 1410 | — |
-| Universal UX patterns | 2572 | — |
+**Cites:** `skills/build/_shared/auto-continue.md` · `skills/build/_shared/brain.md` · `skills/build/_shared/entry-point.md` · `skills/build/_shared/subagent-policy.md` · `skills/build/_shared/voice.md` · `skills/build/schemas/design-brief-external.md` · `skills/build/schemas/handover.md` · `skills/design/references/design-tokens.md` · `skills/design/references/gates.md`
 
 ### `skills/design/references/design-tokens.md` — 1591c
 
@@ -322,11 +308,11 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 
 **Cites:** `skills/build/_shared/subagent-policy.md` · `skills/build/_shared/voice.md` · `skills/build/schemas/backlog.md`
 
-### `skills/review/SKILL.md` — 21247c
+### `skills/review/SKILL.md` — 21249c
 
 | Section | Bytes | Subsections |
 |---|---|---|
-| (intro) | 1091 | — |
+| (intro) | 1093 | — |
 | Invocation contract | 1550 | — |
 | Mode detection | 849 | — |
 | Briefing the two agents | 1722 | — |
@@ -339,11 +325,11 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 
 **Cites:** `skills/build/_shared/brain.md` · `skills/build/_shared/entry-point.md` · `skills/build/_shared/subagent-policy.md` · `skills/build/_shared/voice.md`
 
-### `skills/shape/SKILL.md` — 6452c
+### `skills/shape/SKILL.md` — 6455c
 
 | Section | Bytes | Subsections |
 |---|---|---|
-| (intro) | 913 | — |
+| (intro) | 916 | — |
 | Invocation contract | 548 | — |
 | Step 1.1 — Concept interview | 2150 | — |
 | Step 1.2 — 3C research | 2113 | — |
@@ -352,11 +338,11 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 
 **Cites:** `skills/build/_shared/drilling-discipline.md` · `skills/build/_shared/entry-point.md` · `skills/build/_shared/subagent-policy.md` · `skills/build/_shared/voice.md`
 
-### `skills/spec/SKILL.md` — 20434c
+### `skills/spec/SKILL.md` — 20436c
 
 | Section | Bytes | Subsections |
 |---|---|---|
-| (intro) | 822 | — |
+| (intro) | 824 | — |
 | Invocation contract | 903 | — |
 | The two research jobs | 335 | — |
 | Division of labor | 468 | — |
@@ -381,7 +367,7 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 
 **Cites:** `skills/build/_shared/subagent-policy.md` · `skills/build/schemas/plan.md` · `skills/build/schemas/requirements.md` · `skills/build/schemas/validation.md`
 
-**Total: 31 files, 192886c.**
+**Total: 30 files, 182665c.**
 
 ## Part 2 — Reference graph
 
@@ -403,10 +389,9 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 | `skills/build/schemas/living-docs.md` | 4585 | 2 | build, spec |
 | `skills/build/schemas/outcome-card.md` | 1822 | 1 | spec |
 | `skills/build/schemas/plan.md` | 1383 | 1 | spec/briefs/drafter.md |
-| `skills/build/schemas/requirements.md` | 3204 | 1 | spec/briefs/drafter.md |
+| `skills/build/schemas/requirements.md` | 3108 | 1 | spec/briefs/drafter.md |
 | `skills/build/schemas/roadmap.md` | 1494 | 1 | spec |
-| `skills/build/schemas/validation.md` | 4072 | 1 | spec/briefs/drafter.md |
-| `skills/design/references/app-shell-spec.md` | 9634 | 2 | build/schemas/requirements.md, design |
+| `skills/build/schemas/validation.md` | 3698 | 1 | spec/briefs/drafter.md |
 | `skills/design/references/design-tokens.md` | 1591 | 1 | design |
 | `skills/design/references/gates.md` | 11544 | 1 | design |
 | `skills/spec/briefs/drafter.md` | 4679 | 1 | spec |
@@ -415,18 +400,18 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 
 ## Part 3 — What the map shows
 
-1. **Skill names are unprefixed; the plugin qualifies them.** The plugin is `build`, so a skill is invoked as `/build:<name>` — `/build:spec`, `/build:design`. The orchestrator keeps the name `build` (`/build`), and its directory also holds `_shared/` and `schemas/`, so those paths are stable. One form is used everywhere in the docs: `/build:<name>`, matching both what the user types and the Skill tool's `plugin:skill` convention.
+1. **Skill names are unprefixed; the plugin qualifies them.** A skill is invoked as `/build:<name>`. The orchestrator keeps the name `build` (`/build`), and its directory also holds `_shared/` and `schemas/`, so those paths are stable. One form is used everywhere: `/build:<name>`.
 
-2. **One spine holds across all 8 SKILL.md files.** Every file opens with an intro, then `## Invocation contract` on the fixed column set, then shared concepts, then `## Mode:` or `## Step N —`, then `## Ground rules`. `build/SKILL.md` uses the orchestrator carve-out in `docs/skill-standard.md` §1. Vocabulary is single-valued: `Mode:` for a branch, `Step N` for a sequence.
+2. **One spine holds across all 8 SKILL.md files** — intro, `## Invocation contract`, shared concepts, `## Mode:` or `## Step N —`, `## Ground rules`. Vocabulary is single-valued: `Mode:` for a branch, `Step N` for a sequence.
 
-3. **No orphans and no dangling references.** Every supporting doc has at least one inbound citation by path, and every path resolves to a real file. Every skill's `name:` field matches its directory.
+3. **No orphans and no dangling references.** Every supporting doc has an inbound citation by path; every path resolves; every skill's `name:` matches its directory; every frontmatter block parses as YAML.
 
-4. **Citation load is concentrated, as intended.** `voice.md`, `subagent-policy.md`, and `entry-point.md` carry the cross-cutting canon. Skills cite them; none restates them inline. A 9-gram duplication scan across every file pair returns only citation paths and the standard's own contract header.
+4. **Canon is cited, never restated.** A 9-gram scan across every file pair returns only citation paths and the standard's own contract header.
 
-5. **`drilling-discipline.md` is generated, not authored here.** It syncs from `~/.claude/skills/grill-me/references/drilling-discipline.md` via that skill's `scripts/sync-drilling-discipline.sh`. Never hand-edit it; change the source and re-sync. The header hash must match the source.
+5. **`drilling-discipline.md` is generated.** It syncs from `~/.claude/skills/grill-me/references/drilling-discipline.md`. Never hand-edit it; change the source and re-sync.
 
-6. **The design references are single-consumer and must stay self-contained.** `gates.md` loads only on `/build:design` external Step 3; `app-shell-spec.md` only in `/build:spec` phase mode; `design-tokens.md` at both design modes' close-out. No two are read by the same consumer, so a rule both need is written in both.
+6. **The stack no longer prescribes an app shell.** `requirements.md` asks the spec to state its own navigation, auth, settings, and feedback decisions; `validation.md` checks only what the spec actually stated. The prescriptive catalogue was removed — it graded every product against one generic SaaS shell.
 
-7. **`/build:migrate` sweeps this rename.** A project on the current schema whose docs still name `/build-spec` and friends is detected and swept; the rename table carries the old-to-new mapping.
+7. **Two design references remain, both single-consumer.** `gates.md` loads only on `/build:design` external Step 3; `design-tokens.md` at both design modes' close-out.
 
-8. **Size.** 31 files, 192886c — 98218c across 8 SKILL.md files and 94668c across 23 supporting docs. The stack began this work at 288138c across 38 files.
+8. **Size.** 30 files, 182665c — 98101c across 8 SKILL.md files and 84564c across 22 supporting docs. The stack began this work at 288138c across 38 files.

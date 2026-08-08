@@ -2,6 +2,14 @@
 
 Settled choices for the structure + ASD-STE100 pass. Check this before you re-ask a question.
 
+## 2026-08-08 — The app-shell spec is deleted. The stack does not prescribe a shell.
+
+`references/app-shell-spec.md` (9634c) specified one generic SaaS shell in literal values — a 256px sidebar, Cmd+B to collapse, a 56px bottom nav, Sonner toasts bottom-right for 3–5s, a fixed settings category list. It did not help in practice.
+
+The failure was not the catalogue alone. `validation.md`'s Phase 0 block restated those prescriptions as pass/fail checks, so a product that made a different and perfectly good choice got graded as failing. Prescription plus a checklist that enforces it is worse than either.
+
+**Now:** `requirements.md ## App Shell` asks the phase to *state* its navigation, auth, settings, and universal-pattern decisions, with no catalogue to copy. `validation.md` writes one check per decision the spec actually states, and explicitly never a check for a pattern the app did not choose. The shell still exists as Phase 0 scope in `_shared/roadmap-axis.md`; what is gone is the claim that every product needs the same one.
+
 ## 2026-08-08 — Skills lose the `build-` prefix. build-lite is retired.
 
 **The plugin qualifies the skill, so the prefix was redundant.** Invoking design meant typing `/build:build-design`. Every sub-skill directory and `name:` field drops the prefix: `spec`, `design`, `backend`, `review`, `shape`, `polish`, `migrate`. Invocation is now `/build:design`.

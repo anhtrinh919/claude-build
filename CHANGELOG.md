@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.0 — 2026-08-08
+
+**The app-shell spec is deleted; the stack no longer prescribes a shell.** `references/app-shell-spec.md` specified one generic SaaS shell in literal values — a 256px sidebar, Cmd+B to collapse, a 56px bottom nav, Sonner toasts bottom-right for 3–5s, a fixed settings category list. It did not help in practice.
+
+The catalogue was only half the problem. `validation.md`'s Phase 0 block restated those same prescriptions as pass/fail checks, so a product that made a different and perfectly reasonable choice was graded as failing its own shell. A prescription plus a checklist that enforces it is worse than either alone.
+
+`requirements.md ## App Shell` now asks the phase to *state* its navigation, auth, settings, and universal-pattern decisions, with no catalogue to copy from. `validation.md` writes one check per decision the spec actually states, and never a check for a pattern the app did not choose. The shell survives as Phase 0 scope in `_shared/roadmap-axis.md`; what is gone is the claim that every product needs the same one.
+
 ## 2.0.0 — 2026-08-08
 
 **Breaking: every skill drops the `build-` prefix.** The plugin is already named `build`, so invoking the design skill meant typing `/build:build-design`. Skills are now `/build:spec`, `/build:design`, `/build:backend`, `/build:review`, `/build:shape`, `/build:polish`, `/build:migrate`. The orchestrator keeps its name (`/build`) — its directory also holds `_shared/` and `schemas/`, so renaming it would have rewritten 46 internal paths for no user-facing gain. `/build:migrate` sweeps this rename in existing projects: its detection ladder no longer stops flat on a current-schema project, it greps for a `build-` token and rewrites the references it finds. Without that, every project's own `CLAUDE.md` would keep naming skills that no longer answer.
