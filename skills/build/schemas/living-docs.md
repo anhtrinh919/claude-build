@@ -23,6 +23,7 @@ Every SDD project contains:
     │       ├── validation.md
     │       ├── design-brief.md
     │       ├── design-notes.md
+    │       ├── dogfood-briefing.md
     │       ├── design-tokens.css
     │       ├── mockups/
     │       └── handover.md
@@ -41,7 +42,7 @@ Each file's purpose and authoring detail lives in its own schema under `${CLAUDE
 
 **User-approved, frozen:** `outcome-card.md` — the only doc actually surfaced to the user verbatim and approved via `AskUserQuestion`. A later change restarts /build:spec phase mode.
 
-**Agent-authored snapshot — Claude's draft, not user-approved; update without ceremony:** `mission.md` (a felt change still routes through the felt-impact-fork rule), `requirements.md` / `plan.md` / `validation.md` (each phase's own dated copy; `requirements.md` keeps its within-phase sha256 drift-hash), `design-brief.md`, `design-notes.md`, `handover.md`, `design-comment.md`.
+**Agent-authored snapshot — Claude's draft, not user-approved; update without ceremony:** `mission.md` (a felt change still routes through the felt-impact-fork rule), `requirements.md` / `plan.md` / `validation.md` (each phase's own dated copy; `requirements.md` keeps its within-phase sha256 drift-hash), `design-brief.md`, `design-notes.md`, `handover.md`, `design-comment.md`, `dogfood-briefing.md` (rewritten at the end of every review fix round, so the handoff and the report never read a stale coverage table).
 
 **Conditional:** `GLOSSARY.md` — write when vocabulary is genuinely ambiguous, same felt-need trigger as `design-brief.md`'s claude-code track. (`INTERACTIONS.md` — deliberate skip.)
 

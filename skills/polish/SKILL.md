@@ -71,7 +71,9 @@ Surface the proposed batches (label, member IDs, a one-line reason each) via `As
   ],
   "currentBatch": 0,
   "currentIndex": 0,
-  "filter": null
+  "filter": null,
+  "verifyUrl": null,
+  "verifyPid": null
 }
 ```
 
@@ -88,7 +90,11 @@ Repeat for the item at `currentIndex` within `currentBatch`.
 3. **Hack gate — a commit precondition.** Classify the fix. `[root-cause]` proceeds. `[symptom-patch]` or `[heuristic]` → surface the tradeoff (what the clean upstream fix would be, and why this is a band-aid) and proceed only on explicit user opt-in. Record the choice.
 4. **Felt-impact fork.** A fix that forces a felt choice is a fork — surface it and apply the pick (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`). A bug with one correct outcome is not a fork; just fix it.
 5. **Implement.** Root-cause reasoning stays on the main model; delegate mechanical edits to Sonnet or Haiku. Touch only this item's files.
-6. **Verify** with `/build:review`'s browser engine and three-signal gate, scoped to this bug — its repro scenario plus a blind problem-resolution check — plus typecheck and the relevant tests. Not fixed until its specific symptom is gone on screen.
+6. **Verify** with typecheck, the relevant tests, and a `dogfood` dispatch in **`gate`** mode. `gate` fits here for the same reason standalone uses it: no user is looking until the batch ends.
+
+   **Find the app first — this skill must hand the agent a URL.** `verifyUrl` already set and its server alive (`kill -0 <verifyPid>`) → reuse it; **never re-discover per item.** Otherwise: `lsof -i :3000 -i :3001 -i :5173 -i :8080 -i :4000 -i :8000 2>/dev/null | grep LISTEN` → use that port; none → read the port out of `package.json` `scripts.dev`/`scripts.start` rather than assuming one off the ladder, start it in the background, wait ≤15s; still nothing → ask once. Write `verifyUrl` and, if you started it, `verifyPid`. Dispatching without a URL returns "never reached" and burns the item's three attempts on a fix that worked — and a second discovery pass on a non-ladder port starts a duplicate server that dies on the bound port, doing exactly that from item 2 onward.
+
+   **Pass the desired outcome as the goal, never the symptom** — "the user exports a CSV and the file downloads", not "the export button throws". The verdict answers whether the *goal* is reachable, so a symptom-as-goal inverts it and ships a no-op fix as verified. The repro scenario is the walk; the outcome is the goal. Not fixed until the goal reads Yes with an on-screen signal — `No` or `unsure` is not a pass.
 7. **Commit atomically and sync.** One ID, one commit; the body carries the one-line root cause and the classification tag. Update `backlog.md`. A named external source → tick its item, fetching first and editing in place, non-destructively. Set `shipped-<commit>` and advance `currentIndex`.
 
 **Escalation.** An item still failing after **3 fix attempts** → `blocked` with a one-line reason. Leave it in place and **continue the batch**; a blocked item never halts the others.
@@ -97,14 +103,14 @@ Repeat for the item at `currentIndex` within `currentBatch`.
 
 When `currentIndex` reaches the last item of the batch, shipped or blocked, **stop.** Do not roll into the next batch in the same turn.
 
-1. Set the batch to `awaiting-dogfood`.
+1. Set the batch to `awaiting-dogfood`. **Leave the verify server running** — the user is about to dogfood by hand and needs it; tell them the URL and that "stop dogfood" kills it.
 2. Report it: IDs shipped with their commits, IDs blocked with reasons.
 3. Tell the user the batch is ready for their own hands-on dogfood, and ask whether to continue to the next batch, pause here, or re-open something in this one.
 4. Only on "continue": set the batch `done`, advance `currentBatch`, reset `currentIndex`, and proceed.
 
 ## Step 6 — Wrap
 
-Past the last batch, report by batch and then by ID: **shipped** with commits, **blocked** with reasons, **deferred or dropped**. Confirm `backlog.md` and any named external source are in sync. Delete `.polish-state.json` on a clean drain; leave it if any item is `blocked`, so a follow-up run resumes the unfinished set.
+Past the last batch, report by batch and then by ID: **shipped** with commits, **blocked** with reasons, **deferred or dropped**. Confirm `backlog.md` and any named external source are in sync. **Kill the verify server if this skill started it** — `verifyPid` non-null → `kill`, verify with `kill -0`, escalate to `kill -9` after 2s, null both fields. A server this skill never started is left alone. Delete `.polish-state.json` on a clean drain; leave it if any item is `blocked`, so a follow-up run resumes the unfinished set.
 
 ## Ground rules
 

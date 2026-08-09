@@ -48,7 +48,7 @@ Format: `- [T-N] [roll-in] YYYY-MM-DD [description] — [status]`
 
 ## Dogfood polish
 
-UX nits, visual rough edges, or small copy fixes from dogfood passes: LOW severity, non-blocking, deferred. `/build:review` (pipeline-review mode) appends here instead of the auto-fix loop.
+UX nits, visual rough edges, or small copy fixes from dogfood passes: non-blocking notes, deferred. The dogfood scout emits no severities — `/build:review` (pipeline-review mode) appends a note here instead of the auto-fix loop, which takes broken items only.
 
 Format: `- [T-N] [polish] YYYY-MM-DD [Phase N] [description] — [status]`
 

@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.1.0 — 2026-08-09
+
+**The `dogfood` agent stops being a judge and becomes a scout.** It used to return a three-signal pass/fail gate with severity-tagged findings, and it blocked the phase. But the user already holds a mandatory approval gate on every finished phase, so the machine verdict was a second opinion on a question a person was about to answer better, moments later. It also read project source to explain behavior — duplicating a code review that had already run with a stronger agent, and defeating the blindness the caller protects by withholding the spec and the diff.
+
+It now returns a **coverage briefing**: a five-state table (`ok` / `broken` / `unreachable` / `unsure` / `not-attempted`), one row per briefed item with the count reconciled against the input, plus a mandatory never-reached section. The user judges quality; the agent only reports what it covered.
+
+**Evidence is the running app — screenshot, accessibility tree, page text, console, network — never a project source file.** Every finding must be written as *what I did → what I saw → the screenshot path*, which makes a source-read finding unwritable rather than merely forbidden. The old prose ban failed partly because the skill itself demanded facts no running app contains: it asked the agent to name the screens added this phase and phrased three shell-regression checks as "added this phase." The caller now resolves every one of those to a named route, control, or nav label before dispatch. A brief that can only be satisfied by opening a source file is a bug in the dispatch, not in the agent.
+
+**Two new states replace two forced verdicts.** `unsure` means the agent did the thing and cannot separate the app from its own automation — a settle rule catches the animation caught mid-frame and the render that had not flushed, which previously drove it into the source to explain itself. The orchestrator settles those inline, since it holds the code. `not-attempted` means it ran out of room, which `unreachable` could not express because that state requires a named blocker; without it, a long final-phase walk silently drops rows.
+
+**Only `broken` items enter the auto-fix loop** — every one of them, with no importance weighing, so a failing shell-regression or `validation.md` check is as blocking as a headline outcome. Notes, blind-arrival answers, and taste observations go to the user instead. `code-reviewer` keeps its full HIGH/MEDIUM ladder untouched.
+
+**Unreached items are reported, never re-walked.** After a blocker is fixed, the items it was hiding stay unverified and the user is told so by name. An outcome behind a blocker grades **not observed** — a third state alongside delivered and failed, with an empty signal cell, because inventing a signal no screenshot supports is worse than admitting the gap.
+
+**Coverage is never allowed to go unsaid.** The briefing persists to `specs/<phase>/dogfood-briefing.md`, so a cold resume at `phase-complete` cannot print the handoff with the never-reached list missing. `phase-blocked` now prints that list too, having previously skipped the handoff whole — the path where the user most needs it, since a blocked phase never auto-resumes.
+
+**Modes.** `brief` (pipeline-review) returns no verdict. `gate` returns one line — Yes / No / unsure on the stated goal — and is used by `standalone-dogfood` and `/build:polish`, where no human is looking right behind the run. Polish also gained the app-discovery ladder it never had, and its verdict now asks for the *desired outcome* rather than the symptom; passing the symptom as the goal inverted the answer and shipped no-op fixes as verified.
+
+Also fixed, found while tracing the above: `ui: false` silently deleted the final phase's unfenced cross-phase walk; an ad-hoc standalone run could write a `phase-complete` state file into a repo with no build project, or overwrite a live mid-phase resume position; `/build:polish` leaked a dev server per item and never stopped it; and `plugin.json` still declared `2.1.0`, two releases behind this file.
+
 ## 3.0.0 — 2026-08-09
 
 **Breaking: `docs/decisions.md` is retired and replaced by `docs/rejected.md`.** The old file mixed two things with opposite lifetimes — permanent history and current product state — in one append-only doc. State drifts; history does not. So every entry that described *how the product works* started contradicting the living doc that owned the same fact, and the ledger became a second, stale opinion injected at every phase start and after every compaction.
