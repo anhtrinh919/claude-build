@@ -47,10 +47,10 @@ Run a level only when the open decisions warrant it. `decision-tree.md` feeds th
 
 Every drafter returns a `## Latent decisions` list of choices it made that the drilling did not reach; two to six is healthy, zero means it did not look. Route *their* calls, do not re-derive:
 
-- **felt-impact** (the user sees it, feels it, waits on it, or is constrained by it) → append as a leaf under its real parent in `decision-tree.md`, ask it through that tree batched with related items, fold the answer in before writing, record in `docs/decisions.md ## User decisions`.
-- **invisible-plumbing** → never ask. Record in `docs/decisions.md ## Technical decisions`.
+- **felt-impact** (the user sees it, feels it, waits on it, or is constrained by it) → append as a leaf under its real parent in `decision-tree.md`, ask it through that tree batched with related items, fold the answer in before writing, log the rejected options to `docs/rejected.md`.
+- **invisible-plumbing** → never ask. Record in the doc that owns it — `tech-stack.md ## Key Technical Decisions` or `docs/architecture.md`. Never `docs/rejected.md`.
 
-Unsure → treat as felt-impact. Check `## User decisions` before surfacing any fork; if it is settled, honor it.
+Unsure → treat as felt-impact. Check `docs/rejected.md` before surfacing any fork; a question listed there is closed.
 
 ## Brain integration
 
@@ -82,7 +82,7 @@ Write `currentSubStep: "spec.1.5"`.
 
 Every field filled. `product.md`'s App Map is one Mermaid flowchart regenerated from Screen Inventory plus Navigation Structure, never hand-maintained; its Phase 0 Foundation Scope names hero screens only — home/dashboard plus 1-2 top nav screens, your call.
 
-**Scaffold living docs** per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md`, headers only — an empty section is fine, fake content is not: `CLAUDE.md`, `backlog.md`, `README.md`, `CHANGELOG.md`, `docs/architecture.md`, `docs/api.md`, `docs/decisions.md`. Every doc under `docs/` opens with the exact line `> Agent context — not for human reading.`; `README.md` and `CLAUDE.md` do not. Seed `## User decisions` with the forks already resolved and `## Technical decisions` from the tech-stack table.
+**Scaffold living docs** per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md`, headers only — an empty section is fine, fake content is not: `CLAUDE.md`, `backlog.md`, `README.md`, `CHANGELOG.md`, `docs/architecture.md`, `docs/api.md`, `docs/rejected.md`. Every doc under `docs/` opens with the exact line `> Agent context — not for human reading.`; `README.md` and `CLAUDE.md` do not. Seed `docs/rejected.md` with one line per fork already resolved, carrying only what each one rejected. **Never seed it from the tech-stack table** — those choices live in `tech-stack.md` and copying them creates a second, drifting home.
 
 ### Step 1.6 — Roadmap
 
@@ -177,7 +177,7 @@ Check all eight against both outputs; resolve every gap by editing the docs.
 
 Then route the drafters' latent-decision lists: merge, dedupe, surface felt-impact as forks now, record the rest. Escalate only a structural conflict needing a product decision.
 
-**Behavioral-mechanism diagram (most phases skip).** A mechanism whose behavior *over time* is not inferable from screens plus endpoints — async jobs, real-time sync, multi-actor flow, state machine, permission model — gets one Mermaid `sequenceDiagram` in `docs/decisions.md`.
+**Behavioral-mechanism diagram (most phases skip).** A mechanism whose behavior *over time* is not inferable from screens plus endpoints — async jobs, real-time sync, multi-actor flow, state machine, permission model — gets one Mermaid `sequenceDiagram` in `docs/architecture.md`.
 
 ### Step 8 — Drift review (full only)
 
@@ -203,9 +203,9 @@ No user gate; the card was the contract. Hand straight back (`_shared/auto-conti
 Run in the **same session** the phase completed. Reconcile every living doc to as-built per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md`. The load-bearing rules:
 
 - **`product.md` is the phase-start drift anchor.** New screens → rows, Status `built`. Cut screens → keep the row, Status `removed` plus a one-line why. Reshaped → `changed`, note how. Regenerate the App Map and Navigation Structure. Never leave a removed screen showing as planned.
-- **`tech-stack.md` is the widest-read doc.** New dependency → add with its pinned version. Changed decision → update the Key Technical Decisions table and cross-link the `docs/decisions.md` entry holding the why. A stale line here misleads every phase skill.
+- **`tech-stack.md` is the widest-read doc.** New dependency → add with its pinned version. Changed decision → update the Key Technical Decisions table in place; it holds the why and the alternatives rejected itself, with no second copy anywhere. A stale line here misleads every phase skill.
 - **`mission.md`** — update like `product.md`. Only a user-felt change is a pivot: surface it as a fork, then re-run just the affected constitution slice, never all of Milestone 1.
-- **`docs/api.md`, `docs/decisions.md`, `docs/architecture.md`, `README.md`, `CLAUDE.md`** — per living-docs.md. Append any durable project-scoped directive stated this phase to `CLAUDE.md`.
+- **`docs/api.md`, `docs/architecture.md`, `README.md`, `CLAUDE.md`** — per living-docs.md. Append any durable project-scoped directive stated this phase to `CLAUDE.md`. **`docs/rejected.md` is not reconciled** — it is history and cannot go stale. Append only the forks this phase resolved, one line each. This phase's narration — what was built, what was fixed, what pivoted — goes to `CHANGELOG.md`, never there.
 
 **Backlog triage — silent.** Completed → `done YYYY-MM-DD`. `DF-N` verified fixed → `resolved YYYY-MM-DD`; obsolete → `dropped`. Superseded → `dropped`. An item meriting a full phase → note it for the roadmap. Write back before the changelog.
 
@@ -226,4 +226,4 @@ One `AskUserQuestion` batch may cover: did Phase N deliver as planned, roadmap c
 5. **Success must name the pain.** "WhatsApp chaos" makes success "no more WhatsApp for ops notes", not "notes are saved and visible."
 6. **Every schema field filled** — write it or drop the heading. API contracts include every error condition; every story has a validation check.
 7. **Agents never commit and never start servers.** Every leaf brief carries the containment string from `subagent-policy.md`. Verify every leaf's output on return.
-8. **Settled forks are canon.** Check `docs/decisions.md ## User decisions` before surfacing any fork; record every resolved one.
+8. **Settled forks are canon.** Check `docs/rejected.md` before surfacing any fork; never re-offer an option listed there. Log every fork you resolve, one line.

@@ -21,7 +21,7 @@ Brain: `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/brain.md`, `$AGENT=backend`, 
 
 ## Inputs — find and read first
 
-From the most recent `specs/YYYY-MM-DD-[feature]/`: `requirements.md` (the contract), `plan.md` (build order), `design-tokens.css` if `ui: true`, and the **design source** named by `mission.md ## Design Tool` — on `claude-code` the mockups in `specs/<phase>/mockups/` (they ARE the design) plus `docs/decisions.md`; on `external` the `handover.md` screen→image index plus the images it points to.
+From the most recent `specs/YYYY-MM-DD-[feature]/`: `requirements.md` (the contract), `plan.md` (build order), `design-tokens.css` if `ui: true`, and the **design source** named by `mission.md ## Design Tool` — on `claude-code` the mockups in `specs/<phase>/mockups/` (they ARE the design) plus `specs/<phase>/design-notes.md` if design wrote one; on `external` the `handover.md` screen→image index plus the images it points to.
 
 Missing `requirements.md`, `plan.md`, or (on `ui: true`) the design source → stop: "No phase spec or design found — run `/build:spec` and `/build:design` first." **`phaseCeremony: "narrow"` exempts the design half** — design never ran, so the source is prior phases' mockups plus the existing `design-tokens.css`. Never invoke `/build:design` on a narrow phase.
 
@@ -60,7 +60,7 @@ Read each group's `Depends on:` field and **topologically sort into waves** — 
 
 **Every brief carries:** full `requirements.md`, `plan.md`, the design source, `tech-stack.md`; its group numbers only; prior waves' API surface and changed-file list, pasted not referenced; the per-group procedure; the containment string from `subagent-policy.md`; and the stop conditions — 3 failed hypotheses, thrashing, or 2× estimate → return immediately, never surface to the user itself.
 
-**A felt-impact fork returns `status: needs-decision`, never a silent pick** (Rule 7). Invisible plumbing goes to `docs/decisions.md`.
+**A felt-impact fork returns `status: needs-decision`, never a silent pick** (Rule 7). Invisible plumbing goes to the doc that owns it — `tech-stack.md ## Key Technical Decisions` or `docs/architecture.md`. Implementation notes go to `CHANGELOG.md` at replan, never to `docs/rejected.md`.
 
 **Return format, per group, no commentary:**
 ```

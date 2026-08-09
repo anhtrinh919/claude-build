@@ -13,7 +13,7 @@ Enter through `/build` (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/entry-point.
 
 | Mode | Model | Mechanism | Reads | Writes | Terminal step |
 |---|---|---|---|---|---|
-| **claude-code** | Opus | inline — invokes the `impeccable` skill, which drives its own work and holds the user gate | `requirements.md` (the contract) · `product.md` · `outcome-card.md` · prior `design-tokens.css` | `specs/<phase>/mockups/` · `design-tokens.css` · non-visual decisions → `docs/decisions.md`. **No handover doc** | **none** |
+| **claude-code** | Opus | inline — invokes the `impeccable` skill, which drives its own work and holds the user gate | `requirements.md` (the contract) · `product.md` · `outcome-card.md` · prior `design-tokens.css` | `specs/<phase>/mockups/` · `design-tokens.css` · non-visual decisions → `specs/<phase>/design-notes.md`. **No handover doc** | **none** |
 | **external** | Opus | inline — fans out a Sonnet leaf to read the exported images and return text findings | same, plus the user's exported images | `design-brief.md` · `design-tokens.css` · `design-comment.md` · `handover.md` (screen→image index) | **none** |
 
 Mode is an arg; absent → resolve it as a fork below. Both hold a live user gate, so both run inline (`_shared/subagent-policy.md` Rule 1).
@@ -24,12 +24,12 @@ Mode is an arg; absent → resolve it as a fork below. Both hold a live user gat
 
 ## Mode resolution (first action)
 
-Absent arg → check `docs/decisions.md ## User decisions` for a prior phase's pick. Found `claude-code` → **stays `claude-code` forever, no ask.** Found `external`, or nothing yet → a felt tooling fork, resolved by *"does this phase establish new visual language?"* with one `AskUserQuestion`, recommended first:
+Absent arg → check `mission.md ## Design Tool` for a prior phase's pick. Found `claude-code` → **stays `claude-code` forever, no ask.** Found `external`, or nothing yet → a felt tooling fork, resolved by *"does this phase establish new visual language?"* with one `AskUserQuestion`, recommended first:
 
 - **Phase 0** → recommend **external**: it locks the tokens and visual language, and a dedicated design tool is materially stronger at that founding pass.
 - **Phase 1+** → **external** for a new visual vocabulary (new token family, a component category absent from `design-tokens.css`, ~3+ new screens). **`claude-code`** otherwise.
 
-Record the pick to `mission.md ## Design Tool` (/build:review reads it back) and the fork to `docs/decisions.md`.
+Record the pick to `mission.md ## Design Tool` (/build:review reads it back) and the rejected mode to `docs/rejected.md`, one line.
 
 **North star — once, then carried forward.** `mission.md ## Design North Star` absent → ask one plain question ("what should a user remember or feel after using this?") and write it there. One app, one north star. It is the top-line context for impeccable, or the brief's `## Design intent`.
 
@@ -44,7 +44,7 @@ Hand it: the **north star**; the **screens this phase must cover** (from `requir
 **Close-out, once impeccable's work is approved:**
 
 1. **`design-tokens.css`** — the mockups' shared token layer at `specs/<phase>/design-tokens.css`, written to the standard in `references/design-tokens.md`: one CSS custom property per token under `:root`, generated-from header. Backend imports this one file. Fonts not yet in the app → note them in the decisions log.
-2. **`docs/decisions.md`** — every **non-visual** decision the mockups do not show on their face: a structural choice and its why (slide-over not modal, wizard not one form), any deliberate deviation from `requirements.md`, component→name mappings an implementer might miss. Never restate what is visible in the pixels.
+2. **`specs/<phase>/design-notes.md`** — every **non-visual** decision the mockups do not show on their face: a structural choice and its why (slide-over not modal, wizard not one form), any deliberate deviation from `requirements.md`, component→name mappings an implementer might miss. Never restate what is visible in the pixels. Phase-scoped by design: backend reads it this phase, and it expires with the phase rather than accumulating in a permanent file. Write nothing if the mockups say it all.
 
 ---
 

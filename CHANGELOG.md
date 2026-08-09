@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.0.0 — 2026-08-09
+
+**Breaking: `docs/decisions.md` is retired and replaced by `docs/rejected.md`.** The old file mixed two things with opposite lifetimes — permanent history and current product state — in one append-only doc. State drifts; history does not. So every entry that described *how the product works* started contradicting the living doc that owned the same fact, and the ledger became a second, stale opinion injected at every phase start and after every compaction.
+
+Eight live projects were measured before the change. In the two largest, over 90% of the file was out of scope. claws held 83 headings, of which one was `## User decisions` — the rest were `## Phase N backend — implementation notes` and `## Phase N review — findings and fixes`, a build log that `CHANGELOG.md` already owns. mq-expense's file opened by declaring itself a copy of the tech-stack table, which was exactly what the scaffold step told it to do. mama-health stored CLI flags and a JSON payload shape as decisions — an entry that goes wrong the day a flag is renamed. layout-svg carried an entry marked superseded inline, with the full original reasoning above the reversal, leaving a reader to work out which half was live. Two projects had independently hand-invented the fix: lune-startup grew a `### Superseded, kept so they are not re-argued` section the schema never defined, one line per item, naming only what was dropped.
+
+**The new scope is structural, not a discipline rule: an entry describes a question, a living doc describes the product, and no sentence does both.** Two docs can only conflict when both claim the same fact, so a file whose subject no living doc discusses cannot conflict with one. What survives that test is exactly what nothing else records — which options a settled fork killed, and that the question is closed. Both are permanently true. The chosen option is gone from the ledger; it lives where it is implemented.
+
+Four rules carry it, and each one closes a failure found in the measured files: **one line per entry** (layout-svg ran past 200 words of implementation reasoning), **nothing in the file but entries** (the old schema gave a format for entries but never said the file held only entries, so 1100 lines of diary walked in), **never the chosen option or a mechanism**, and **append-only with no rewriting** — a reopened question gains `· reopened Phase N` on its existing line, because a rejected option stays rejected whatever the product later does.
+
+**Everything evicted has a named home.** Phase narration, implementation notes, and review findings → `CHANGELOG.md`. Stack and dependency calls → `tech-stack.md ## Key Technical Decisions`, which already had Why and Alternatives-Rejected columns and was already the widest-read doc. Component and data-model calls, and the behavioral-mechanism sequence diagram → `docs/architecture.md`. A standing user directive → `CLAUDE.md`. A phase's non-visual design notes → a new `specs/<phase>/design-notes.md`, phase-scoped so it expires with the phase instead of accumulating forever in a global file.
+
+**Two maintenance mechanisms are deleted outright, not replaced.** The replan reconcile pass is gone — there is nothing left in the file that can go stale. So is the supersede-and-rewrite protocol, which the schema had mandated and which no skill ever implemented.
+
+**`/build:migrate` converts existing projects, and now runs on current-schema projects too** — previously they were a no-op. It sorts every old entry to one of the five destinations above, writes the new ledger, then archives the original whole and unedited to `docs/archive/`, where no skill reads it. Nothing is deleted. It is idempotent, and it refuses to invent a rejected option an entry does not state.
+
 ## 2.1.0 — 2026-08-08
 
 **The app-shell spec is deleted; the stack no longer prescribes a shell.** `references/app-shell-spec.md` specified one generic SaaS shell in literal values — a 256px sidebar, Cmd+B to collapse, a 56px bottom nav, Sonner toasts bottom-right for 3–5s, a fixed settings category list. It did not help in practice.

@@ -16,7 +16,7 @@ description: SDD build orchestrator. Turns an idea into a shipped, dogfooded pro
 
 | Mode | Model | Mechanism | Reads | Writes | Terminal step |
 |---|---|---|---|---|---|
-| single | Opus | inline — it *is* the session; it runs every sub-skill inline and never spawns one | `.build-state.json`, `product.md`, `docs/decisions.md ## User decisions` | `.build-state.json` at every gate | `constitution-complete`, `design-complete`, `backend-complete`, `roadmap-complete`, every rollback |
+| single | Opus | inline — it *is* the session; it runs every sub-skill inline and never spawns one | `.build-state.json`, `product.md`, `docs/rejected.md` | `.build-state.json` at every gate | `constitution-complete`, `design-complete`, `backend-complete`, `roadmap-complete`, every rollback |
 
 Off-pipeline skills this orchestrator does not route: `/build:polish` (backlog drainer), `/build:migrate` (legacy upgrade). The user invokes both directly.
 
@@ -93,7 +93,7 @@ Quick map only. Each sub-skill's own `## Invocation contract` is canonical. Doc 
 | /build:spec · constitution | Product Shape, `research.md` | `mission.md` `product.md` `tech-stack.md` `roadmap.md` + living-docs scaffold |
 | /build:spec · phase | constitution, `roadmap.md`, `backlog.md` | approved `outcome-card.md` + `specs/YYYY-MM-DD-[feature]/{requirements,plan,validation}.md` + `requirementsHash` |
 | /build:spec · replan | the just-completed phase | living docs updated, changelog, branch merged |
-| /build:design | `requirements.md` | `design-tokens.css` + (`claude-code`: `mockups/`, decisions→`docs/decisions.md`, **no handover**) / (`external`: `design-brief.md` + images + `design-comment.md` + `handover.md` index) |
+| /build:design | `requirements.md` | `design-tokens.css` + (`claude-code`: `mockups/`, non-visual notes→`design-notes.md`, **no handover**) / (`external`: `design-brief.md` + images + `design-comment.md` + `handover.md` index) |
 | /build:backend | `requirements.md` `plan.md` `design-tokens.css` + the mode's design source | working, integration-tested API |
 | /build:review | `validation.md` `outcome-card.md`, running app | review report + silent fixes + **dogfood handoff** |
 
@@ -105,7 +105,7 @@ Set by /build:spec at Outcome Card approval, only for a phase touching screens a
 /build:spec runs without drafters, reconciliation, or drift review, and writes no `validation.md`. **/build:design and design-compliance are skipped entirely** — `spec-complete` goes straight to /build:backend, unchanged. /build:review runs **`standalone-dogfood`** mode and, as this phase's named closure, still writes `phase-complete`/`phase-blocked`.
 
 ## Cold start
-Once per session, first action. Read the three files in the contract → find `step` in the Resume ladder → resume there. Skip `product.md` or `docs/decisions.md` if missing. Not build orchestration → ignore the state file; it is an anchor, not a coercion.
+Once per session, first action. Read the three files in the contract → find `step` in the Resume ladder → resume there. Skip `product.md` or `docs/rejected.md` if missing. Not build orchestration → ignore the state file; it is an anchor, not a coercion.
 
 **One door** (`_shared/entry-point.md`). A resume routes through here, never straight into a sub-skill. The `stack` field names the owning orchestrator.
 
@@ -113,8 +113,8 @@ Once per session, first action. Read the three files in the contract → find `s
 
 ## Ground rules (canon in `_shared/`)
 1. **/eli only at the user-gate boundaries** — the wrap before a constitution or phase-complete go/no-go. A summary at an internal step reads as a stop.
-2. **User gates are outcome-only; every felt decision is a fork** (`_shared/voice.md`). The user approves the shape, the product story, the Outcome Card, the design, the phase-end dogfood — never spec files. Any decision with felt UX or performance impact becomes a fork: options, a plain tradeoff each, a recommended default. Front-load it; a fork emerging mid-build overrides auto-continue. Invisible plumbing → decide silently → `docs/decisions.md`.
-3. **Settled decisions are canon.** `docs/decisions.md ## User decisions` is the anti-overturn ledger. Check it before re-asking any fork; record every resolved one.
+2. **User gates are outcome-only; every felt decision is a fork** (`_shared/voice.md`). The user approves the shape, the product story, the Outcome Card, the design, the phase-end dogfood — never spec files. Any decision with felt UX or performance impact becomes a fork: options, a plain tradeoff each, a recommended default. Front-load it; a fork emerging mid-build overrides auto-continue. Invisible plumbing → decide silently → the doc that owns it (`tech-stack.md` or `docs/architecture.md`).
+3. **Settled decisions are canon.** `docs/rejected.md` is the anti-overturn ledger — one line per fork, naming only what it killed. Check it before re-asking any fork; never re-offer an option listed there. Log every fork you resolve.
 4. **Backlog capture.** A deferred request → a dated one-liner in `backlog.md` at once, confirmed by ID ("Noted as T-7"). Dogfood bugs thread as `DF-N`. Always refer by ID.
 5. **Agent containment** (`_shared/subagent-policy.md` is canon). Every leaf brief ends with its containment string, verbatim. After every return check `git log <pre>..HEAD` and `ps ax | grep "[c]laude -p"` for runaways. **Agents never commit** — the orchestrator does.
 6. All user questions go through `AskUserQuestion`. Cap-hit and blocker surfaces are binary: "Accept anyway, or Stop?"

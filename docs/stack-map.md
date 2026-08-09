@@ -185,7 +185,7 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 | (intro) | 175 | — |
 | File Structure | 784 | — |
 | Update cadence | 922 | — |
-| File Descriptions | 1923 | CLAUDE.md · product.md · backlog.md · README.md · docs/architecture.md · docs/api.md · docs/decisions.md |
+| File Descriptions | 1923 | CLAUDE.md · product.md · backlog.md · README.md · docs/architecture.md · docs/api.md · docs/rejected.md |
 | Update Rules | 585 | — |
 
 **Cites:** `skills/build/schemas/backlog.md` · `skills/build/schemas/claude-md.md` · `skills/build/schemas/constitution.md`

@@ -1,4 +1,4 @@
-<!-- SYNCED FROM ~/.claude/skills/grill-me/references/drilling-discipline.md — do not hand-edit. Re-run sync-drilling-discipline.sh after any change to the canonical file. Source hash: a909b1594c23 -->
+<!-- SYNCED FROM ~/.claude/skills/grill-me/references/drilling-discipline.md — do not hand-edit. Re-run sync-drilling-discipline.sh after any change to the canonical file. Source hash: a43c8cbff720 -->
 
 # Drilling Discipline
 
@@ -68,10 +68,10 @@ Use for the build stack's spec phase mode.
 |---|---|---|
 | Root | The phase's Outcome Card outcome | — cite it, do not re-derive |
 | Trunk | — | Always fails here. Collapse straight to branch. |
-| Branch | An open scope decision with real fan-out (coverage, format, timing) | A micro-choice with no felt difference — route to `docs/decisions.md` |
+| Branch | An open scope decision with real fan-out (coverage, format, timing) | A micro-choice with no felt difference — decide it silently |
 | Leaf | A concrete mechanism implied by the branch answer | Still open-ended |
 
-Check `docs/decisions.md` before you open a root or trunk in this mode. If it is answered there, cite it.
+Check `docs/rejected.md` before you open a root or trunk in this mode. A question listed there is closed — cite it and move on.
 
 ### technical — an infrastructure or architecture call
 
@@ -114,6 +114,17 @@ A decision found mid-session is not a separate channel. Add it as a new node und
 - Do not ask what a file already answers. Read the codebase and prior docs first.
 - Research before you recommend anything technical or factual.
 - Cite benchmarks and studies as reference points, not as a verdict.
+
+## Deep Mode
+
+An intensity, not a mode. It works with any preset. Use it when the user must own every decision.
+
+- Show the branch list before you ask. Let the user veto the shape.
+- Put the cost of each option inside the option.
+- Read back each answer. Get a confirm before you write a doc.
+- Keep an answer's scope. Do not widen it.
+- If an answer breaks a written rule, stop and ask. Never override the rule alone.
+- Record rejected options and accepted costs, not only decisions.
 
 ## Stop Condition
 

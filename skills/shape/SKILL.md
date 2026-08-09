@@ -37,7 +37,7 @@ Assemble the resolved tree:
 - **What it is:** [one line — the product as a recognizable form, reflecting the fork picks]
 - **Who it's for:** [the one primary user]
 - **Core job:** [the single thing it must do well — the spine]
-- **Forks chosen:** [each fork, one line: `fork → choice`. /build:spec writes these into docs/decisions.md ## User decisions, so they are never re-litigated.]
+- **Forks chosen:** [each fork, one line: `fork → choice`, plus what it rejected. /build:spec logs the rejected options to docs/rejected.md, so they are never re-offered.]
 - **Beyond the core spine (deferred, not vetoed):** [2–4 things intentionally outside the core job for now; each: what it is, and why it waits. Never "cut from v1" — this is open growth, not a permanent exclusion set.]
 ```
 
