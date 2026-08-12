@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.1.1 — 2026-08-12
+
+**Two reported failures: sub-skills never loading (`/build:backend`, `/build:review` worst), auto-continue not honored inside backend's wave loop.** Both traced to the same shape of bug at two layers.
+
+**Layer 1 — `/build`'s own definition of "inline" was ambiguous.** It contrasted a sub-skill running in-session against spawning a subagent, but never said how a sub-skill's instructions get loaded into the session at all — leaving room to improvise a sub-skill's job from the Resume ladder's summary instead of actually calling it through the Skill tool. Fixed at the definition itself (the intro line and the invocation-contract mechanism cell), not with reminders scattered downstream — a sub-skill now explicitly "loads into the session through the Skill tool and runs inline."
+
+**Layer 2 — `_shared/auto-continue.md`, the canon file every skill points to for turn behavior, was itself wrong and incomplete.** It opened with "a phase runs start-to-finish in ONE turn" — false, since drilling, grilling, and the Outcome Card approval are real stops that happen inside a phase. Worse, the Outcome Card gate — a mandatory, per-phase approval — was missing from its own list of real stops entirely. Rewritten to lead with the forcing default ("keep going, same turn") rather than a claim about reality, and to list every real stop, Outcome Card included.
+
+**Every consuming file's citation of that canon file was also in the wrong place** — always at the one boundary with the least pause risk, never at the actual repeating internal one. `/build:backend` cited it only at its final hand-back, leaving the wave-dispatch loop (Step 2), the boundary the report named specifically, uncited. `/build:review` cited it inside `pipeline-review` only, missing `standalone-dogfood` — the mode every narrow-phase closure runs, and the one most exposed to a mid-run pause. `/build:spec` cited it only at phase mode's final hand-back, missing all three modes' own interview machinery. Each moved to its real point of use, once per file, per `docs/skill-standard.md`'s own citation discipline: `/build`'s Resume ladder, `/build:backend`'s Step 2, `/build:review`'s shared "Inline, always" section (covers both modes and the fix loop), `/build:spec`'s shared intro (covers all three modes).
+
+`docs/stack-map.md`'s citation graph is now stale against these moves — its generator (`scratchpad/genmap.py`) isn't checked into this repo, so it wasn't regenerated. Flagged, not fixed.
+
 ## 3.1.0 — 2026-08-09
 
 **The `dogfood` agent stops being a judge and becomes a scout.** It used to return a three-signal pass/fail gate with severity-tagged findings, and it blocked the phase. But the user already holds a mandatory approval gate on every finished phase, so the machine verdict was a second opinion on a question a person was about to answer better, moments later. It also read project source to explain behavior — duplicating a code review that had already run with a stronger agent, and defeating the blindness the caller protects by withholding the spec and the diff.

@@ -45,6 +45,8 @@ Before any implementation code, map every function and path this phase adds or c
 
 ## Step 2 — Implementation, group by group
 
+Every wave below, and every step after this one, is an internal boundary — cross each one silently, no summary before continuing (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/auto-continue.md`).
+
 Groups build in dependency order. **Resume-idempotency:** before dispatch, run every remaining group's `verify-group-N.sh`. Any that already passes is built and committed — skip it. Log "[N] groups already built, [N] remaining."
 
 ### Wave dispatch
@@ -102,7 +104,7 @@ Test the **full API surface** against every contract in `requirements.md`, all e
 
 Write the phase-wrap brain entry once Step 3 passes. Report: what the backend provides in one sentence, the endpoint count, status (`ready` / `has known issues` / `blocked`), one line on anything fragile.
 
-**Do not** write `step`, and **do not** invoke `/build:review`. Null `currentSubStep` on return; it carries a `"backend.group-N"` breadcrumb while a group is in flight, for crash-resume. Hand straight back (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/auto-continue.md`).
+**Do not** write `step`, and **do not** invoke `/build:review`. Null `currentSubStep` on return; it carries a `"backend.group-N"` breadcrumb while a group is in flight, for crash-resume. Hand straight back.
 
 ## Ground rules
 

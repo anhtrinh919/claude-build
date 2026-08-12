@@ -5,18 +5,18 @@ description: SDD build orchestrator. Turns an idea into a shipped, dogfooded pro
 
 # /build — SDD orchestrator
 
-**Wiring only.** Every sub-skill owns its own body. These tables are enough to resume — never open a sub-skill file to learn where you are. **Start at *Cold start*.**
+**Wiring only.** Every sub-skill owns its own body. These tables say where you are and which sub-skill runs next — never open a sub-skill file just to find that out. **Start at *Cold start*.**
 
 - Re-entrant and state-file-first. Every gate writes `.build-state.json`. Any turn can be a cold resume.
 - **Sequential:** shape, then per phase spec → design → backend → review. No background or parallel builds.
-- The orchestrator **is the session**. It runs each sub-skill **inline**, never as a subagent.
+- The orchestrator **is the session**. Every sub-skill loads into it through the Skill tool and runs **inline** — same session, never spawned as a subagent.
 - Quoted user-facing text is the *intent* to convey, never a script. Never show the user a path, a stack name, or jargon (`_shared/voice.md`).
 
 ## Invocation contract
 
 | Mode | Model | Mechanism | Reads | Writes | Terminal step |
 |---|---|---|---|---|---|
-| single | Opus | inline — it *is* the session; it runs every sub-skill inline and never spawns one | `.build-state.json`, `product.md`, `docs/rejected.md` | `.build-state.json` at every gate | `constitution-complete`, `design-complete`, `backend-complete`, `roadmap-complete`, every rollback |
+| single | Opus | inline — loaded via the Skill tool into this session, never spawned as a subagent | `.build-state.json`, `product.md`, `docs/rejected.md` | `.build-state.json` at every gate | `constitution-complete`, `design-complete`, `backend-complete`, `roadmap-complete`, every rollback |
 
 Off-pipeline skills this orchestrator does not route: `/build:polish` (backlog drainer), `/build:migrate` (legacy upgrade). The user invokes both directly.
 
@@ -48,6 +48,8 @@ There is no `foundationStatus` — v2 has no background foundation build.
 
 ## Resume ladder
 The chain of `step` values. `‖` marks a **boundary gate**: `/eli` wrap, then an `AskUserQuestion` (Proceed / Stop-for-now), then yield the turn. Every other arrow **auto-continues in the same turn** — no stop, no phase-wrap ("Phase N is built"), no "paused" framing, and never tell the user to retype `/build`.
+
+`_shared/auto-continue.md` is the full list of real stops — this diagram shows only its two named boundaries, `‖`. Landing on a non-`‖`, non-terminal row without having run its named sub-skill is a routing failure.
 
 ```
 (no state) → shaping-in-progress → shape-complete → constitution-complete ‖
@@ -109,7 +111,7 @@ Once per session, first action. Read the three files in the contract → find `s
 
 **One door** (`_shared/entry-point.md`). A resume routes through here, never straight into a sub-skill. The `stack` field names the owning orchestrator.
 
-**One turn per phase** (`_shared/auto-continue.md`). Cross every internal step and milestone silently. Yield the turn ONLY at the named user gates: constitution, each phase-complete, a felt-impact fork, a cap-hit binary. No "next I'll…", no permission-to-proceed, no pause narration.
+**One turn per phase**, per the Resume ladder above.
 
 ## Ground rules (canon in `_shared/`)
 1. **/eli only at the user-gate boundaries** — the wrap before a constitution or phase-complete go/no-go. A summary at an internal step reads as a stop.

@@ -9,7 +9,7 @@ Drill the user for every decision the build needs, then author the docs those de
 
 Enter through `/build` (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/entry-point.md`). Plain language to the user — never a path, schema name, or stack term (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`).
 
-The mode bodies are ladders, not scripts. Push deeper when answers are thin; stop when a topic is settled.
+The mode bodies are ladders, not scripts. Push deeper when answers are thin; stop when a topic is settled. Auto-continue governs the machinery between this file's own questions — drilling rounds, the Named Flows and roadmap confirms, the Outcome Card gate — never the questions themselves (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/auto-continue.md`).
 
 ## Invocation contract
 
@@ -194,7 +194,7 @@ Write under `specs/YYYY-MM-DD-[slug]/`: full writes `requirements.md`, `plan.md`
 1. `sha256sum specs/YYYY-MM-DD-[slug]/requirements.md | cut -d' ' -f1` — taken **after** drift review, never mid-review. Only phase mode writes `requirementsHash`.
 2. Write `.build-state.json`: the hash, `step: "spec-complete"`, `phase` + `feature`, `reviewIteration: 0`, `currentSubStep: null`, `dogfoodPid` preserved, `phaseCeremony` from the card, and `stack: "build"` if absent.
 
-No user gate; the card was the contract. Hand straight back (`_shared/auto-continue.md`) — /build:design on full, /build:backend on narrow. Downstream skills recompute the hash and on mismatch surface once (requirements changed since approval → Continue / restart spec) rather than auto-blocking. Report the spec dir, branch, ceremony scope and why, counts, and drift issues fixed.
+No user gate; the card was the contract. Hand straight back — /build:design on full, /build:backend on narrow. Downstream skills recompute the hash and on mismatch surface once (requirements changed since approval → Continue / restart spec) rather than auto-blocking. Report the spec dir, branch, ceremony scope and why, counts, and drift issues fixed.
 
 ---
 
