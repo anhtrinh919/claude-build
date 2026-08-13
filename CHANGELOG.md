@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.1 — 2026-08-13
+
+`schemas/claude-md.md` gains a third must-have: the auto-continue rule.
+
+A fresh session reads `CLAUDE.md` before any `/build` skill loads. It needs to know to move through stages, steps, and tasks on its own, pausing only at phase end and defined gates — the rule can't wait for `auto-continue.md` to load first.
+
 ## 4.0.0 — 2026-08-13
 
 **Breaking: `docs/rejected.md` is deleted from the stack. There is no successor.**
