@@ -62,7 +62,7 @@ Read each group's `Depends on:` field and **topologically sort into waves** — 
 
 **Every brief carries:** full `requirements.md`, `plan.md`, the design source, `tech-stack.md`; its group numbers only; prior waves' API surface and changed-file list, pasted not referenced; the per-group procedure; the containment string from `subagent-policy.md`; and the stop conditions — 3 failed hypotheses, thrashing, or 2× estimate → return immediately, never surface to the user itself.
 
-**A felt-impact fork returns `status: needs-decision`, never a silent pick** (Rule 7). Invisible plumbing goes to the doc that owns it — `tech-stack.md ## Key Technical Decisions` or `docs/architecture.md`. Implementation notes go to `CHANGELOG.md` at replan, never to `docs/rejected.md`.
+**A felt-impact fork returns `status: needs-decision`, never a silent pick** (Rule 7). Invisible plumbing goes to the doc that owns it — `tech-stack.md ## Key Technical Decisions` or `docs/architecture.md`. Implementation notes go to `CHANGELOG.md` at replan.
 
 **Return format, per group, no commentary:**
 ```

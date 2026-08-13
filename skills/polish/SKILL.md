@@ -31,7 +31,7 @@ Quoted lines are intent to convey, not scripts. IDs, statuses, paths, and the st
 
 **Always** read `backlog.md` — Reports (`DF-N`) and the flat buckets (`T-N`), schema at `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/backlog.md`. Preserve IDs verbatim; never renumber.
 
-**External source — ask every run, never assume or hardcode one.** One `AskUserQuestion`: just the backlog / the previously-used source (the default if `CLAUDE.md ## Project directives` names one) / other free text (a Notion page, a Linear, GitHub, or Jira view, any shared doc). Keep that source's own IDs verbatim (`B-n`, `ENG-n`, `#n`). A newly pasted source → offer to record it in `CLAUDE.md ## Project directives` as the next default.
+**External source — ask every run, never assume or hardcode one.** One `AskUserQuestion`: just the backlog / the previously-used source (the default if project memory names one) / other free text (a Notion page, a Linear, GitHub, or Jira view, any shared doc). Keep that source's own IDs verbatim (`B-n`, `ENG-n`, `#n`). A newly pasted source → offer to save it to project memory as the next default.
 
 Honor a filter arg if given (`/build:polish bugs`, `/build:polish B11-B16`).
 

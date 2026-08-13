@@ -37,7 +37,7 @@ Never trust a subagent's "done" claim. After every return, check the expected ou
 
 ## Rule 6 — Capture project directives on the spot
 
-The instant a durable project-scoped rule surfaces, from any skill, append a dated line to `CLAUDE.md ## Project directives`. Do not wait for replan.
+The instant a durable project-scoped rule surfaces, from any skill, save it to the agent's own project memory — not a repo file. Do not wait for replan.
 
 ## Rule 7 — Parallel dispatch
 

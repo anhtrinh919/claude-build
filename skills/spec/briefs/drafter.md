@@ -8,7 +8,7 @@ Drill decisions (verbatim from the /build:spec phase drilling session): [paste f
 Outcome card (the user-approved contract — everything you write must serve it): [paste outcome-card.md verbatim]
 Scope summary: [paste scope challenge output — what already exists / what's new]
 Phase: [N], Feature slug: [slug]
-Tech stack: [paste tech-stack.md — constraints, non-negotiables, pinned versions, excluded patterns]
+Tech stack: [paste tech-stack.md — constraints, non-negotiables, pinned versions, key technical decisions]
 
 End your return with a `## Latent decisions` list — one sentence per choice you made that was not in the drill decisions or the outcome card. For any latent decision the user would feel (UX or performance), carry its fork: the genuine options, a one-line plain-language tradeoff for each, and your recommended pick. No other commentary.
 

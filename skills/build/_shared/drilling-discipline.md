@@ -71,8 +71,6 @@ Use for the build stack's spec phase mode.
 | Branch | An open scope decision with real fan-out (coverage, format, timing) | A micro-choice with no felt difference — decide it silently |
 | Leaf | A concrete mechanism implied by the branch answer | Still open-ended |
 
-Check `docs/rejected.md` before you open a root or trunk in this mode. A question listed there is closed — cite it and move on.
-
 ### technical — an infrastructure or architecture call
 
 Use for a technical or infra subject.
@@ -124,7 +122,6 @@ An intensity, not a mode. It works with any preset. Use it when the user must ow
 - Read back each answer. Get a confirm before you write a doc.
 - Keep an answer's scope. Do not widen it.
 - If an answer breaks a written rule, stop and ask. Never override the rule alone.
-- Record rejected options and accepted costs, not only decisions.
 
 ## Stop Condition
 

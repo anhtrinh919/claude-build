@@ -19,9 +19,3 @@ Phase 0 is fixed; user (as PM) shapes Phase 1+ order.
 1. **Phase 1 — [Feature Name]:** [The one feature this slice brings to life, end-to-end. Why it comes first.]
 2. **Phase 2 — [Feature Name]:** [The one feature this slice delivers. Why here.]
 3. **Phase 3 — [Feature Name]:** [...]
-
-## Global Out of Scope
-What this project will explicitly never do. Named precisely — not vague.
-
-- [Specific exclusion]
-- [Specific exclusion]

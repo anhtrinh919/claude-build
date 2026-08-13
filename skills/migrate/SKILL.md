@@ -1,6 +1,6 @@
 ---
 name: migrate
-description: Brings a legacy build project onto the current /build stack — a v1 project (`foundationStatus` or `*-approved` steps) or a pre-rename build-2 project. Upgrades the state file, remaps the Design Tool, sweeps stale skill references, converts docs/decisions.md into the docs/rejected.md ledger, archives the old state. Also converts a project already on the current schema. Trigger on /build:migrate.
+description: Brings a legacy build project onto the current /build stack — a v1 project (`foundationStatus` or `*-approved` steps) or a pre-rename build-2 project. Upgrades the state file, remaps the Design Tool, sweeps stale skill references, retires docs/decisions.md and archives the old state. Also converts a project already on the current schema. Trigger on /build:migrate.
 user-invocable: true
 ---
 
@@ -13,7 +13,7 @@ The current stack reads `.build-state.json` on the current schema and ships as t
 
 Both converge on the same target: `.build-state.json` on the current schema, plus docs that reference the current `/build*` skills and invoke `/build` without a filesystem path.
 
-A third job runs for **every** project, current schema included: converting the retired `docs/decisions.md` into `docs/rejected.md`.
+A third job runs for **every** project, current schema included: retiring `docs/decisions.md` — each entry to the living doc that owns it, the original to the archive.
 
 Runs **inline**. No subagents, no state of its own. It edits **only the project's own files** — never the `/build` skill definitions. It builds nothing, runs nothing, and commits nothing unless asked.
 
@@ -21,7 +21,7 @@ Runs **inline**. No subagents, no state of its own. It edits **only the project'
 
 | Mode | Model | Mechanism | Reads | Writes | Terminal step |
 |---|---|---|---|---|---|
-| single | session model | inline | `.build-state.json` or `.build2-state.json`, `mission.md`, `docs/decisions.md`, the project's own docs | the upgraded state file, a `.bak` of the original, remapped `mission.md ## Design Tool`, swept doc references, `docs/rejected.md` + the archived old ledger | **none** — the user invokes `/build` when ready |
+| single | session model | inline | `.build-state.json` or `.build2-state.json`, `mission.md`, `docs/decisions.md`, the project's own docs | the upgraded state file, a `.bak` of the original, remapped `mission.md ## Design Tool`, swept doc references, the archived old ledger | **none** — the user invokes `/build` when ready |
 
 Run it once, in the project root. **Safest at a phase boundary** (`phase-complete` or `phase-blocked`), where nothing is half-built. Mid-phase works too — warn the user and let them choose, recommending proceed if the tree is committed and wait if `git status` is dirty.
 
@@ -30,7 +30,7 @@ Run it once, in the project root. **Safest at a phase boundary** (`phase-complet
 1. **`.build2-state.json` present** → **build-2 project**. Schema is current; only the filename and `/build-2*` references are stale.
 2. Else **`.build-state.json` present**:
    - Has `foundationStatus`, **or** `step` ∈ {`frontend-complete`, `frontend-approved`, `constitution-approved`, `spec-approved`, `backend-approved`, `phase-approved`, bare `complete`} → **v1 project**.
-   - Otherwise the schema is current. Grep the project's docs for a `build-` prefixed skill token (`/build-spec`, `/build-design`, …). Found → run **only** the reference sweep in Mode: v1 step 3; the state file needs nothing. None → the state file is done; go straight to **Every project: convert the decision ledger**.
+   - Otherwise the schema is current. Grep the project's docs for a `build-` prefixed skill token (`/build-spec`, `/build-design`, …). Found → run **only** the reference sweep in Mode: v1 step 3; the state file needs nothing. None → the state file is done; go straight to **Every project: retire the decision ledger**.
 3. Else **`mission.md` present** → between features. Write a fresh `.build-state.json` only if the user confirms they want `/build` to drive the next feature; else stop: "Nothing to migrate — just run `/build`."
 4. Else → stop: "This isn't a build project."
 
@@ -98,32 +98,30 @@ Copy the old `.build-state.json` to `.build-state.json.bak` before overwriting. 
 1. **Rename the state file.** Write `.build-state.json` from the contents of `.build2-state.json`, adding `stack: "build"` — the one field build-2 lacks. Rename the original to `.build2-state.json.bak`.
 2. **Sweep `/build-2*` references** across `CLAUDE.md`, `product.md`, `backlog.md`, and every `specs/**/*.md`: `build-2` → `build` (which fixes `/build-2-spec`, `/build-2-review`, bare `/build-2`), `build2-state` → `build-state`, and any `~/.claude/skills/build-2/…` path → **invoke the `/build` skill**. Same guards as the v1 sweep.
 
-## Every project: convert the decision ledger
+## Every project: retire the decision ledger
 
-Runs last, in **every** mode, including a project already on the current schema. `docs/decisions.md` is retired: it mixed permanent history with product state, so it drifted against the living docs and fed every session a stale second opinion. Its replacement, `docs/rejected.md`, holds only what a settled fork killed — see `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md`.
+Runs last, in **every** mode, including a project already on the current schema. `docs/decisions.md` is retired with no successor: it mixed permanent history with product state, so it drifted against the living docs and fed every session a stale second opinion. The stack keeps no rejection ledger — every decision now lives in the doc that implements it, per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md`.
 
-No `docs/decisions.md` → write an empty `docs/rejected.md` with its header line and skip the rest.
+No `docs/decisions.md` → nothing to do, skip the rest.
 
 **Sort every entry into exactly one destination. Nothing is deleted.**
 
 | Entry | Destination |
 |---|---|
-| Names what a fork rejected — "Rejected:", "Options were:", "Alternatives", "X not Y", "chosen over" | **`docs/rejected.md`** — one line: the question, the rejected options, the phase and date. Drop the chosen option, the mechanism, and the reasoning. |
 | Phase narration — implementation notes, review findings and fixes, live-bug write-ups, "what changed this phase" | **`CHANGELOG.md`**, under the phase's existing heading. Compress; never paste. |
 | A stack, dependency, or library call | **`tech-stack.md ## Key Technical Decisions`** — only if that table does not already hold it. It usually does. |
 | A component or data-model call | **`docs/architecture.md`** — same no-duplicate test. |
-| A standing user directive ("never auto-deploy", "subscription only, never an API key") | **`CLAUDE.md ## Project directives`**, one dated line. |
+| A standing user directive ("never auto-deploy", "subscription only, never an API key") | **the agent's project memory**, not a repo file. |
+| Names only what a fork rejected — "Rejected:", "Options were:", "X not Y" | **nowhere** — it goes to the archive with everything else. Never force it into a living doc. |
 | Anything else | left where it lands, below |
 
 **Then archive the original whole**, unedited, to `docs/archive/decisions-YYYY-MM-DD.md`, and delete `docs/decisions.md`. No skill reads the archive, so it cannot poison a session, and nothing is lost. Note the archive path in the report.
 
-**Guards.** Never invent a rejected option an entry does not state — an entry with no rejection is not a `rejected.md` line. Never copy a line into a living doc that already covers it; the duplicate is the defect being removed. Cap each `rejected.md` line at one line, always. Stay idempotent: a project with `docs/rejected.md` and no `docs/decisions.md` is already converted, so do nothing.
-
-**Sweep the name** across `CLAUDE.md`, `product.md`, `backlog.md`, `docs/**`, and every `specs/**/*.md`: `docs/decisions.md` → `docs/rejected.md`, with the same word-boundary guards as the skill sweep.
+**Guards.** Never copy a line into a living doc that already covers it; the duplicate is the defect being removed. Stay idempotent: a project with no `docs/decisions.md` is already converted, so do nothing.
 
 ## Report
 
-Plain language (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`): that the project now runs on `/build`, which step it resumes from as a human phrase (`design-complete` → "the design is done; next is the backend build"), the Design-Tool value it mapped to, which docs were swept, how many settled forks moved into the new rejection ledger, and that both the old state and the old ledger are kept.
+Plain language (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`): that the project now runs on `/build`, which step it resumes from as a human phrase (`design-complete` → "the design is done; next is the backend build"), the Design-Tool value it mapped to, which docs were swept, how many entries moved into the living docs, and that both the old state and the old ledger are kept.
 
 **Do not auto-run `/build`.** The user invokes it when ready, and it resumes from the mapped step.
 
@@ -135,4 +133,4 @@ Plain language (`${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/voice.md`): that the
 
 1. Touches only the project's own files. Never edits a `/build` skill.
 2. Builds nothing, runs nothing, commits nothing unless the user asks.
-3. Idempotent — re-running changes nothing. A project already on the current schema still gets the decision-ledger conversion; only a project already holding `docs/rejected.md` with no `docs/decisions.md` is a full no-op, reported as a plain "just run `/build`."
+3. Idempotent — re-running changes nothing. A project already on the current schema still gets the decision-ledger retirement; only a project with no `docs/decisions.md` is a full no-op, reported as a plain "just run `/build`."

@@ -29,7 +29,7 @@ Absent arg → check `mission.md ## Design Tool` for a prior phase's pick. Found
 - **Phase 0** → recommend **external**: it locks the tokens and visual language, and a dedicated design tool is materially stronger at that founding pass.
 - **Phase 1+** → **external** for a new visual vocabulary (new token family, a component category absent from `design-tokens.css`, ~3+ new screens). **`claude-code`** otherwise.
 
-Record the pick to `mission.md ## Design Tool` (/build:review reads it back) and the rejected mode to `docs/rejected.md`, one line.
+Record the pick to `mission.md ## Design Tool` (/build:review reads it back).
 
 **North star — once, then carried forward.** `mission.md ## Design North Star` absent → ask one plain question ("what should a user remember or feel after using this?") and write it there. One app, one north star. It is the top-line context for impeccable, or the brief's `## Design intent`.
 

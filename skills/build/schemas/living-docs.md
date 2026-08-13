@@ -29,16 +29,13 @@ Every SDD project contains:
     │       └── handover.md
     └── docs/
         ├── architecture.md
-        ├── api.md
-        ├── rejected.md
+        └── api.md
 
 Each file's purpose and authoring detail lives in its own schema under `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/` — this doc governs update cadence and cross-doc rules, not per-file content.
 
 ## Update cadence
 
 **Always current — refreshed every phase wrap:** `product.md`, `tech-stack.md`, `roadmap.md`, `docs/api.md`, `CLAUDE.md`, `README.md`, `CHANGELOG.md`.
-
-**Append-only, never refreshed:** `docs/rejected.md` — it records history, not state, so nothing in it can go out of date.
 
 **User-approved, frozen:** `outcome-card.md` — the only doc actually surfaced to the user verbatim and approved via `AskUserQuestion`. A later change restarts /build:spec phase mode.
 
@@ -60,22 +57,8 @@ Component map, data models with fields and types, and the component-level and da
 ### docs/api.md
 The live full API surface — method, path, auth, one line each. Update on every endpoint add, change, or removal. The spec file is only a phase's snapshot; this is the truth.
 
-### docs/rejected.md
-The project's **rejection ledger** — the one thing no other living doc records: which options a resolved fork killed, so nobody proposes them twice. Read it before surfacing any fork. Never read it for what the product does.
-
-**An entry describes a question. A living doc describes the product. No sentence does both.** That is the whole scope, and it makes a conflict with a living doc impossible rather than merely unlikely — the two never claim the same fact. One section, one format, one line per entry:
-
-    **[Question]** — Rejected: [A], [B]. _(Phase N · YYYY-MM-DD)_
-    **[Question]** — Rejected: [A]. _(Phase 1 · YYYY-MM-DD · reopened Phase 3)_
-
-Four rules, all load-bearing:
-
-1. **One line per entry. No exceptions.** A rejection needing a paragraph is not a rejection — it is product state, and it belongs to the doc that owns it.
-2. **Nothing in the file but entries.** No prose sections, no phase headings, no narration.
-3. **Never the chosen option, never a mechanism, never a why that will expire.** The choice lives where it is implemented. A reason that generalizes is a standing preference → `CLAUDE.md`.
-4. **Append-only.** A reopened question gains `· reopened Phase N` on its existing line. Never rewrite an entry, never mark one superseded — a rejected option stays rejected whatever the product later does.
-
-**What does NOT go here**, each with its real home: phase narration, implementation notes, review findings and fixes → `CHANGELOG.md` · stack, dependency, and library calls → `tech-stack.md ## Key Technical Decisions` (Decision / Why / Alternatives Rejected) · component and data-model calls → `docs/architecture.md` · a standing user directive → `CLAUDE.md` · a phase's structural design notes → `specs/<phase>/design-notes.md`.
+### No rejection ledger
+The stack keeps no list of options a fork killed. Every decision lives in the doc that implements it: phase narration and fixes → `CHANGELOG.md` · stack, dependency, and library calls → `tech-stack.md ## Key Technical Decisions` (Decision / Why / Alternatives Rejected) · component and data-model calls → `docs/architecture.md` · a standing user directive → the agent's project memory, not a repo file · a phase's structural design notes → `specs/<phase>/design-notes.md`.
 
 ## Update Rules
 

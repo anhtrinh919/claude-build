@@ -2,7 +2,7 @@
 
 > Agent context — not for human reading.
 
-The transient task lake: `DF-N` dogfood threads and `T-N` tasks. Not the roadmap (committed phases), not `CLAUDE.md ## Project directives` (durable preferences). Things to do that don't belong in the current phase's spec.
+The transient task lake: `DF-N` dogfood threads and `T-N` tasks. Not the roadmap (committed phases), not project memory (durable preferences). Things to do that don't belong in the current phase's spec.
 
 ## Numbering & communication — read this first
 

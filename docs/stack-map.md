@@ -185,7 +185,7 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 | (intro) | 175 | — |
 | File Structure | 784 | — |
 | Update cadence | 922 | — |
-| File Descriptions | 1923 | CLAUDE.md · product.md · backlog.md · README.md · docs/architecture.md · docs/api.md · docs/rejected.md |
+| File Descriptions | 1923 | CLAUDE.md · product.md · backlog.md · README.md · docs/architecture.md · docs/api.md |
 | Update Rules | 585 | — |
 
 **Cites:** `skills/build/schemas/backlog.md` · `skills/build/schemas/claude-md.md` · `skills/build/schemas/constitution.md`
@@ -221,14 +221,13 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 | App Shell | 920 | Navigation · Auth · Settings · Universal Patterns |
 | Excluded from This Phase | 166 | — |
 
-### `skills/build/schemas/roadmap.md` — 1494c
+### `skills/build/schemas/roadmap.md` — 1348c
 
 | Section | Bytes | Subsections |
 |---|---|---|
 | (intro) | 28 | — |
 | How phases are sliced (read before filling) | 833 | — |
 | Phases | 460 | — |
-| Global Out of Scope | 144 | — |
 
 **Cites:** `skills/build/_shared/roadmap-axis.md`
 
@@ -390,7 +389,7 @@ Generated from source. Part 1 lists every file, its `##` sections, and their siz
 | `skills/build/schemas/outcome-card.md` | 1822 | 1 | spec |
 | `skills/build/schemas/plan.md` | 1383 | 1 | spec/briefs/drafter.md |
 | `skills/build/schemas/requirements.md` | 3108 | 1 | spec/briefs/drafter.md |
-| `skills/build/schemas/roadmap.md` | 1494 | 1 | spec |
+| `skills/build/schemas/roadmap.md` | 1348 | 1 | spec |
 | `skills/build/schemas/validation.md` | 3698 | 1 | spec/briefs/drafter.md |
 | `skills/design/references/design-tokens.md` | 1591 | 1 | design |
 | `skills/design/references/gates.md` | 11544 | 1 | design |

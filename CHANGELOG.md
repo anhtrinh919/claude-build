@@ -1,5 +1,73 @@
 # Changelog
 
+## 4.0.0 — 2026-08-13
+
+**Breaking: `docs/rejected.md` is deleted from the stack. There is no successor.**
+
+A file that holds only a list of "no" teaches the agent to reason in boundaries.
+
+Every skill read the ledger before it asked a question, and after every compaction. So it defined what the product is not.
+
+The agent pigeon-holed the app's shape. It refused directions nobody had ruled out.
+
+It invented hard rules from entries that recorded one moment's preference. Builds without the ledger are better.
+
+**The anti-overturn rule goes with it.** That rule was the ledger's last job. It needs a list of negatives to check against.
+
+Forks are front-loaded at each phase gate. Each resolved choice lives in the doc that implements it.
+
+`tech-stack.md` holds stack calls. `docs/architecture.md` holds component and data-model calls.
+
+The agent's own project memory holds a standing user directive, not a repo file. `CHANGELOG.md` holds phase narration. Each records the choice, not its casualties.
+
+Cut from `schemas/living-docs.md`, `schemas/claude-md.md`, and `_shared/drilling-discipline.md`.
+
+Cut from `_shared/voice.md`. One line there states that the stack keeps no such ledger.
+
+Cut from `/build`: the contract, the cold start, and ground rule 3. Ground rules renumber to 1–6.
+
+Cut from every read and write site in `/build:spec`, `/build:design`, `/build:shape`, `/build:review`, and `/build:backend`.
+
+`/build:spec` scaffolds the living docs without it, and seeds nothing.
+
+**`/build:migrate` retires `docs/decisions.md` and writes no successor.** Its sort table drops the rejection destination.
+
+An entry that names only what a fork ruled out goes to `docs/archive/` with the original, whole and unedited.
+
+Never force such an entry into a living doc. A project with no `docs/decisions.md` is a no-op.
+
+**A project keeps its own `docs/rejected.md` on disk, untouched.** No skill reads it, writes it, or names it.
+
+Delete that file by hand to remove it.
+
+**The same shape is cut from two more schemas.** The damage comes from the shape, not the file.
+
+A permanent list of pure negatives, authored by the agent and read every phase, harms the build wherever it sits.
+
+`roadmap.md ## Global Out of Scope` is deleted. It read "what this project will explicitly never do".
+
+`tech-stack.md ## Explicit Exclusions` is deleted. `## Constraints & Non-Negotiables` above it already holds those facts, as build rules.
+
+**The constitution interview stops manufacturing them.** Step 1.4 drops "what it explicitly does NOT do" from the mission topic.
+
+Step 1.6 drops the "what is globally out of scope" question. It still resolves any Layer 3 gap.
+
+What the user states is recorded in the user's own words, in one home each.
+
+A technical non-negotiable goes to `tech-stack.md ## Constraints & Non-Negotiables`. Any other durable directive goes to the agent's own project memory, not a repo file.
+
+The agent never authors an exclusion the user did not state.
+
+**`CLAUDE.md` stops being a stamped schema.** It held a full living-docs index and a `## Project directives` ledger — both wrong, per every existing project's `CLAUDE.md` not fitting that shape and neither section earning its place.
+
+The living-docs index duplicated what each `/build` skill already names at its own gate. The directives ledger revived the exact stale-second-opinion pattern this version just removed from `docs/decisions.md`.
+
+`schemas/claude-md.md` now states two must-haves only — the `/build` resume pointer and a one-line mission — and is otherwise free to grow. No existing project needs migrating to match it.
+
+**Three negatives are kept, and they earn it.** `tech-stack.md`'s Alternatives Rejected column and `docs/architecture.md`'s equivalent bind to a positive decision in the same row.
+
+The Outcome Card's "Not in this phase" and `requirements.md`'s "Excluded from This Phase" expire with the phase. They hold the scope line the user approved.
+
 ## 3.1.1 — 2026-08-12
 
 **Two reported failures: sub-skills never loading (`/build:backend`, `/build:review` worst), auto-continue not honored inside backend's wave loop.** Both traced to the same shape of bug at two layers.

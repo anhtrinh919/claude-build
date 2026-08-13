@@ -112,11 +112,6 @@ The widest-read doc in a build. Stack choices plus the rules nothing may break.
 
 - [Constraint]
 
-## Explicit Exclusions
-[What this stack deliberately does NOT use, and why. Exclusions prevent scope creep and wrong assumptions by agents.]
-
-- **[Technology]:** [Why excluded]
-
 ## Key Technical Decisions
 
 | Decision | Why | Alternatives Rejected |
