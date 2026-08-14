@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.2 — 2026-08-14
+
+**Auto-continue was still not holding, reported after 3.1.1 and 4.0.1 both claimed to fix it.** Root cause traced to `v2.0.0`'s character-budget rewrite: `build/SKILL.md` cited `_shared/auto-continue.md` at 4 points post-rewrite, down from 8 restatements pre-2.0. The 2.0.0 pass moved from restating the rule inline to a single citation per site — correct citation placement, but less redundancy to survive a long session and context compaction.
+
+Repetition restored to the pre-2.0 count: the plugin description, a new full-restatement paragraph near the top of the file, an expanded Cold-start restatement, and an expanded ground rule 1. `_shared/auto-continue.md` itself is unchanged — its content was never the gap.
+
 ## 4.0.1 — 2026-08-13
 
 `schemas/claude-md.md` gains a third must-have: the auto-continue rule.

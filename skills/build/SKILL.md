@@ -1,6 +1,6 @@
 ---
 name: build
-description: SDD build orchestrator. Turns an idea into a shipped, dogfooded product, one vertical slice per phase. Re-entrant and state-first — reads `.build-state.json` to resume after context loss, then routes /build:shape, /build:spec, /build:design, /build:backend, /build:review. Trigger on /build.
+description: SDD build orchestrator. Turns an idea into a shipped, dogfooded product, one vertical slice per phase. Re-entrant and state-first — reads `.build-state.json` to resume after context loss, then routes /build:shape, /build:spec, /build:design, /build:backend, /build:review. Every step and sub-skill handoff auto-continues in the same turn; only named gates (constitution, phase-complete, a felt-impact fork) stop and wait. Trigger on /build.
 ---
 
 # /build — SDD orchestrator
@@ -11,6 +11,8 @@ description: SDD build orchestrator. Turns an idea into a shipped, dogfooded pro
 - **Sequential:** shape, then per phase spec → design → backend → review. No background or parallel builds.
 - The orchestrator **is the session**. Every sub-skill loads into it through the Skill tool and runs **inline** — same session, never spawned as a subagent.
 - Quoted user-facing text is the *intent* to convey, never a script. Never show the user a path, a stack name, or jargon (`_shared/voice.md`).
+
+**One turn per phase.** Internal step and sub-skill-return boundaries are not stopping points — cross them silently, same turn. Stop and yield ONLY at the named user gates: the constitution boundary, each phase-complete boundary, the Outcome Card gate, a felt-impact fork, a cap-hit binary, the external design hand-off. No "next I'll…", no permission-to-proceed, no pause narration. Full contract: `_shared/auto-continue.md`.
 
 ## Invocation contract
 
@@ -111,10 +113,10 @@ Once per session, first action. Read both files in the contract → find `step` 
 
 **One door** (`_shared/entry-point.md`). A resume routes through here, never straight into a sub-skill. The `stack` field names the owning orchestrator.
 
-**One turn per phase**, per the Resume ladder above.
+**One turn per phase.** Internal step and milestone boundaries are not stopping points — cross them silently and keep working. Stop and yield the turn ONLY at the named user gates, per the Resume ladder above and `_shared/auto-continue.md`.
 
 ## Ground rules (canon in `_shared/`)
-1. **/eli only at the user-gate boundaries** — the wrap before a constitution or phase-complete go/no-go. A summary at an internal step reads as a stop.
+1. **/eli only at the user-gate boundaries** — the wrap before a constitution or phase-complete go/no-go. A summary at an internal step reads as a stop. Cross every other internal step and sub-skill return silently, same turn — no "next I'll…", no permission-to-proceed (`_shared/auto-continue.md`).
 2. **User gates are outcome-only; every felt decision is a fork** (`_shared/voice.md`). The user approves the shape, the product story, the Outcome Card, the design, the phase-end dogfood — never spec files. Any decision with felt UX or performance impact becomes a fork: options, a plain tradeoff each, a recommended default. Front-load it; a fork emerging mid-build overrides auto-continue. Invisible plumbing → decide silently → the doc that owns it (`tech-stack.md` or `docs/architecture.md`).
 3. **Backlog capture.** A deferred request → a dated one-liner in `backlog.md` at once, confirmed by ID ("Noted as T-7"). Dogfood bugs thread as `DF-N`. Always refer by ID.
 4. **Agent containment** (`_shared/subagent-policy.md` is canon). Every leaf brief ends with its containment string, verbatim. After every return check `git log <pre>..HEAD` and `ps ax | grep "[c]laude -p"` for runaways. **Agents never commit** — the orchestrator does.
