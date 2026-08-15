@@ -1,4 +1,20 @@
 # Changelog
+## 4.0.4
+
+**Auto-continue, given a checkable form.** The prose rule has now failed four
+times — reported after `3.1.1`, after `4.0.1`, after `4.0.2`'s repetition
+restore, and again on a `spec-complete` hand-off that ended with "starting
+Group 1" and stopped. Repetition is not the missing ingredient.
+
+A `step` write is now stated as a trigger rather than a milestone: the message
+that writes a non-gate `step` value must also carry the next sub-skill's
+invocation. Bookkeeping and the next move ride together, and the report comes
+after the work. Ending a message on a `step` write is the failure, whatever the
+message says.
+
+The pull this defends against is that **a long report reads like the end of a
+turn**. A prohibition loses to that pull. A rule about where a tool call has to
+sit does not.
 
 ## 4.0.3
 

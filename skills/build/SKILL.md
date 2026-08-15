@@ -76,6 +76,10 @@ Detail, where a step is more than its next link:
 | `roadmap-complete` | **Terminal.** Every roadmap phase is built. "Nothing left to build." Stop. |
 | `phase-blocked` | surface the open issues. Never auto-resume. Always stops |
 
+**A `step` write is a trigger, not a milestone.** Every non-`‖` row in the ladder writes `step` and then keeps working. So the message that writes one of those values **also carries the next sub-skill's invocation** — bookkeeping and the next move ride together, and the report comes after the work rather than after the write. Ending a message on a `step` write is the auto-continue failure, whatever the message says.
+
+This is the checkable form of the rule stated above, and it exists because the prose form has failed four times: reported after `3.1.1`, after `4.0.1`, after `4.0.2`'s repetition restore, and again on a `spec-complete` → `/build:backend` hand-off that ended with "starting Group 1" and stopped. **A long report reads like the end of a turn**, and that pull beats a prohibition. It does not beat a rule about where a tool call has to sit.
+
 **Who writes `step`.** A sub-skill writes it on clean exit when no gate follows: `shaping-in-progress`/`shape-complete` (/build:shape), `spec-complete` (/build:spec phase), `phase-complete`/`phase-blocked` (/build:review). The **orchestrator** writes every gated step after its gate passes — `constitution-complete`, `design-complete`, `backend-complete`, `roadmap-complete` — and every rollback. /build:design, /build:backend, and /build:spec constitution mode return without writing `step`: it rides on the previous terminal step while `currentSubStep` tracks live position, cleared to null on their clean return.
 
 **Roadmap discipline** (`_shared/roadmap-axis.md`). Phase 0 = Foundation: shell + hero screens, polished static, unwired. Phases 1+ = vertical slices, slice-tested, never horizontal. /build:spec drafts the sequence; the user confirms it.
