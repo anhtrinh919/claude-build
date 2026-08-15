@@ -104,7 +104,9 @@ Test the **full API surface** against every contract in `requirements.md`, all e
 
 Write the phase-wrap brain entry once Step 3 passes. Report: what the backend provides in one sentence, the endpoint count, status (`ready` / `has known issues` / `blocked`), one line on anything fragile.
 
-**Do not** write `step`, and **do not** invoke `/build:review`. Null `currentSubStep` on return; it carries a `"backend.group-N"` breadcrumb while a group is in flight, for crash-resume. Hand straight back.
+**Do not** write `step`, and **do not** invoke `/build:review`. Hand straight back.
+
+**Write `currentSubStep: "backend.done"` on clean return — never null.** `step` still reads `spec-complete` or `design-complete` at this moment, because the orchestrator writes `backend-complete` only after its own gate. So `backend.done` is the sole durable record that the groups are built and only the gate is outstanding. Nulling it here makes a finished backend identical on disk to one that never started, and the phase then sits at `spec-complete` looking untouched — with every group committed. The orchestrator clears it when it writes `backend-complete`.
 
 ## Ground rules
 

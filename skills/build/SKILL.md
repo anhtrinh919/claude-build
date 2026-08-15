@@ -20,7 +20,7 @@ description: SDD build orchestrator. Turns an idea into a shipped, dogfooded pro
 |---|---|---|---|---|---|
 | single | Opus | inline — loaded via the Skill tool into this session, never spawned as a subagent | `.build-state.json`, `product.md` | `.build-state.json` at every gate | `constitution-complete`, `design-complete`, `backend-complete`, `roadmap-complete`, every rollback |
 
-Off-pipeline skills this orchestrator does not route: `/build:polish` (backlog drainer), `/build:migrate` (legacy upgrade). The user invokes both directly.
+Off-pipeline skills this orchestrator does not route: `/build:polish` (backlog drainer), `/build:migrate` (legacy upgrade). The user invokes both directly. **Neither advances `step`**, so an open phase stays open across a whole polish run — each reads `.build-state.json` and names the outstanding pipeline step, on entry and again at wrap.
 
 ## Model + mechanism
 **Every sub-skill is a separate, flat, top-level folder** in `skills/` — `${CLAUDE_PLUGIN_ROOT}/skills/spec/`, never nested under `build/`. Invoke each by name through the Skill tool (`skill: "build:spec"`). Only `schemas/` and `_shared/` sit under `build/`; never guess a path from those.
@@ -110,6 +110,12 @@ Set by /build:spec at Outcome Card approval, only for a phase touching screens a
 
 ## Cold start
 Once per session, first action. Read both files in the contract → find `step` in the Resume ladder → resume there. Skip `product.md` if missing. Not build orchestration → ignore the state file; it is an anchor, not a coercion.
+
+**Stall check, before you resume.** A phase whose code is committed but whose `step` never advanced looks exactly like a phase that never started. Two signals say otherwise, and either one means the work is done and only a gate is outstanding — run that gate, do not rebuild:
+- `currentSubStep` reads `backend.done` — /build:backend finished and handed back.
+- `step` is `spec-complete` or `design-complete`, and every `specs/<phase>/verify-group-*.sh` passes.
+
+**Never tell the user a phase is built.** A phase is `phase-complete` or it is unfinished, and the words for the middle state are **"built, not closed — `/build:review` still has to run."** "Phase N is built" reads as done, and a user who hears it reasonably stops the pipeline and goes elsewhere. Say which step remains, by name, every time you report progress on an open phase.
 
 **One door** (`_shared/entry-point.md`). A resume routes through here, never straight into a sub-skill. The `stack` field names the owning orchestrator.
 

@@ -29,6 +29,8 @@ Quoted lines are intent to convey, not scripts. IDs, statuses, paths, and the st
 
 ## Step 0 — Ingest and triage
 
+**Read `.build-state.json` first, before the backlog.** This skill is a sibling to the pipeline and never advances it, so an open phase sits exactly where it was left for as long as this runs. Present and `step` is anything but `phase-complete` or `roadmap-complete` → say so in one line before triage, naming the phase and the next pipeline step by name: *"Phase 6 is built, not closed — `/build:review` still has to run. Draining the backlog first leaves it open."* Then continue; the user may well want the polish first. Absent → nothing to say, carry on.
+
 **Always** read `backlog.md` — Reports (`DF-N`) and the flat buckets (`T-N`), schema at `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/backlog.md`. Preserve IDs verbatim; never renumber.
 
 **External source — ask every run, never assume or hardcode one.** One `AskUserQuestion`: just the backlog / the previously-used source (the default if project memory names one) / other free text (a Notion page, a Linear, GitHub, or Jira view, any shared doc). Keep that source's own IDs verbatim (`B-n`, `ENG-n`, `#n`). A newly pasted source → offer to save it to project memory as the next default.
@@ -111,6 +113,8 @@ When `currentIndex` reaches the last item of the batch, shipped or blocked, **st
 ## Step 6 — Wrap
 
 Past the last batch, report by batch and then by ID: **shipped** with commits, **blocked** with reasons, **deferred or dropped**. Confirm `backlog.md` and any named external source are in sync. **Kill the verify server if this skill started it** — `verifyPid` non-null → `kill`, verify with `kill -0`, escalate to `kill -9` after 2s, null both fields. A server this skill never started is left alone. Delete `.polish-state.json` on a clean drain; leave it if any item is `blocked`, so a follow-up run resumes the unfinished set.
+
+**Hand the pipeline back.** Re-read `.build-state.json`. An open phase → close the report with the one line that says where it stands and what runs next, by name: *"Phase 6 is still built-not-closed. `/build:review` is the next step and it has not run."* This is the moment the user decides what happens next, and a drained backlog reads like the end of the work unless the open phase is named here.
 
 ## Ground rules
 

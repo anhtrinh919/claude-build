@@ -1,5 +1,27 @@
 # Changelog
 
+## 4.0.3
+
+**A built phase can no longer look like a phase that never started.** Three
+holes let a finished Phase 6 sit at `spec-complete` with every group committed,
+through a whole backlog drain, unnoticed.
+
+- `/build:backend` nulled `currentSubStep` on clean return, erasing the only
+  record that the groups were built and the gate was outstanding. It now writes
+  `backend.done`, and the orchestrator clears it at `backend-complete`.
+- `/build` cold start had no way to tell a finished backend from an untouched
+  one. It now checks two signals before resuming, and runs the gate rather than
+  rebuilding.
+- `/build:polish` never read `.build-state.json` at all. Being a sibling to the
+  pipeline, it froze an open phase for as long as it ran and said nothing. It
+  now names the phase and the outstanding step on entry, and again at wrap —
+  which is the moment the user decides what happens next.
+
+**"Phase N is built" is barred as a progress report.** A phase is
+`phase-complete` or it is unfinished, and the words for the middle are "built,
+not closed — `/build:review` still has to run". The old wording reads as done,
+and a user who hears it reasonably stops the pipeline and goes elsewhere.
+
 ## 4.0.2 — 2026-08-14
 
 **Auto-continue was still not holding, reported after 3.1.1 and 4.0.1 both claimed to fix it.** Root cause traced to `v2.0.0`'s character-budget rewrite: `build/SKILL.md` cited `_shared/auto-continue.md` at 4 points post-rewrite, down from 8 restatements pre-2.0. The 2.0.0 pass moved from restating the rule inline to a single citation per site — correct citation placement, but less redundancy to survive a long session and context compaction.
