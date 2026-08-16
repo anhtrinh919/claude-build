@@ -1,5 +1,7 @@
 # Phase Outcome Card — schema
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 File: `specs/YYYY-MM-DD-<feature-slug>/outcome-card.md`
 
 The user-facing contract for a phase, written by `/build:spec` (phase mode). The user approves it via AskUserQuestion before any spec is written — the only artifact approved at spec time.

@@ -71,6 +71,8 @@ Never hard-wrap. One line per paragraph, bullet, or table row, however long.
 
 Cut: micromanaging instructions, prose that justifies why a rule exists when the rule alone works, retired context, and any reference an earlier cut left dangling. Keep: every mechanism, gate, command, path, and conflict rule.
 
+Every file under `schemas/` or `references/` opens with this line, right after the title (after frontmatter, if any): `> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.` It governs every entry written into or read from that file.
+
 ## 7. Conformance check
 
 Run against a file after any rewrite:
@@ -83,3 +85,4 @@ Run against a file after any rewrite:
 6. Every `_shared/`, `schemas/`, and `references/` path in the file resolves.
 7. Every artifact the skill authors has a schema cited.
 8. **The frontmatter parses as YAML.** Run `claude plugin tag .`, or `yaml.safe_load` the block. A `description` holding a colon-space, a `#`, or a leading quote must be wrapped in single quotes with internal `'` doubled. This fails silently: an unparsable block loads the skill with *empty* metadata, so it never triggers and nothing reports an error.
+9. Every `schemas/` and `references/` file opens with the Conciseness line from §6.

@@ -1,5 +1,7 @@
 # Design tokens — the standard `design-tokens.css` must meet
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 Read this before you write `specs/<phase>/design-tokens.css`. It applies to both design modes. Backend imports this one file and treats it as the only source for color, font, and spacing, so a token that is wrong here is wrong everywhere.
 
 ## Three tiers

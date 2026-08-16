@@ -1,5 +1,7 @@
 # [Feature Name] Implementation Plan
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 Each group is independently reviewable and maps to one slice of the feature: a **sequence of work**, not a visual spec. The code-harness implements and verifies each group before the next.
 
 ## Ground rules for this file

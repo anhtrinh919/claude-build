@@ -2,6 +2,12 @@
 
 Settled choices for the structure + ASD-STE100 pass. Check this before you re-ask a question.
 
+## 2026-08-16 — Every `schemas/` and `references/` file gets a Conciseness line.
+
+Schema and reference docs are templates and rulebooks; §6's ASD-STE100 pass covered `SKILL.md` prose only, and left the entries agents write into these files ungoverned. Each of the 14 files now opens with `> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.`, right after the title (after frontmatter, in `requirements.md`). It governs both the file's own prose and every entry an agent later writes into it. `docs/skill-standard.md` §6 and §7 record the rule.
+
+`docs/stack-map.md` was already stale before this change — `claude-md.md`'s recorded section table (2501c, four sections) does not match the file on disk (543c, one section) as of `cff00f3`. Its generator, `scratchpad/genmap.py`, is not checked into this repo, so Part 1/2 byte counts could not be regenerated here. Run the generator and commit the refresh separately.
+
 ## 2026-08-08 — The app-shell spec is deleted. The stack does not prescribe a shell.
 
 `references/app-shell-spec.md` (9634c) specified one generic SaaS shell in literal values — a 256px sidebar, Cmd+B to collapse, a 56px bottom nav, Sonner toasts bottom-right for 3–5s, a fixed settings category list. It did not help in practice.
