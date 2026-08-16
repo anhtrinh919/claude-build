@@ -38,13 +38,13 @@ One owner per field. Separate fields prevent write races.
 | `step` | see Resume ladder | see *Who writes `step`* |
 | `reviewIteration` | fix-loop counter, cap 3 | /build:review |
 | `requirementsHash` | sha256 of requirements.md (drift detector) | /build:spec (phase) |
-| `currentSubStep` | breadcrumb, e.g. `"design.phase-1"`, `"shape.1.2"`, `"spec.1.5"`. Null on clean exit | whichever step runs |
+| `currentSubStep` | breadcrumb, e.g. `"shape.1.2"`, `"spec.1.5"`, `"spec.phase.4"`, `"backend.done"`, `"replan.done"`. Null on clean exit — except `backend.done` and `replan.done`, kept as done-markers until the next gate clears them | whichever step runs |
 | `dogfoodPid` | running dogfood server PID. Null on stop | /build:review |
 | `phaseCeremony` | `"full"` \| `"narrow"` — set per phase at Outcome Card approval | /build:spec (phase) |
 
 There is no `foundationStatus` — v2 has no background foundation build.
 
-**Breadcrumbs.** `currentSubStep` takes one value per literal step: `"shape.1.1"`–`"shape.1.2"` in /build:shape, `"spec.1.4"`–`"spec.1.6"` in /build:spec constitution mode. A resume mid-step continues the interview at that step. It never restarts the tree.
+**Breadcrumbs.** `currentSubStep` takes one value per literal step: `"shape.1.1"`–`"shape.1.2"` in /build:shape, `"spec.1.4"`–`"spec.1.6"` in /build:spec constitution mode, `"spec.phase.0"`–`"spec.phase.8"` in /build:spec phase mode. A resume mid-step continues at that step; it never restarts the tree. **The Outcome Card needs its own marker, not just a step number:** once approved, `currentSubStep` reads `"spec.phase.4-approved"`, and a resume finding it never re-drafts or re-asks the card — it reads the approved `outcome-card.md` off disk and continues at Step 5. Two more breadcrumbs are done-markers, not step positions: `"backend.done"` (Stall check, below) and `"replan.done"` (Resume ladder, `phase-complete` row) — both survive a clean return specifically so a resume can tell finished work from unstarted work.
 
 **Legacy state.** A `foundationStatus` field, a `frontend-*` step, an `*-approved` step, or a `.build2-state.json` means the project predates this stack. Stop and run `/build:migrate` — that skill owns detection and upgrade.
 
@@ -68,11 +68,11 @@ Detail, where a step is more than its next link:
 | `shaping-in-progress` | /build:shape at `currentSubStep`. Continue there, never restart the tree |
 | `shape-complete` | /build:spec constitution: 1.4 product interview → 1.5 constitution writing → 1.6 roadmap. Resume at `currentSubStep` if one is set |
 | *(no state, mission.md present)* | /build:spec **replan** → feature cycle |
-| `constitution-complete` | Feature cycle → Phase 0 spec |
+| `constitution-complete` | Feature cycle → Phase 0 spec (/build:spec phase mode). Resume at `currentSubStep` if one is set — never restart at Step 0 |
 | `spec-complete` | /build:design — or straight to /build:backend when `phaseCeremony: "narrow"` |
 | `design-complete` | /build:backend |
 | `backend-complete` | /build:review (silent handoff). No roadmap phase left after this one → pass `final-phase` so its dogfood runs unfenced across the whole product |
-| `phase-complete` | check `dogfoodPid` → dogfood handoff if needed → boundary gate → (Proceed) /build:spec replan **always** → a roadmap phase left → its spec; none left → write `roadmap-complete` and stop |
+| `phase-complete` | check `dogfoodPid` → dogfood handoff if needed → boundary gate → (Proceed) → `currentSubStep` reads `replan.done`? replan already ran this cycle — skip straight to the next line, never re-run it. Otherwise /build:spec replan **always** → a roadmap phase left → its spec; none left → write `roadmap-complete` and stop |
 | `roadmap-complete` | **Terminal.** Every roadmap phase is built. "Nothing left to build." Stop. |
 | `phase-blocked` | surface the open issues. Never auto-resume. Always stops |
 
@@ -80,7 +80,7 @@ Detail, where a step is more than its next link:
 
 This is the checkable form of the rule stated above, and it exists because the prose form has failed four times: reported after `3.1.1`, after `4.0.1`, after `4.0.2`'s repetition restore, and again on a `spec-complete` → `/build:backend` hand-off that ended with "starting Group 1" and stopped. **A long report reads like the end of a turn**, and that pull beats a prohibition. It does not beat a rule about where a tool call has to sit.
 
-**Who writes `step`.** A sub-skill writes it on clean exit when no gate follows: `shaping-in-progress`/`shape-complete` (/build:shape), `spec-complete` (/build:spec phase), `phase-complete`/`phase-blocked` (/build:review). The **orchestrator** writes every gated step after its gate passes — `constitution-complete`, `design-complete`, `backend-complete`, `roadmap-complete` — and every rollback. /build:design, /build:backend, and /build:spec constitution mode return without writing `step`: it rides on the previous terminal step while `currentSubStep` tracks live position, cleared to null on their clean return.
+**Who writes `step`.** A sub-skill writes it on clean exit when no gate follows: `shaping-in-progress`/`shape-complete` (/build:shape), `spec-complete` (/build:spec phase), `phase-complete`/`phase-blocked` (/build:review). The **orchestrator** writes every gated step after its gate passes — `constitution-complete`, `design-complete`, `backend-complete`, `roadmap-complete` — and every rollback. /build:design, /build:backend, and /build:spec constitution mode return without writing `step`: it rides on the previous terminal step while `currentSubStep` tracks live position. /build:design and /build:spec constitution mode clear it to null on clean return; **/build:backend writes `backend.done` instead** — the Stall check below reads that value, so nulling it here would erase the only record that the groups are already built.
 
 **Roadmap discipline** (`_shared/roadmap-axis.md`). Phase 0 = Foundation: shell + hero screens, polished static, unwired. Phases 1+ = vertical slices, slice-tested, never horizontal. /build:spec drafts the sequence; the user confirms it.
 
@@ -115,9 +115,10 @@ Set by /build:spec at Outcome Card approval, only for a phase touching screens a
 ## Cold start
 Once per session, first action. Read both files in the contract → find `step` in the Resume ladder → resume there. Skip `product.md` if missing. Not build orchestration → ignore the state file; it is an anchor, not a coercion.
 
-**Stall check, before you resume.** A phase whose code is committed but whose `step` never advanced looks exactly like a phase that never started. Two signals say otherwise, and either one means the work is done and only a gate is outstanding — run that gate, do not rebuild:
+**Stall check, before you resume.** A phase whose code is committed but whose `step` never advanced looks exactly like a phase that never started — and a phase already replanned but not yet re-proceeded looks exactly like one that was never proceeded on. Three signals say otherwise, and any one means the work is done and only the next step is outstanding — run that, never rebuild or re-run:
 - `currentSubStep` reads `backend.done` — /build:backend finished and handed back.
 - `step` is `spec-complete` or `design-complete`, and every `specs/<phase>/verify-group-*.sh` passes.
+- `currentSubStep` reads `replan.done` — replan already reconciled the docs and merged the branch this cycle. Go straight to the next roadmap phase's spec (or `roadmap-complete` if none left); never re-enter replan.
 
 **Never tell the user a phase is built.** A phase is `phase-complete` or it is unfinished, and the words for the middle state are **"built, not closed — `/build:review` still has to run."** "Phase N is built" reads as done, and a user who hears it reasonably stops the pipeline and goes elsewhere. Say which step remains, by name, every time you report progress on an open phase.
 

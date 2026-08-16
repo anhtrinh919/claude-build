@@ -1,4 +1,14 @@
 # Changelog
+## 4.0.5
+
+**Five resume/doc-update gaps, found by dry-running the whole ladder end to end.** All five share one shape: a rule existed in prose but nothing forced a resuming session to see it.
+
+- `/build:spec` phase mode had breadcrumbs for the constitution's three steps but none for its own nine — including Step 4, the Outcome Card approval, the one document a resumed session must never re-ask. It now writes `"spec.phase.0"`–`"spec.phase.8"`, with the approved card marked `"spec.phase.4-approved"` so a crash-resume reads the approval off disk instead of re-surfacing it.
+- `build/SKILL.md`'s own "Who writes `step`" summary still said `/build:backend` clears `currentSubStep` to null on return — the opposite of what `4.0.3` shipped. Backend was right; the summary was stale and never updated. Fixed to match.
+- `/build:spec` replan had no marker for "already ran." A crash between replan and the next phase's spec looked identical to a crash before replan started, risking a re-merge of an already-merged branch. It now writes `currentSubStep: "replan.done"` the moment the merge lands, and the Resume ladder checks for it before re-entering replan.
+- `living-docs.md`'s "same session" rule read as "never in a follow-up session" — directly contradicting replan's own instruction to run after a crash-resume. Reworded: a resumed session on the same unfinished phase still counts: only work that's moved on doesn't.
+- The `stack` field's ownership rule was a promise with no check behind it. `entry-point.md` now says to read the file back after every write and confirm `stack` survived.
+
 ## 4.0.4
 
 **Auto-continue, given a checkable form.** The prose rule has now failed four

@@ -63,7 +63,7 @@ The stack keeps no list of options a fork killed. Every decision lives in the do
 ## Update Rules
 
 1. **Read first.** Before touching code in an existing project, read the relevant living docs. Not the raw source files — the docs.
-2. **Same session.** Update docs in the same session the code changed. Not in a follow-up session.
+2. **Same working session — a crash-resume still counts.** Update docs before moving to different work, never deferred as a later chore. A session that resumes an unfinished phase after a crash is still this phase's session; a session that has moved on to unrelated work is not.
 3. **Summaries only.** Docs are compressed — useful facts, not full code dumps or activity logs.
 4. **No blanks.** An empty section means the doc wasn't written. Write it or delete the section heading.
 5. **docs/api.md is always current.** If the API changed and docs/api.md wasn't updated, the doc is wrong — fix it before proceeding.

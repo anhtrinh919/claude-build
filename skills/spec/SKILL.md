@@ -17,7 +17,7 @@ The mode bodies are ladders, not scripts. Push deeper when answers are thin; sto
 |---|---|---|---|---|---|
 | **constitution** | Opus + Opus drafters | inline | Product Shape + `research.md` | `mission.md` `product.md` `tech-stack.md` `roadmap.md` + living-docs scaffold | **none** — `step` rides on `shape-complete`, `currentSubStep` tracks 1.4/1.5/1.6. The orchestrator writes `constitution-complete` after its gate |
 | **phase** | Opus + 1 Sonnet research leaf + 2 Opus drafters | inline | constitution docs · `roadmap.md` · `backlog.md` | approved `outcome-card.md` + `specs/YYYY-MM-DD-[slug]/{requirements,plan,validation}.md` | **`spec-complete`**, with `requirementsHash` |
-| **replan** | Opus | inline | the just-completed phase · `roadmap.md` | living docs as-built · `CHANGELOG.md` · merged branch | none |
+| **replan** | Opus | inline | the just-completed phase · `roadmap.md` | living docs as-built · `CHANGELOG.md` · merged branch · `currentSubStep: "replan.done"` | none |
 
 The orchestrator passes the mode explicitly. Act on the arg; never auto-detect.
 
@@ -106,7 +106,11 @@ Return the **latent-decisions list** (felt-impact ones carrying their fork) and 
 
 Read `mission.md`, `tech-stack.md`, and `roadmap.md` first. Never ask a question those docs or the codebase already answer.
 
+Nine steps, each its own `currentSubStep` (`"spec.phase.0"`–`"spec.phase.8"`), mirroring constitution mode. A resume mid-step continues there — never restarts at Step 0. **Step 4 is the one exception:** once the card is approved, the breadcrumb becomes `"spec.phase.4-approved"`, not `"spec.phase.5"` — a resume finding it must never re-draft or re-surface the card. Read the approved `outcome-card.md` off disk and continue straight to Step 5.
+
 ### Step 0 — Feature research
+
+Write `currentSubStep: "spec.phase.0"`.
 
 Spawn **1 Sonnet leaf** (`run_in_background: false`), context-isolated: the feature name, the product one-liner, and the goal — find 2–3 apps solving *this specific feature*; extract what screens exist, which patterns are standard, what is distinctive.
 
@@ -115,6 +119,8 @@ Spawn **1 Sonnet leaf** (`run_in_background: false`), context-isolated: the feat
 **Backlog triage.** Read `backlog.md` if present. A `T-N` that fits without expanding the card → mention by ID during orientation. An open `DF-N` → name by ID, ask whether to fix here or separately. Never spend an `AskUserQuestion` on backlog items.
 
 ### Step 1 — Scope grill
+
+Write `currentSubStep: "spec.phase.1"`.
 
 `phase-scope`. Do not ask a fresh "who is this for" — the actor is settled upstream.
 
@@ -125,12 +131,16 @@ Spawn **1 Sonnet leaf** (`run_in_background: false`), context-isolated: the feat
 
 ### Step 2 — Stories, screens, primary flow
 
+Write `currentSubStep: "spec.phase.2"`.
+
 - **User stories** — "As [actor], I can [specific action] so that [specific outcome]." "Filter the list by supplier so I see only their items" is a story; "manage the list" is not.
 - **Screen inventory** — per story, as Screen / State / Key UI elements / Primary user action. Cover empty, loading, error, and mobile states, and the edge cases (double-submit, expired session, back button mid-action).
 - **Business rules** — rules governing this feature, patterns from the codebase, tone constraints.
 - **Primary flow** — the 1–3 stories whose failure makes the feature useless. These become /build:review's stop criteria; everything else is secondary, where a bug blocks but does not stop the review.
 
 ### Step 3 — Ceremony scope
+
+Write `currentSubStep: "spec.phase.3"`.
 
 Evaluate before presenting the card. A narrow phase is built directly and dogfooded, skipping spec-authoring and design entirely. Recommend **narrow** only when every check holds; any one false → **full**. Tie-break toward full.
 
@@ -145,18 +155,24 @@ State the verdict in one line of *why* when you present the card.
 
 ### Step 4 — Outcome Card gate
 
+Write `currentSubStep: "spec.phase.4"`.
+
 **The only user approval at spec time.** Spec files are machine-validated downstream and never shown to the user; the card is their contract.
 
 1. Draft from the drilling session using `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/outcome-card.md`. User language only — no endpoints, schemas, or component names. Leave `approved` unset.
 2. Write it to `specs/YYYY-MM-DD-[feature-slug]/outcome-card.md`; create the directory now, date from `date +%Y-%m-%d`.
 3. Surface it verbatim, then one `AskUserQuestion` conveying that this card is the contract for Phase N and everything built and reviewed traces back to it. Fork: **Approve — build directly** / **Approve — full spec + design** (recommend whichever Ceremony scope chose) / **Adjust** (fold in, re-surface, re-ask until Approve).
-4. On Approve, set `approved: <today>` and `ceremony: full|narrow`. A later card change restarts this mode.
+4. On Approve, set `approved: <today>` and `ceremony: full|narrow`, and write `currentSubStep: "spec.phase.4-approved"` — the durable marker that the one user-approved contract in this mode is safe. A later card change restarts this mode.
 
 ### Step 5 — Scope challenge
+
+Write `currentSubStep: "spec.phase.5"`.
 
 List what already exists in the codebase against what is genuinely new, and identify the minimum set of changes. **More than 8 files or 2+ new abstractions → ask whether to reduce scope first.** Note any deferred `roadmap.md` item that bundles in without expanding scope. Author-only.
 
 ### Step 6 — Author
+
+Write `currentSubStep: "spec.phase.6"`.
 
 Create the branch `phase-N-[feature-slug]` either way.
 
@@ -165,6 +181,8 @@ Create the branch `phase-N-[feature-slug]` either way.
 **Narrow.** No leaves, no reconciliation, no drift review. Write `requirements.md` and `plan.md` yourself to the same schemas, every field filled — narrow means less process around the docs, not thinner docs. No `validation.md`. Skip to Step 9.
 
 ### Step 7 — Reconciliation (full only)
+
+Write `currentSubStep: "spec.phase.7"`.
 
 Check all eight against both outputs; resolve every gap by editing the docs.
 
@@ -182,6 +200,8 @@ Then route the drafters' latent-decision lists: merge, dedupe, surface felt-impa
 **Behavioral-mechanism diagram (most phases skip).** A mechanism whose behavior *over time* is not inferable from screens plus endpoints — async jobs, real-time sync, multi-actor flow, state machine, permission model — gets one Mermaid `sequenceDiagram` in `docs/architecture.md`.
 
 ### Step 8 — Drift review (full only)
+
+Write `currentSubStep: "spec.phase.8"`.
 
 1. **Drift from the card.** Anything serving no card outcome → cut. Any outcome under-served → add. Any contradiction with the constitution or codebase → reconcile. Re-judge the invisible-plumbing calls; promote anything felt to a fork.
 2. **Completeness and error paths.** Missing states, unhandled errors, vague API errors, and the "what happens when" holes. Verify the implicit-state list in `briefs/drafter.md` Task A was honored.
@@ -202,7 +222,7 @@ No user gate; the card was the contract. Hand straight back — /build:design on
 
 ## Mode: replan
 
-Run in the **same session** the phase completed. Reconcile every living doc to as-built per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md`. The load-bearing rules:
+Run in the same working session as the phase's close — including a session that resumes after a crash lands mid-cycle; a crash does not make this deferred work (`living-docs.md` Rule 2). Never run it in a session that has moved on to unrelated work. Reconcile every living doc to as-built per `${CLAUDE_PLUGIN_ROOT}/skills/build/schemas/living-docs.md`. The load-bearing rules:
 
 - **`product.md` is the phase-start drift anchor.** New screens → rows, Status `built`. Cut screens → keep the row, Status `removed` plus a one-line why. Reshaped → `changed`, note how. Regenerate the App Map and Navigation Structure. Never leave a removed screen showing as planned.
 - **`tech-stack.md` is the widest-read doc.** New dependency → add with its pinned version. Changed decision → update the Key Technical Decisions table in place; it holds the why and the alternatives rejected itself, with no second copy anywhere. A stale line here misleads every phase skill.
@@ -213,7 +233,7 @@ Run in the **same session** the phase completed. Reconcile every living doc to a
 
 **Changelog — the divergence ledger.** Generate `CHANGELOG.md` from the git log by date (or `scripts/changelog.py` if present); strip merge commits and branch housekeeping. Under this phase's heading add explicit `Pivoted:` and `Removed:` lines — git's additive log will not show these.
 
-**Merge.** Merge the branch to `main` with a no-fast-forward "Phase N complete: [feature]" commit, delete the branch. Fire the phase-wrap brain trigger first.
+**Merge.** Merge the branch to `main` with a no-fast-forward "Phase N complete: [feature]" commit, delete the branch. Fire the phase-wrap brain trigger first. Then write `currentSubStep: "replan.done"` — the merge and the marker land together, so a crash cannot land in the gap between them.
 
 One `AskUserQuestion` batch may cover: did Phase N deliver as planned, roadmap changes, constitution changes, confirmation that Phase N+1 is next. Zero questions is fine if nothing changed.
 
