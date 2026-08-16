@@ -1,5 +1,7 @@
 # Gate catalogue — the Definition of Done
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 A gate does not pass by assertion. Each gate returns objective evidence, or it is blocked. Rank every gate by the judgment it needs:
 
 - **Tier 1 — objective (hard-block).** Answer from the screen→image index and the image set by enumeration: present or absent, reachable or orphaned, designed or missing. Paste the enumeration as evidence.

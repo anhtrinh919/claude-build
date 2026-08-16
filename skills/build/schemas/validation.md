@@ -1,5 +1,7 @@
 # [Feature Name] Validation
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 This is the test contract for `/build:review` (pipeline-review mode). Every check must pass before approval. Write each check as an observable, walkable sentence — "Rename to `../evil`: rejected inline with a plain message," not "works correctly."
 
 ## Automated Checks

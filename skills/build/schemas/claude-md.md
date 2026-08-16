@@ -1,5 +1,7 @@
 # CLAUDE.md — [Project Name]
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 This doc is a starting point, not a schema. Grows freely.
 
 ## Must-have

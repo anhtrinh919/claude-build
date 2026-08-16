@@ -1,5 +1,7 @@
 # Roadmap — [Project Name]
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 ## How phases are sliced (read before filling)
 
 Phase 0 scope (always first, automatic) is defined in `${CLAUDE_PLUGIN_ROOT}/skills/build/_shared/roadmap-axis.md` — read it there, not here.

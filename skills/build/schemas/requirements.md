@@ -5,6 +5,8 @@ phase: [N]
 ui: true | false
 ---
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 ## UI flag
 
 `ui: true` (default) runs `/build:review`'s dogfood step; `ui: false` skips it. Set the flag — do not infer it from screen count.

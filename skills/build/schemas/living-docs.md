@@ -1,5 +1,7 @@
 # Living Docs — Structure & Update Rules
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 Living docs record project state, each at its own level of permanence. Agents read them before touching code, not raw source files.
 
 ## File Structure

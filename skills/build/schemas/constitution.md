@@ -1,5 +1,7 @@
 # Constitution schemas — `mission.md` · `product.md` · `tech-stack.md`
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 Three separate project files, one schema doc. `/build:spec` constitution mode (Step 1.5) authors all three from one drafter brief. `/build:spec` replan mode updates all three every phase — they record the product **as actually built**, not the original plan. `roadmap.md` has its own schema; it is authored later, at Step 1.6.
 
 Copy each template below into its own file at the project root.

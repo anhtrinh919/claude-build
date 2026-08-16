@@ -1,6 +1,7 @@
 # Backlog — [Project Name]
 
 > Agent context — not for human reading.
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
 
 The transient task lake: `DF-N` dogfood threads and `T-N` tasks. Not the roadmap (committed phases), not project memory (durable preferences). Things to do that don't belong in the current phase's spec.
 

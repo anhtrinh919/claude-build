@@ -1,5 +1,7 @@
 # Design Brief — External Tool Path
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 Brief for handoff to whatever external design tool the user chooses. The tool owns the **entire visual look** — style, color, typography, layout, components, spacing, motion. This brief supplies **context, spec, and copy only**, so the tool knows the *why* behind every screen group and does not design this phase into a corner that later phases must retrofit around.
 
 **Length target:** 15–40K tokens — the lower bound for small phases, the upper for foundation phases with rich product context. Stay under 50K, so the design tool keeps context budget for its own work.

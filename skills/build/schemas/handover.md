@@ -1,5 +1,7 @@
 # Phase [N] Frontend Handover — [Feature Name]
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 **External track only.** This file is the **bare screen→image index** for a design the user made in their own tool and exported as images. (The `claude-code` track writes no handover — its mockups are real code in `specs/<phase>/mockups/`.)
 
 ## Design source — the exported images

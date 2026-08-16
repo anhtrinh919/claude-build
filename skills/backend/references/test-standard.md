@@ -1,5 +1,7 @@
 # Test Standard — tests that catch bugs, not just pass CI
 
+> **Conciseness.** ASD-STE100 English. Max 20 words per sentence. Max 2 sentences per entry.
+
 Required reading for `/build:backend` before it writes any test (Step 1). It also applies whenever you write, review, or expand a test file anywhere in the `/build` stack.
 
 **Success bar:** the mechanism under test is never mocked; every assertion names a specific value; every regression test fails before the fix and passes after; the feature runs on a real path before anyone calls it done.
