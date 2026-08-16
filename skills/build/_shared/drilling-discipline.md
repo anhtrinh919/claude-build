@@ -1,8 +1,10 @@
-<!-- SYNCED FROM ~/.claude/skills/grill-me/references/drilling-discipline.md — do not hand-edit. Re-run sync-drilling-discipline.sh after any change to the canonical file. Source hash: a43c8cbff720 -->
+<!-- SYNCED FROM ~/.claude/skills/grill-me/references/drilling-discipline.md — do not hand-edit. Re-run sync-drilling-discipline.sh after any change to the canonical file. Source hash: 7124175fa04e -->
 
 # Drilling Discipline
 
 This file is the canonical copy. It applies to grill-me and the build stack's spec skill.
+
+Applies only inside an active drilling round — a `/grill-me` session, or Step 1+ of a spec-phase interview. Never carry this ceremony (levels, gates, "take a position") into a reply outside a drilling round.
 
 This is a relentless interview, not a checklist. Do not stop at a question count. Stop only when no node is open.
 
@@ -71,6 +73,8 @@ Use for the build stack's spec phase mode.
 | Branch | An open scope decision with real fan-out (coverage, format, timing) | A micro-choice with no felt difference — decide it silently |
 | Leaf | A concrete mechanism implied by the branch answer | Still open-ended |
 
+Check `docs/rejected.md` before you open a root or trunk in this mode. A question listed there is closed — cite it and move on.
+
 ### technical — an infrastructure or architecture call
 
 Use for a technical or infra subject.
@@ -122,6 +126,7 @@ An intensity, not a mode. It works with any preset. Use it when the user must ow
 - Read back each answer. Get a confirm before you write a doc.
 - Keep an answer's scope. Do not widen it.
 - If an answer breaks a written rule, stop and ask. Never override the rule alone.
+- Record rejected options and accepted costs, not only decisions.
 
 ## Stop Condition
 

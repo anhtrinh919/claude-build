@@ -15,7 +15,7 @@ Both converge on the same target: `.build-state.json` on the current schema, plu
 
 A third job runs for **every** project, current schema included: retiring `docs/decisions.md` — each entry to the living doc that owns it, the original to the archive.
 
-Runs **inline**. No subagents, no state of its own. It edits **only the project's own files** — never the `/build` skill definitions. It builds nothing, runs nothing, and commits nothing unless asked.
+Runs **inline**. No leaf-agent dispatch — this skill edits files directly, no state of its own. It edits **only the project's own files** — never the `/build` skill definitions. It builds nothing, runs nothing, and commits nothing unless asked.
 
 ## Invocation contract
 

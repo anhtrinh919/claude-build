@@ -6,6 +6,8 @@ The rules for spawning, briefing, and trusting subagents anywhere in the build s
 
 **Subagents cannot spawn subagents.** The Agent tool is not available inside a subagent, so an inner spawn silently degrades into the subagent doing the work itself. Blindness, parallelism, and the model split all break.
 
+**"Runs inline" below is about sub-skill loading only — never read it as a ban on Agent-tool leaf dispatch, which this file governs and a project's own `CLAUDE.md` may separately, standingly permit.**
+
 - **In `/build`, every sub-skill runs `inline`.** The orchestrator is the session. It loads and runs each sub-skill in turn and never spawns one as a subagent. The only subagents anywhere are the leaf workers a sub-skill fans out — research, drafters, render, browse, implementation, fix — and those are always internally subagent-free.
 - Any leaf brief that says "read and execute a SKILL.md" is a bug. Brief a leaf with a concrete task and a file list, never a skill to run.
 
@@ -38,6 +40,10 @@ Never trust a subagent's "done" claim. After every return, check the expected ou
 ## Rule 6 — Capture project directives on the spot
 
 The instant a durable project-scoped rule surfaces, from any skill, save it to the agent's own project memory — not a repo file. Do not wait for replan.
+
+## Rule 6b — Standing rules travel by reference
+
+A project's `CLAUDE.md` auto-loads into every subagent's context regardless of brief content, but nothing about that guarantees a leaf agent weighs it against its task. Any brief whose task could touch a business fact or tune agent behavior adds one line: "Before acting, check this task against CLAUDE.md's binding rules." This does not require re-pasting CLAUDE.md — it cues the model to treat the already-injected project content as active for this task, not background.
 
 ## Rule 7 — Parallel dispatch
 
